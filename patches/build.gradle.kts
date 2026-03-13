@@ -10,6 +10,8 @@ patches {
 
 dependencies {
     // Used by JsonGenerator.
+    implementation(project(":patcher"))
+    implementation(project(":extensions:shared"))
     implementation(libs.gson)
 }
 

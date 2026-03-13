@@ -1,6 +1,7 @@
 import java.lang.Boolean.TRUE
 
 plugins {
+
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
     alias(libs.plugins.protobuf)
@@ -34,6 +35,8 @@ android {
 }
 
 dependencies {
+    implementation(project(":patcher"))
+    
     compileOnly(libs.annotation)
     compileOnly(libs.preference)
 
