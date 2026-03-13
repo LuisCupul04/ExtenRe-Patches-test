@@ -15,8 +15,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 internal class ReadMeFileGenerator : PatchesFileGenerator {
-    // For this exception to apply to [README.md],
-    // Supported version of [com.extenre.patches.music.utils.integrations.Constants.COMPATIBLE_PACKAGE] should be empty.
+    // Excepción para ciertos paquetes donde la versión soportada es fija
     private val exception = mapOf(
         "com.google.android.apps.youtube.music" to "6.29.59"
     )
@@ -28,97 +27,83 @@ internal class ReadMeFileGenerator : PatchesFileGenerator {
     override fun generate(patches: Set<Patch<*>>) {
         val rootPath = Paths.get("").toAbsolutePath().parent!!
         val readMeFilePath = "$rootPath/README.md"
-
         val readMeFile = File(readMeFilePath)
         val readMeTemplateFile = File("$rootPath/README-template.md")
 
         val output = StringBuilder()
 
+        // Preparar el archivo README
         if (readMeFile.exists()) {
-            PrintWriter(readMeFile).also {
-                it.print("")
-                it.close()
-            }
+            PrintWriter(readMeFile).use { it.print("") }
         } else {
             Files.createFile(Paths.get(readMeFilePath))
         }
 
-        // copy the contents of 'README-template.md' to the temp file
-        StringBuilder(readMeTemplateFile.readText())
-            .toString()
-            .let(readMeFile::writeText)
+        // Copiar el contenido de la plantilla
+        readMeFile.writeText(readMeTemplateFile.readText())
 
-        // add a list of supported versions to a temp file
-        mapOf(
+        // Reemplazar los marcadores de versiones compatibles
+        val markers = mapOf(
             com.extenre.patches.music.utils.compatibility.Constants.COMPATIBLE_PACKAGE to "\"COMPATIBLE_PACKAGE_MUSIC\"",
             com.extenre.patches.reddit.utils.compatibility.Constants.COMPATIBLE_PACKAGE to "\"COMPATIBLE_PACKAGE_REDDIT\"",
             com.extenre.patches.youtube.utils.compatibility.Constants.COMPATIBLE_PACKAGE to "\"COMPATIBLE_PACKAGE_YOUTUBE\""
-        ).forEach { (compatiblePackage, replaceString) ->
-            compatiblePackage.let { (packageName, versions) ->
-                val supportedVersion =
-                    if (versions == null && exception.containsKey(packageName)) {
-                        exception[packageName] + "+"
-                    } else {
-                        versions
-                            ?.toString()
-                            ?.replace("[", "[\n        \"")
-                            ?.replace("]", "\"\n      ]")
-                            ?.replace(", ", "\",\n        \"")
-                            ?: "\"ALL\""
+        )
+
+        var currentContent = readMeFile.readText()
+        markers.forEach { (compatiblePackage, marker) ->
+            val (packageName, versions) = compatiblePackage
+            val supportedVersion = when {
+                versions == null && exception.containsKey(packageName) -> exception[packageName] + "+"
+                versions != null -> versions.joinToString(
+                    prefix = "[\n        \"",
+                    separator = "\",\n        \"",
+                    postfix = "\"\n      ]"
+                )
+                else -> "\"ALL\""
+            }
+            currentContent = currentContent.replace(Regex(marker), supportedVersion)
+        }
+        readMeFile.writeText(currentContent)
+
+        // Agrupar parches por paquete compatible
+        val patchesByPackage = mutableMapOf<String, MutableSet<Patch<*>>>()
+        for (patch in patches) {
+            patch.compatiblePackages?.forEach { (packageName, _) ->
+                patchesByPackage.getOrPut(packageName) { mutableSetOf() }.add(patch)
+            }
+        }
+
+        // Generar la tabla de parches
+        patchesByPackage.entries
+            .sortedByDescending { it.value.size }
+            .forEach { (pkg, patchesForPkg) ->
+                output.appendLine("### [\uD83D\uDCE6 `$pkg`](https://play.google.com/store/apps/details?id=$pkg)")
+                output.appendLine("<details>\n")
+                output.appendLine(tableHeader)
+
+                patchesForPkg.sortedBy { it.name }.forEach { patch ->
+                    val versions = patch.compatiblePackages?.get(pkg)
+                    val supportedVersion = when {
+                        versions != null && versions.isNotEmpty() -> {
+                            val min = versions.minOrNull() ?: ""
+                            val max = versions.maxOrNull() ?: ""
+                            if (min == max) max else "$min ~ $max"
+                        }
+                        exception.containsKey(pkg) -> exception[pkg] + "+"
+                        else -> "ALL"
                     }
 
-                StringBuilder(readMeFile.readText())
-                    .replace(Regex(replaceString), supportedVersion)
-                    .let(readMeFile::writeText)
+                    output.appendLine(
+                        "| `${patch.name}` " +
+                                "| ${patch.description} " +
+                                "| $supportedVersion |"
+                    )
+                }
+                output.appendLine("</details>\n")
             }
 
-            mutableMapOf<String, MutableSet<Patch<*>>>()
-                .apply {
-                    for (patch in patches) {
-                        patch.compatiblePackages?.forEach { (packageName, _) ->
-                            if (!contains(packageName)) put(packageName, mutableSetOf())
-                            this[packageName]!!.add(patch)
-                        }
-                    }
-                }
-                .entries
-                .sortedByDescending { it.value.size }
-                .forEach { (pkg, patches) ->
-                    output.apply {
-                        appendLine("### [\uD83D\uDCE6 `$pkg`](https://play.google.com/store/apps/details?id=$pkg)")
-                        appendLine("<details>\n")
-                        appendLine(tableHeader)
-                        patches.sortedBy { it.name }.forEach { patch ->
-                            val supportedVersionArray =
-                                patch.compatiblePackages?.lastOrNull()?.second
-                            val supportedVersion =
-                                if (supportedVersionArray?.isNotEmpty() == true) {
-                                    val minVersion = supportedVersionArray.elementAt(0)
-                                    val maxVersion =
-                                        supportedVersionArray.elementAt(supportedVersionArray.size - 1)
-                                    if (minVersion == maxVersion)
-                                        maxVersion
-                                    else
-                                        "$minVersion ~ $maxVersion"
-                                } else if (exception.containsKey(pkg))
-                                    exception[pkg] + "+"
-                                else
-                                    "ALL"
-
-                            appendLine(
-                                "| `${patch.name}` " +
-                                        "| ${patch.description} " +
-                                        "| $supportedVersion |"
-                            )
-                        }
-                        appendLine("</details>\n")
-                    }
-                }
-
-            // copy the contents of the temp file to 'README.md'
-            StringBuilder(readMeFile.readText())
-                .replace(Regex("\\{\\{\\s?table\\s?}}"), output.toString())
-                .let(readMeFile::writeText)
-        }
+        // Reemplazar el marcador de tabla en el README
+        val finalContent = readMeFile.readText().replace(Regex("\\{\\{\\s?table\\s?}}"), output.toString())
+        readMeFile.writeText(finalContent)
     }
 }

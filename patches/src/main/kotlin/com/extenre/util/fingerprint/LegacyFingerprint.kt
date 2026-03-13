@@ -20,6 +20,7 @@ import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.util.proxy.mutableTypes.MutableClass
 import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod
 import com.extenre.util.containsLiteralInstruction
+import com.extenre.util.findMutableMethodOf
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstLiteralInstruction
 import com.extenre.util.injectLiteralInstructionViewCall
@@ -27,69 +28,79 @@ import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.ClassDef
 import com.android.tools.smali.dexlib2.iface.Method
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
+import com.android.tools.smali.dexlib2.util.MethodUtil
 
 private val String.exception
     get() = PatchException("Failed to resolve $this")
 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.resolvable(): Boolean =
-    second.methodOrNull != null
+    second.methodOrNull(this@BytecodePatchContext) != null
 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.definingClassOrThrow(): String =
-    second.classDefOrNull?.type ?: throw first.exception
+    second.classDefOrNull(this@BytecodePatchContext)?.type ?: throw first.exception
 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.matchOrThrow(): Match =
-    second.match(mutableClassOrThrow())
+    second.match(this@BytecodePatchContext)
 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.matchOrThrow(parentFingerprint: Pair<String, Fingerprint>): Match {
-    val parentClassDef = parentFingerprint.second.classDefOrNull
+    val parentClassDef = parentFingerprint.second.classDefOrNull(this@BytecodePatchContext)
         ?: throw parentFingerprint.first.exception
-    return second.matchOrNull(parentClassDef)
+    return second.matchOrNull(parentClassDef, this@BytecodePatchContext)
         ?: throw first.exception
 }
 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.matchOrNull(): Match? =
-    second.classDefOrNull?.let {
-        second.matchOrNull(it)
+    second.classDefOrNull(this@BytecodePatchContext)?.let {
+        second.matchOrNull(it, this@BytecodePatchContext)
     }
 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.matchOrNull(parentFingerprint: Pair<String, Fingerprint>): Match? =
-    parentFingerprint.second.classDefOrNull?.let { parentClassDef ->
-        second.matchOrNull(parentClassDef)
+    parentFingerprint.second.classDefOrNull(this@BytecodePatchContext)?.let { parentClassDef ->
+        second.matchOrNull(parentClassDef, this@BytecodePatchContext)
     }
 
 context(BytecodePatchContext)
-internal fun Pair<String, Fingerprint>.methodOrNull(): MutableMethod? =
-    matchOrNull()?.method
+internal fun Pair<String, Fingerprint>.methodOrNull(): Method? =
+    second.methodOrNull(this@BytecodePatchContext)
 
 context(BytecodePatchContext)
-internal fun Pair<String, Fingerprint>.methodOrThrow(): MutableMethod =
-    second.methodOrNull ?: throw first.exception
+internal fun Pair<String, Fingerprint>.methodOrThrow(): Method =
+    second.method(this@BytecodePatchContext)
 
 context(BytecodePatchContext)
-internal fun Pair<String, Fingerprint>.methodOrThrow(parentFingerprint: Pair<String, Fingerprint>): MutableMethod =
+internal fun Pair<String, Fingerprint>.methodOrThrow(parentFingerprint: Pair<String, Fingerprint>): Method =
     matchOrThrow(parentFingerprint).method
 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.originalMethodOrThrow(): Method =
-    second.originalMethodOrNull ?: throw first.exception
+    second.originalMethod(this@BytecodePatchContext)
 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.originalMethodOrThrow(parentFingerprint: Pair<String, Fingerprint>): Method =
     matchOrThrow(parentFingerprint).originalMethod
 
 context(BytecodePatchContext)
-internal fun Pair<String, Fingerprint>.mutableClassOrThrow(): MutableClass =
-    second.classDefOrNull ?: throw first.exception
+internal fun Pair<String, Fingerprint>.mutableClassOrThrow(): MutableClass {
+    val classDef = second.classDefOrNull(this@BytecodePatchContext) ?: throw first.exception
+    return proxy(classDef).mutableClass
+}
 
 context(BytecodePatchContext)
-internal fun Pair<String, Fingerprint>.methodCall() =
-    methodOrThrow().methodCall()
+internal fun Pair<String, Fingerprint>.mutableMethodOrThrow(): MutableMethod {
+    val method = second.method(this@BytecodePatchContext)
+    val mutableClass = mutableClassOrThrow()
+    return mutableClass.methods.first { MethodUtil.methodSignaturesMatch(it, method) }
+}
+
+context(BytecodePatchContext)
+internal fun Pair<String, Fingerprint>.methodCall(): String =
+    mutableMethodOrThrow().methodCall()
 
 context(BytecodePatchContext)
 internal fun MutableMethod.methodCall(): String {
@@ -106,7 +117,8 @@ fun Pair<String, Fingerprint>.injectLiteralInstructionBooleanCall(
     literal: Long,
     descriptor: String
 ) {
-    methodOrThrow().apply {
+    val method = mutableMethodOrThrow()
+    method.apply {
         val literalIndex = indexOfFirstLiteralInstruction(literal)
         val index = indexOfFirstInstructionOrThrow(literalIndex, Opcode.MOVE_RESULT)
         val register = getInstruction<OneRegisterInstruction>(index).registerA
@@ -136,7 +148,7 @@ fun Pair<String, Fingerprint>.injectLiteralInstructionViewCall(
     literal: Long,
     smaliInstruction: String
 ) {
-    val method = methodOrThrow()
+    val method = mutableMethodOrThrow()
     method.injectLiteralInstructionViewCall(literal, smaliInstruction)
 }
 
@@ -152,7 +164,7 @@ internal fun legacyFingerprint(
     customFingerprint: ((methodDef: Method, classDef: ClassDef) -> Boolean)? = null,
 ) = Pair(
     name,
-    fingerprint(fuzzyPatternScanThreshold = fuzzyPatternScanThreshold) {
+    fingerprint {
         if (accessFlags != null) {
             accessFlags(accessFlags)
         }
@@ -182,4 +194,3 @@ internal fun legacyFingerprint(
         }
     }
 )
-
