@@ -27,13 +27,18 @@ jobs:
           distribution: "zulu"
           java-version: "21"
 
-      - name: Cache Gradle
-        uses: burrunan/gradle-cache-action@v3
+      # Reemplaza burrunan/gradle-cache-action por la acción oficial de Gradle
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4   # Maneja caché automáticamente
 
+      # Paso de build con orden corregido y desactivación de caché de configuración
       - name: Build
         env:
           GITHUB_TOKEN: ${{ secrets.EXTEN_TOKEN }}
-        run: ./gradlew generatePatchesFiles clean
+        run: ./gradlew clean generatePatchesFiles --no-configuration-cache
+        # Nota: Si la tarea generatePatchesFiles requiere un APK previamente generado,
+        # descomenta la siguiente línea y ejecútala antes:
+        # run: ./gradlew assembleRelease && ./gradlew clean generatePatchesFiles --no-configuration-cache
 
       # Opcional: Publicar en GitHub Packages (solo en master)
       # - name: Publish to GitHub Packages
