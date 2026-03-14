@@ -41,6 +41,9 @@ android {
             }
         }
     }
+    publishing {
+        singleVariant("release")   // <-- Agrega esto
+    }
 }
 
 dependencies {

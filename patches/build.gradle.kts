@@ -15,7 +15,7 @@ patches {
 }
 
 dependencies {
-    implementation("com.extenre.extensions:shared:1.0.0") // La coordenada que definiste
+    implementation(project(":extensions:shared"))
     implementation("com.extenre:extenre-patcher:20.0.1.RE")
     implementation(libs.gson)
 }
