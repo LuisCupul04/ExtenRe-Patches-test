@@ -7,17 +7,19 @@ plugins {
     alias(libs.plugins.protobuf)
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("release") { // El nombre de la publicación puede ser "release"
-            from(components["release"])
-            groupId = "com.extenre.extensions"
-            artifactId = "shared"
-            version = "1.0.0"
+afterEvaluate {
+    publishing {
+        publications {
+            create<MavenPublication>("release") {
+                from(components["release"])
+                groupId = "com.extenre.extensions"
+                artifactId = "shared"
+                version = "1.0.0"
+            }
         }
-    }
-    repositories {
-        mavenLocal()
+        repositories {
+            mavenLocal()
+        }
     }
 }
 
