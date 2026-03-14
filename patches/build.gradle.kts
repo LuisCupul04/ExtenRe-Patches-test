@@ -1,10 +1,3 @@
-import org.gradle.api.attributes.Attribute
-import org.gradle.api.attributes.ArtifactTypeDefinition
-import org.gradle.api.attributes.LibraryElements
-import org.gradle.api.attributes.Usage
-import org.gradle.api.attributes.java.TargetJvmVersion
-import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
-
 group = "com.extenre"
 
 patches {
