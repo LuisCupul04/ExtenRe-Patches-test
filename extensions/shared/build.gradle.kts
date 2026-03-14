@@ -9,15 +9,15 @@ plugins {
 
 publishing {
     publications {
-        create<MavenPublication>("release") {
-            from(components["release"]) // Publica la variante release
+        create<MavenPublication>("release") { // El nombre de la publicación puede ser "release"
+            from(components["default"]) // ✅ Cambia "release" por "default"
             groupId = "com.extenre.extensions"
             artifactId = "shared"
-            version = "1.0.0" // o la versión que corresponda
+            version = "1.0.0"
         }
     }
     repositories {
-        mavenLocal() // Para pruebas locales, o configura GitHub Packages
+        mavenLocal()
     }
 }
 
