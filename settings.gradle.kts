@@ -26,7 +26,7 @@ pluginManagement {
 }
 
 plugins {
-    id("com.extenre.patches") version "1.0.2.dev-RE"
+    id("com.extenre.patches") version "1.0.3.dev-RE"
 }
 
 rootProject.name = "extenre-patches"
