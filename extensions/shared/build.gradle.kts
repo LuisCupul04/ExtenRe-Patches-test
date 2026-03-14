@@ -64,7 +64,7 @@ protobuf {
 }
 
 extension {
-    name = "extensions/shared.re"
+//    name = "extensions/shared.re"
 }
 
 afterEvaluate {
@@ -72,7 +72,7 @@ afterEvaluate {
         publications {
             create<MavenPublication>("release") {
                 from(components["release"])
-                groupId = "com.extenre.extensions"
+//                groupId = "com.extenre.extensions"
                 artifactId = "shared"
                 version = "1.0.0"
             }
