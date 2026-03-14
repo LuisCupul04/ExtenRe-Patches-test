@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.gradle.api.attributes.Usage
 import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.attributes.java.TargetJvmVersion
-import org.gradle.api.attributes.ArtifactTypeDefinition
+import org.gradle.api.attributes.Attribute
 
 group = "com.extenre"
 
@@ -20,7 +20,7 @@ configurations.runtimeClasspath {
         attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
         attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
         attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 21)
-        attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, ArtifactTypeDefinition.JAR_TYPE) // ← NUEVO
+        attribute(Attribute.of("artifactType", String::class.java), "jar") // ← NUEVO
     }
 }
 
