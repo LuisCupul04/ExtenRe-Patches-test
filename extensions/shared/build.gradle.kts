@@ -1,5 +1,6 @@
 plugins {
-    alias(libs.plugins.android.library)   // ← Agregado
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.android)   // ← Agrega esta línea
     alias(libs.plugins.protobuf)
 }
 
