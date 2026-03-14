@@ -1,13 +1,12 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
-plugins {
-    kotlin("jvm")           // <-- Sin versión
-    id("maven-publish")
-}
+import org.gradle.api.attributes.Attribute
+import org.gradle.api.attributes.ArtifactTypeDefinition
+import org.gradle.api.attributes.LibraryElements
+import org.gradle.api.attributes.Usage
+import org.gradle.api.attributes.java.TargetJvmVersion
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 
 group = "com.extenre"
 
-// Configuración de la extensión 'patches' (asumo que existe un plugin o extensión)
 patches {
     about {
         name = "ExtenRe Patches"
@@ -27,28 +26,20 @@ tasks {
         archiveExtension.set("EXRE")
         exclude("com/extenre/generator")
     }
-
     register<JavaExec>("generatePatchesFiles") {
         description = "Generate patches files"
         dependsOn(build)
         classpath = sourceSets["main"].runtimeClasspath
         mainClass.set("com.extenre.generator.MainKt")
     }
-
-    named("publish") {
+    publish {
         dependsOn("generatePatchesFiles")
     }
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
 }
 
 kotlin {
     compilerOptions {
         freeCompilerArgs = listOf("-Xcontext-receivers")
-        jvmTarget = JvmTarget.JVM_21
     }
 }
 
@@ -56,9 +47,6 @@ publishing {
     publications {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
-            groupId = group.toString()
-            artifactId = "patches"
-            version = version ?: "1.0.0"
         }
     }
     repositories {
