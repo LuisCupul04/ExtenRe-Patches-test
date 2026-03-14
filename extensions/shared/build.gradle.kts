@@ -17,7 +17,6 @@ android {
     defaultConfig {
         minSdk = 24
     }
-    defaultPublishConfig = "release"  // <-- LÍNEA NUEVA
     buildTypes {
         release {
             isMinifyEnabled = TRUE

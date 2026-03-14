@@ -23,7 +23,9 @@ configurations.runtimeClasspath {
 }
 
 dependencies {
-    implementation(project(":extensions:shared"))  // Sin configuration explícita
+    implementation(project(":extensions:shared")) {
+        targetConfiguration = "releaseRuntimeElements"
+    }
     implementation("com.extenre:extenre-patcher:20.0.1.RE")
     implementation(libs.gson)
 }
