@@ -24,16 +24,17 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
-      # Usamos Microsoft JDK con la versión 21 (última disponible)
+      # Cambio a distribución temurin (puede ser microsoft)
       - name: Setup Java
         uses: actions/setup-java@v5
         with:
-          distribution: "microsoft"
+          distribution: "temurin"   # o "microsoft"
           java-version: "21"
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      # Limpieza profunda de cachés de Gradle
       - name: Clean compiler caches
         run: |
           rm -rf ~/.gradle/caches/
@@ -43,7 +44,7 @@ jobs:
       - name: Publish shared module to Maven Local
         env:
           GITHUB_TOKEN: ${{ secrets.EXTEN_TOKEN }}
-        run: ./gradlew :extensions:shared:publishToMavenLocal --stacktrace --info
+        run: ./gradlew :extensions:shared:publishToMavenLocal
 
       - name: Build patches
         env:
