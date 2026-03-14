@@ -24,17 +24,15 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
-      # Cambio a distribución temurin (puede ser microsoft)
       - name: Setup Java
         uses: actions/setup-java@v5
         with:
-          distribution: "temurin"   # o "microsoft"
+          distribution: "temurin"
           java-version: "21"
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # Limpieza profunda de cachés de Gradle
       - name: Clean compiler caches
         run: |
           rm -rf ~/.gradle/caches/
@@ -44,7 +42,7 @@ jobs:
       - name: Publish shared module to Maven Local
         env:
           GITHUB_TOKEN: ${{ secrets.EXTEN_TOKEN }}
-        run: ./gradlew :extensions:shared:publishToMavenLocal
+        run: ./gradlew :extensions:shared:publishToMavenLocal --stacktrace   # ← agregado --stacktrace
 
       - name: Build patches
         env:
