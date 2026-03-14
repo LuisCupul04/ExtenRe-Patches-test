@@ -80,7 +80,7 @@ public class ThirdPartyYouTubeMusicPreference extends CustomDialogListPreference
             for (YouTubeMusic music : values()) {
                 String packageName = music.packageName;
                 if (packageName != null) {
-                    if (music == RVX_MUSIC && packageName.equals(YOUTUBE_MUSIC_PACKAGE_NAME)) {
+                    if (music == EXTENRE_MUSIC && packageName.equals(YOUTUBE_MUSIC_PACKAGE_NAME)) {
                         continue;
                     }
                     PACKAGE_TO_ENUM.put(packageName, music);
