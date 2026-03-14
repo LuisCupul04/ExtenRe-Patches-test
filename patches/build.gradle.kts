@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    kotlin("jvm")           // <-- Sin versión
+    //kotlin("jvm")           // <-- Sin versión
     id("maven-publish")
 }
 
