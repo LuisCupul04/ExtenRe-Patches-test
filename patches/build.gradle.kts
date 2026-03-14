@@ -1,15 +1,31 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import java.lang.Boolean.TRUE  // si necesitas TRUE
 
 plugins {
-    id("com.android.library")                // <-- Agregar
-    id("org.jetbrains.kotlin.android")        // <-- Agregar (reemplaza a kotlin("jvm"))
+    kotlin("jvm") version "2.0.21"   // Usa la misma versión que tu proyecto
     id("maven-publish")
-    // Elimina kotlin("jvm") si lo tenías
 }
 
 group = "com.extenre"
 
+repositories {
+    mavenLocal()                     // Para encontrar shared publicado localmente
+    mavenCentral()
+    google()
+    maven {
+        name = "GitHubPackages"
+        url = uri("https://maven.pkg.github.com/LuisCupul04/Extenre-patcher")
+        credentials {
+            username = System.getenv("GITHUB_ACTOR")
+            password = System.getenv("GITHUB_TOKEN")
+        }
+    }
+    maven {
+        name = "JitPack"
+        url = uri("https://jitpack.io")
+    }
+}
+
+// Configuración de la extensión 'patches' (asumo que existe un plugin o extensión)
 patches {
     about {
         name = "ExtenRe Patches"
@@ -18,25 +34,8 @@ patches {
     }
 }
 
-android {
-    namespace = "com.extenre.patches"          // Ajusta según tu paquete
-    compileSdk = 35                             // Misma versión que en shared
-    defaultConfig {
-        minSdk = 24                              // Misma que shared
-    }
-    // No necesitas buildTypes si no compilas variantes, pero puedes dejarlo vacío
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-    }
-    kotlinOptions {
-        jvmTarget = "21"                          // Equivalente a compilerOptions
-        freeCompilerArgs = listOf("-Xcontext-receivers")
-    }
-}
-
 dependencies {
-    implementation(project(":extensions:shared"))   // Dependencia local
+    implementation("com.extenre.extensions:shared:1.0.0")
     implementation("com.extenre:extenre-patcher:20.0.1.RE")
     implementation(libs.gson)
 }
@@ -46,24 +45,34 @@ tasks {
         archiveExtension.set("EXRE")
         exclude("com/extenre/generator")
     }
+
     register<JavaExec>("generatePatchesFiles") {
         description = "Generate patches files"
         dependsOn(build)
         classpath = sourceSets["main"].runtimeClasspath
         mainClass.set("com.extenre.generator.MainKt")
     }
-    publish {
+
+    // Asegura que publish dependa de generatePatchesFiles (si usas la tarea publish)
+    named("publish") {
         dependsOn("generatePatchesFiles")
     }
 }
 
-// El bloque kotlin { compilerOptions } se reemplaza por android.kotlinOptions
-// Por tanto, elimina el bloque kotlin que tenías abajo.
+kotlin {
+    compilerOptions {
+        freeCompilerArgs = listOf("-Xcontext-receivers")
+        jvmTarget = JvmTarget.JVM_21   // Ajusta a la versión que necesites
+    }
+}
 
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
-            from(components["release"])           // Publica la variante release
+            from(components["java"])
+            groupId = group.toString()
+            artifactId = "patches"
+            version = version ?: "1.0.0"   // Define la versión si no está establecida
         }
     }
     repositories {

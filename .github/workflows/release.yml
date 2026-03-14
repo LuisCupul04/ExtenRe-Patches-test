@@ -35,7 +35,13 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # Compilación de los parches excluyendo la tarea problemática syncExtension
+      ### NUEVO PASO 1: Publicar el módulo shared en Maven Local ###
+      - name: Publish shared module to Maven Local
+        env:
+          GITHUB_TOKEN: ${{ secrets.EXTEN_TOKEN }}  # Necesario para resolver dependencias de GitHub Packages
+        run: ./gradlew :extensions:shared:publishToMavenLocal
+
+      ### NUEVO PASO 2: Generar los parches (ahora con shared disponible localmente) ###
       - name: Build patches
         env:
           GITHUB_TOKEN: ${{ secrets.EXTEN_TOKEN }}

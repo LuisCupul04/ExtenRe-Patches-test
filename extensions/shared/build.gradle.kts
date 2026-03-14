@@ -7,26 +7,6 @@ plugins {
     alias(libs.plugins.protobuf)
 }
 
-afterEvaluate {
-    publishing {
-        publications {
-            create<MavenPublication>("release") {
-                from(components["release"])
-                groupId = "com.extenre.extensions"
-                artifactId = "shared"
-                version = "1.0.0"
-            }
-        }
-        repositories {
-            mavenLocal()
-        }
-    }
-}
-
-extension {
-    name = "extensions/shared.re"
-}
-
 android {
     namespace = "com.extenre.extension"
     compileSdk = 35
@@ -42,24 +22,20 @@ android {
         }
     }
     publishing {
-        singleVariant("release")   // <-- Agrega esto
+        singleVariant("release")
     }
 }
 
 dependencies {
-    api("com.extenre:extenre-patcher:20.0.1.RE")   // api para que sea transitiva
-    
+    api("com.extenre:extenre-patcher:20.0.1.RE")
     compileOnly(libs.annotation)
     compileOnly(libs.preference)
-
     implementation(libs.collections4)
     implementation(libs.gson)
     implementation(libs.lang3)
     implementation(libs.okhttp3)
     implementation(libs.protobuf.javalite)
-
     implementation("com.github.ynab:J2V8:6.2.1-16kb.2@aar")
-
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     compileOnly(project(":extensions:shared:stub"))
 }
@@ -75,6 +51,26 @@ protobuf {
                     option("lite")
                 }
             }
+        }
+    }
+}
+
+extension {
+    name = "extensions/shared.re"
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            create<MavenPublication>("release") {
+                from(components["release"])
+                groupId = "com.extenre.extensions"
+                artifactId = "shared"
+                version = "1.0.0"
+            }
+        }
+        repositories {
+            mavenLocal()  // Importante: publica en local
         }
     }
 }
