@@ -1,14 +1,14 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    kotlin("jvm") version "2.0.21"   // Usa la misma versión que tu proyecto
+    kotlin("jvm")           // <-- Sin versión
     id("maven-publish")
 }
 
 group = "com.extenre"
 
 repositories {
-    mavenLocal()                     // Para encontrar shared publicado localmente
+    mavenLocal()            // Para encontrar shared publicado localmente
     mavenCentral()
     google()
     maven {
@@ -53,7 +53,6 @@ tasks {
         mainClass.set("com.extenre.generator.MainKt")
     }
 
-    // Asegura que publish dependa de generatePatchesFiles (si usas la tarea publish)
     named("publish") {
         dependsOn("generatePatchesFiles")
     }
@@ -62,7 +61,7 @@ tasks {
 kotlin {
     compilerOptions {
         freeCompilerArgs = listOf("-Xcontext-receivers")
-        jvmTarget = JvmTarget.JVM_21   // Ajusta a la versión que necesites
+        jvmTarget = JvmTarget.JVM_21
     }
 }
 
@@ -72,7 +71,7 @@ publishing {
             from(components["java"])
             groupId = group.toString()
             artifactId = "patches"
-            version = version ?: "1.0.0"   // Define la versión si no está establecida
+            version = version ?: "1.0.0"
         }
     }
     repositories {
