@@ -17,6 +17,7 @@ android {
     defaultConfig {
         minSdk = 24
     }
+    defaultPublishConfig = "release"  // <-- LÍNEA NUEVA
     buildTypes {
         release {
             isMinifyEnabled = TRUE
@@ -24,13 +25,6 @@ android {
                 abiFilters.add("")
             }
         }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-    }
-    kotlinOptions {
-        jvmTarget = "21"
     }
 }
 
