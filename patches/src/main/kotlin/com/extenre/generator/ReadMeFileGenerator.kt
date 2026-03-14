@@ -21,7 +21,7 @@ internal class ReadMeFileGenerator : PatchesFileGenerator {
     )
 
     private val tableHeader =
-        "| \uD83D\uDC8A Patch | \uD83D\uDCDC Description | \uD83C\uDFF9 Target Version |\n" +
+        "| \uD83D\uDCA8 Patch | \uD83D\uDCDC Description | \uD83C\uDFF9 Target Version |\n" +
                 "|:--------:|:--------------:|:-----------------:|"
 
     override fun generate(patches: Set<Patch<*>>) {
@@ -43,7 +43,8 @@ internal class ReadMeFileGenerator : PatchesFileGenerator {
         readMeFile.writeText(readMeTemplateFile.readText())
 
         // Reemplazar los marcadores de versiones compatibles
-        val markers = mapOf(
+        // Especificamos el tipo explícitamente para evitar problemas de inferencia
+        val markers: Map<Pair<String, Set<String>?>, String> = mapOf(
             com.extenre.patches.music.utils.compatibility.Constants.COMPATIBLE_PACKAGE to "\"COMPATIBLE_PACKAGE_MUSIC\"",
             com.extenre.patches.reddit.utils.compatibility.Constants.COMPATIBLE_PACKAGE to "\"COMPATIBLE_PACKAGE_REDDIT\"",
             com.extenre.patches.youtube.utils.compatibility.Constants.COMPATIBLE_PACKAGE to "\"COMPATIBLE_PACKAGE_YOUTUBE\""
@@ -85,8 +86,9 @@ internal class ReadMeFileGenerator : PatchesFileGenerator {
                     val versions = patch.compatiblePackages?.get(pkg)
                     val supportedVersion = when {
                         versions != null && versions.isNotEmpty() -> {
-                            val min = versions.minOrNull() ?: ""
-                            val max = versions.maxOrNull() ?: ""
+                            // Usamos min() y max() en lugar de minOrNull/maxOrNull para compatibilidad
+                            val min = versions.min()
+                            val max = versions.max()
                             if (min == max) max else "$min ~ $max"
                         }
                         exception.containsKey(pkg) -> exception[pkg] + "+"
@@ -94,8 +96,8 @@ internal class ReadMeFileGenerator : PatchesFileGenerator {
                     }
 
                     output.appendLine(
-                        "| `${patch.name}` " +
-                                "| ${patch.description} " +
+                        "| `${patch.key}` " +                // Usamos patch.key (nombre original)
+                                "| ${patch.title} " +         // Usamos patch.title
                                 "| $supportedVersion |"
                     )
                 }
