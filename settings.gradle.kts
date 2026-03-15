@@ -15,7 +15,7 @@ pluginManagement {
         // tus repositorios con credenciales
         maven {
             name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/LuisCupul04/ExtenRe-patcher-re")
+            url = uri("https://maven.pkg.github.com/LuisCupul04/ExtenRe-patcher")
             credentials {
                 username = providers.gradleProperty("gpr.user").getOrElse(System.getenv("GITHUB_ACTOR"))
                 password = providers.gradleProperty("gpr.key").getOrElse(System.getenv("GITHUB_TOKEN"))

@@ -11,7 +11,7 @@ patches {
 dependencies {
     // Used by JsonGenerator.
     implementation(libs.gson)
-    implementation(libs["extenre-patcher-re"])
+    implementation(libs.extenre.patcher)
 }
 
 tasks {

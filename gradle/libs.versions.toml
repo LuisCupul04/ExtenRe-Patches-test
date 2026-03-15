@@ -1,5 +1,5 @@
 [versions]
-extenre-patcher-re = "4.0.3.RE"
+extenre-patcher = "4.0.0.RE"
 # Tracking https://github.com/google/smali/issues/64.
 #noinspection GradleDependency
 smali = "3.0.9.RE"
@@ -18,7 +18,7 @@ preference = "1.2.1"
 kotlin = "2.0.0" 
 
 [libraries]
-extenre-patcher-re = { module = "com.extenre:extenre-patcher-re", version.ref = "extenre-patcher-re" }
+extenre-patcher = { module = "com.extenre:extenre-patcher", version.ref = "extenre-patcher" }
 
 annotation = { module = "androidx.annotation:annotation", version.ref = "annotation" }
 collections4 = { module = "org.apache.commons:commons-collections4", version.ref = "collections4" }
