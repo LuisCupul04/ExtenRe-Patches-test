@@ -1,5 +1,5 @@
 [versions]
-extenre-patcher = "4.0.0.RE"
+extenre-patcher = "20.0.1.RE"
 # Tracking https://github.com/google/smali/issues/64.
 #noinspection GradleDependency
 smali = "3.0.9.RE"
