@@ -20,11 +20,11 @@ internal class JsonPatchesFileGenerator : PatchesFileGenerator {
         val patchesJson = File("../patches-exre.json")
         patches.sortedBy { it.name }.map { patch ->
             JsonPatch(
-                name = patch.key!!,                     // Usamos key (propiedad original de Patch)
-                description = patch.title,              // Usamos title (propiedad original de Patch)
+                name = patch.name!!,                     // era key
+                description = patch.description,          // era title
                 use = patch.use,
-                dependencies = patch.dependencies.map { dependency -> dependency.key ?: dependency.toString() },
-                compatiblePackages = patch.compatiblePackages?.associate { (packageName, versions) -> packageName to versions },
+                dependencies = patch.dependencies.map { it.name ?: it.toString() }, // dependency.name
+                compatiblePackages = patch.compatiblePackages?.mapValues { (_, versions) -> versions },
                 options = patch.options.values.map { option ->
                     JsonPatch.Option(
                         key = option.key,
