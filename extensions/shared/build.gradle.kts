@@ -1,6 +1,6 @@
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)   // ← Agrega esta línea
+    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.protobuf)
 }
 
@@ -18,9 +18,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = true   // ← Cambiado de TRUE a true
+            isMinifyEnabled = true
 
-            // Si necesitas filtrar ABIs, especifícalos; si no, puedes quitar el bloque ndk
             ndk {
                 abiFilters.add("armeabi-v7a")
                 abiFilters.add("arm64-v8a")
@@ -34,8 +33,9 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    
-    kotlin {
+}
+
+kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
     }
