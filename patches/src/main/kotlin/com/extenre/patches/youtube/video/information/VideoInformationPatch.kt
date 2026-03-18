@@ -47,13 +47,13 @@ import com.extenre.util.addStaticFieldToExtension
 import com.extenre.util.cloneMutable
 import com.extenre.util.findFieldFromToString
 import com.extenre.util.findMethodFromToString
-import com.extenre.util.findMethodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
 import com.extenre.util.findMutableClassOrThrow
 import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.methodCall
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
-import com.extenre.util.fingerprint.originalMethodOrThrow
+import com.extenre.util.fingerprint.originalmutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.getWalkerMethod
 import com.extenre.util.indexOfFirstInstructionOrThrow
@@ -225,7 +225,7 @@ val videoInformationPatch = bytecodePatch(
             returnType: String,
             fromString: Boolean? = null
         ): String {
-            methodOrThrow().apply {
+            mutableMethodOrThrow().apply {
                 val startIndex = if (fromString == true)
                     matchOrThrow().stringMatches!!.first().index
                 else
@@ -243,8 +243,8 @@ val videoInformationPatch = bytecodePatch(
             }
         }
 
-        videoEndFingerprint.methodOrThrow().apply {
-            findMethodOrThrow(definingClass).let {
+        videoEndFingerprint.mutableMethodOrThrow().apply {
+            findmutableMethodOrThrow(definingClass).let {
                 playerConstructorMethod = it
                 playerConstructorInsertIndex = it.indexOfFirstInstructionOrThrow {
                     opcode == Opcode.INVOKE_DIRECT && getReference<MethodReference>()?.name == "<init>"
@@ -257,7 +257,7 @@ val videoInformationPatch = bytecodePatch(
             seekSourceEnumType = parameterTypes[1].toString()
             seekSourceMethodName = name
 
-            seekRelativeFingerprint.methodOrThrow(videoEndFingerprint).also { method ->
+            seekRelativeFingerprint.mutableMethodOrThrow(videoEndFingerprint).also { method ->
                 seekRelativeSourceMethodName = method.name
                 cloneSeekRelativeSourceMethod = method.returnType == "V"
             }
@@ -294,8 +294,8 @@ val videoInformationPatch = bytecodePatch(
             videoEndMethod = getWalkerMethod(walkerIndex)
         }
 
-        mdxPlayerDirectorSetVideoStageFingerprint.methodOrThrow().apply {
-            findMethodOrThrow(definingClass).let {
+        mdxPlayerDirectorSetVideoStageFingerprint.mutableMethodOrThrow().apply {
+            findmutableMethodOrThrow(definingClass).let {
                 mdxConstructorMethod = it
                 mdxConstructorInsertIndex = it.indexOfFirstInstructionOrThrow {
                     opcode == Opcode.INVOKE_DIRECT && getReference<MethodReference>()?.name == "<init>"
@@ -541,7 +541,7 @@ val videoInformationPatch = bytecodePatch(
             }
         }
 
-        playbackSpeedClassFingerprint.methodOrThrow().apply {
+        playbackSpeedClassFingerprint.mutableMethodOrThrow().apply {
             val index = indexOfFirstInstructionOrThrow(Opcode.RETURN_OBJECT)
             val register = getInstruction<OneRegisterInstruction>(index).registerA
             val playbackSpeedClass = this.returnType
@@ -676,11 +676,11 @@ val videoInformationPatch = bytecodePatch(
             }
 
         val formatStreamQualityNameReference = formatStreamingModelQualityLabelBuilderFingerprint
-            .methodOrThrow()
+            .mutableMethodOrThrow()
             .methodCall()
 
         val formatStreamITagReference =
-            formatStreamModelToStringFingerprint.originalMethodOrThrow()
+            formatStreamModelToStringFingerprint.originalmutableMethodOrThrow()
                 .findMethodFromToString("FormatStream(itag=")
                 .methodCall()
 
@@ -742,7 +742,7 @@ val videoInformationPatch = bytecodePatch(
                 )
         }
 
-        initFormatStreamFingerprint.methodOrThrow(initFormatStreamParentFingerprint)
+        initFormatStreamFingerprint.mutableMethodOrThrow(initFormatStreamParentFingerprint)
             .apply {
                 val preferredFormatStreamIndex =
                     indexOfPreferredFormatStreamInstruction(this)
@@ -765,11 +765,11 @@ val videoInformationPatch = bytecodePatch(
             }
 
         val initialResolutionField =
-            playbackStartParametersToStringFingerprint.originalMethodOrThrow()
+            playbackStartParametersToStringFingerprint.originalmutableMethodOrThrow()
                 .findFieldFromToString(FIXED_RESOLUTION_STRING)
 
         playbackStartParametersConstructorFingerprint
-            .methodOrThrow(playbackStartParametersToStringFingerprint)
+            .mutableMethodOrThrow(playbackStartParametersToStringFingerprint)
             .apply {
                 val index = indexOfFirstInstructionReversedOrThrow {
                     opcode == Opcode.IPUT_OBJECT &&

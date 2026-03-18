@@ -23,7 +23,7 @@ import com.extenre.patches.music.utils.settings.ResourceUtils.updatePatchStatus
 import com.extenre.patches.music.utils.settings.addPreferenceWithIntent
 import com.extenre.patches.music.utils.settings.settingsPatch
 import com.extenre.util.addEntryValues
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
 import com.extenre.util.indexOfFirstStringInstructionOrThrow
@@ -75,12 +75,12 @@ val changeStartPagePatch = bytecodePatch(
 
     execute {
 
-        coldStartIntentFingerprint.methodOrThrow().addInstruction(
+        coldStartIntentFingerprint.mutableMethodOrThrow().addInstruction(
             0,
             "invoke-static {p1}, $EXTENSION_CLASS_DESCRIPTOR->overrideIntent(Landroid/content/Intent;)V"
         )
 
-        coldStartUpFingerprint.methodOrThrow().apply {
+        coldStartUpFingerprint.mutableMethodOrThrow().apply {
             val defaultBrowseIdIndex = indexOfFirstStringInstructionOrThrow(DEFAULT_BROWSE_ID)
             val browseIdIndex = indexOfFirstInstructionReversedOrThrow(defaultBrowseIdIndex) {
                 opcode == Opcode.IGET_OBJECT &&

@@ -21,7 +21,7 @@ import com.extenre.util.findFreeRegister
 import com.extenre.util.findMethodsOrThrow
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
@@ -58,7 +58,7 @@ val lithoFilterPatch = bytecodePatch(
 
         // region Pass the buffer into extension.
 
-        byteBufferFingerprint.methodOrThrow().addInstruction(
+        byteBufferFingerprint.mutableMethodOrThrow().addInstruction(
             0,
             "invoke-static { p2 }, $EXTENSION_LITHO_FILER_CLASS_DESCRIPTOR->setProtoBuffer(Ljava/nio/ByteBuffer;)V"
         )
@@ -121,13 +121,13 @@ val lithoFilterPatch = bytecodePatch(
 
         try {
             isLegacyMethod = MethodUtil.methodSignaturesMatch(
-                componentContextParserLegacyFingerprint.methodOrThrow(),
-                componentContextParserFingerprint.methodOrThrow()
+                componentContextParserLegacyFingerprint.mutableMethodOrThrow(),
+                componentContextParserFingerprint.mutableMethodOrThrow()
             )
         } catch (_: Exception) {
         }
 
-        componentCreateFingerprint.methodOrThrow().apply {
+        componentCreateFingerprint.mutableMethodOrThrow().apply {
             val insertIndex = if (isLegacyMethod) {
                 // YT 19.16 and YTM 6.51 clobbers p2 so must check at start of the method and not at the return index.
                 0
@@ -163,7 +163,7 @@ val lithoFilterPatch = bytecodePatch(
 
         // region Change Litho thread executor to 1 thread to fix layout issue in unpatched YouTube.
 
-        lithoThreadExecutorFingerprint.methodOrThrow().addInstructions(
+        lithoThreadExecutorFingerprint.mutableMethodOrThrow().addInstructions(
             0, """
                 invoke-static { p1 }, $EXTENSION_LITHO_FILER_CLASS_DESCRIPTOR->getExecutorCorePoolSize(I)I
                 move-result p1

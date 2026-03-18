@@ -14,7 +14,7 @@ import com.extenre.patches.youtube.utils.extension.Constants.EXTENSION_PATH
 import com.extenre.patches.youtube.utils.playbackRateBottomSheetBuilderFingerprint
 import com.extenre.patches.youtube.utils.resourceid.sharedResourceIdPatch
 import com.extenre.util.addStaticFieldToExtension
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 
 private const val EXTENSION_VIDEO_UTILS_CLASS_DESCRIPTOR =
     "$EXTENSION_PATH/utils/VideoUtils;"
@@ -28,7 +28,7 @@ val flyoutMenuHookPatch = bytecodePatch(
     dependsOn(sharedResourceIdPatch)
 
     execute {
-        playbackRateBottomSheetBuilderFingerprint.methodOrThrow().apply {
+        playbackRateBottomSheetBuilderFingerprint.mutableMethodOrThrow().apply {
             val smaliInstructions =
                 """
                     if-eqz v0, :ignore
@@ -46,7 +46,7 @@ val flyoutMenuHookPatch = bytecodePatch(
             )
         }
 
-        videoQualityBottomSheetClassFingerprint.methodOrThrow().apply {
+        videoQualityBottomSheetClassFingerprint.mutableMethodOrThrow().apply {
             val smaliInstructions =
                 """
                     if-eqz v0, :ignore

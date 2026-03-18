@@ -19,7 +19,7 @@ import com.extenre.patches.youtube.utils.playservice.versionCheckPatch
 import com.extenre.patches.youtube.utils.resourceid.sharedResourceIdPatch
 import com.extenre.patches.youtube.utils.settings.ResourceUtils.addPreference
 import com.extenre.patches.youtube.utils.settings.settingsPatch
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
@@ -45,11 +45,11 @@ val splashAnimationPatch = bytecodePatch(
     execute {
 
         val startUpResourceIdMethod =
-            startUpResourceIdFingerprint.methodOrThrow(startUpResourceIdParentFingerprint)
+            startUpResourceIdFingerprint.mutableMethodOrThrow(startUpResourceIdParentFingerprint)
         val startUpResourceIdMethodCall =
             startUpResourceIdMethod.definingClass + "->" + startUpResourceIdMethod.name + "(I)Z"
 
-        splashAnimationFingerprint.methodOrThrow().apply {
+        splashAnimationFingerprint.mutableMethodOrThrow().apply {
             implementation!!.instructions
                 .withIndex()
                 .filter { (_, instruction) ->

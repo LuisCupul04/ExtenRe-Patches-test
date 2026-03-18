@@ -20,7 +20,7 @@ import com.extenre.patches.youtube.utils.extension.Constants.PLAYER_CLASS_DESCRI
 import com.extenre.patches.youtube.utils.patch.PatchList.CHANGE_PLAYER_FLYOUT_MENU_TOGGLES
 import com.extenre.patches.youtube.utils.settings.ResourceUtils.addPreference
 import com.extenre.patches.youtube.utils.settings.settingsPatch
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.resolvable
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstruction
@@ -45,7 +45,7 @@ val changeTogglePatch = bytecodePatch(
 
     execute {
         fun changeToggleCinematicLightingHook() {
-            val stableVolumeMethod = stableVolumeFingerprint.methodOrThrow()
+            val stableVolumeMethod = stableVolumeFingerprint.mutableMethodOrThrow()
 
             val stringReferenceIndex = stableVolumeMethod.indexOfFirstInstruction {
                 opcode == Opcode.INVOKE_VIRTUAL &&
@@ -58,7 +58,7 @@ val changeTogglePatch = bytecodePatch(
             val stringReference =
                 stableVolumeMethod.getInstruction<ReferenceInstruction>(stringReferenceIndex).reference
 
-            cinematicLightingFingerprint.methodOrThrow().apply {
+            cinematicLightingFingerprint.mutableMethodOrThrow().apply {
                 val iGetIndex = indexOfFirstInstructionOrThrow {
                     opcode == Opcode.IGET &&
                             getReference<FieldReference>()?.definingClass == definingClass
@@ -124,9 +124,9 @@ val changeTogglePatch = bytecodePatch(
             methodToCall: String
         ) {
             val method = if (fingerprint == playbackLoopInitFingerprint)
-                fingerprint.methodOrThrow(playbackLoopOnClickListenerFingerprint)
+                fingerprint.mutableMethodOrThrow(playbackLoopOnClickListenerFingerprint)
             else
-                fingerprint.methodOrThrow()
+                fingerprint.mutableMethodOrThrow()
 
             method.apply {
                 val referenceIndex = indexOfFirstInstruction {
@@ -155,7 +155,7 @@ val changeTogglePatch = bytecodePatch(
 
 
         val additionalSettingsConfigMethod =
-            additionalSettingsConfigFingerprint.methodOrThrow()
+            additionalSettingsConfigFingerprint.mutableMethodOrThrow()
         val methodToCall =
             additionalSettingsConfigMethod.definingClass + "->" + additionalSettingsConfigMethod.name + "()Z"
 

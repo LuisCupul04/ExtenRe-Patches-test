@@ -16,7 +16,7 @@ import com.extenre.patches.youtube.utils.extension.Constants.MISC_PATH
 import com.extenre.patches.youtube.utils.patch.PatchList.BYPASS_URL_REDIRECTS
 import com.extenre.patches.youtube.utils.settings.ResourceUtils.addPreference
 import com.extenre.patches.youtube.utils.settings.settingsPatch
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.android.tools.smali.dexlib2.Opcode
@@ -38,7 +38,7 @@ val openLinksDirectlyPatch = bytecodePatch(
             openLinksDirectlyFingerprintPrimary,
             openLinksDirectlyFingerprintSecondary
         ).forEach { fingerprint ->
-            fingerprint.methodOrThrow().apply {
+            fingerprint.mutableMethodOrThrow().apply {
                 val insertIndex = indexOfFirstInstructionOrThrow {
                     opcode == Opcode.INVOKE_STATIC &&
                             getReference<MethodReference>()?.name == "parse"

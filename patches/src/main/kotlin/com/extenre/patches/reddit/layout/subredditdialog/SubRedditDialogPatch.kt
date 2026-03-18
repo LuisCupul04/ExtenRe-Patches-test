@@ -23,7 +23,7 @@ import com.extenre.patches.reddit.utils.settings.is_2025_05_or_greater
 import com.extenre.patches.reddit.utils.settings.is_2025_06_or_greater
 import com.extenre.patches.reddit.utils.settings.settingsPatch
 import com.extenre.patches.reddit.utils.settings.updatePatchStatus
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstruction
@@ -53,7 +53,7 @@ val subRedditDialogPatch = bytecodePatch(
 
         if (is_2024_41_or_greater) {
             frequentUpdatesHandlerFingerprint
-                .methodOrThrow()
+                .mutableMethodOrThrow()
                 .apply {
                     listOfIsLoggedInInstruction(this)
                         .forEach { index ->
@@ -72,7 +72,7 @@ val subRedditDialogPatch = bytecodePatch(
 
         // Not used in latest Reddit client.
         if (!is_2025_05_or_greater) {
-            frequentUpdatesSheetScreenFingerprint.methodOrThrow().apply {
+            frequentUpdatesSheetScreenFingerprint.mutableMethodOrThrow().apply {
                 val index = indexOfFirstInstructionReversedOrThrow(Opcode.RETURN_OBJECT)
                 val register =
                     getInstruction<OneRegisterInstruction>(index).registerA
@@ -85,7 +85,7 @@ val subRedditDialogPatch = bytecodePatch(
         }
 
         if (is_2025_01_or_greater) {
-            nsfwAlertEmitFingerprint.methodOrThrow().apply {
+            nsfwAlertEmitFingerprint.mutableMethodOrThrow().apply {
                 val hasBeenVisitedIndex = indexOfHasBeenVisitedInstruction(this)
                 val hasBeenVisitedRegister =
                     getInstruction<OneRegisterInstruction>(hasBeenVisitedIndex + 1).registerA
@@ -128,7 +128,7 @@ val subRedditDialogPatch = bytecodePatch(
 
         // Not used in latest Reddit client.
         if (!is_2025_06_or_greater) {
-            redditAlertDialogsFingerprint.methodOrThrow().apply {
+            redditAlertDialogsFingerprint.mutableMethodOrThrow().apply {
                 val backgroundTintIndex = indexOfSetBackgroundTintListInstruction(this)
                 val insertIndex =
                     indexOfFirstInstructionOrThrow(backgroundTintIndex) {

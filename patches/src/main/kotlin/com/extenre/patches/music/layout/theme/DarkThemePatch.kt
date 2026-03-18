@@ -27,8 +27,8 @@ import com.extenre.patches.shared.drawable.drawableColorHookPatch
 import com.extenre.patches.shared.materialyou.baseMaterialYou
 import com.extenre.util.ResourceGroup
 import com.extenre.util.copyResources
-import com.extenre.util.findMethodOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
 import com.extenre.util.valueOrThrow
 import com.android.tools.smali.dexlib2.Opcode
@@ -52,7 +52,7 @@ private val darkThemeBytecodePatch = bytecodePatch(
 
         // The images in the playlist and album headers have a black gradient (probably applied server-side).
         // Applies a new gradient to the images in the playlist and album headers.
-        elementsContainerFingerprint.methodOrThrow().apply {
+        elementsContainerFingerprint.mutableMethodOrThrow().apply {
             val index = indexOfFirstInstructionReversedOrThrow(Opcode.CHECK_CAST)
             val register = getInstruction<OneRegisterInstruction>(index).registerA
 
@@ -62,7 +62,7 @@ private val darkThemeBytecodePatch = bytecodePatch(
             )
         }
 
-        findMethodOrThrow(PATCH_STATUS_CLASS_DESCRIPTOR) {
+        findmutableMethodOrThrow(PATCH_STATUS_CLASS_DESCRIPTOR) {
             name == "DarkTheme"
         }.replaceInstruction(
             0,

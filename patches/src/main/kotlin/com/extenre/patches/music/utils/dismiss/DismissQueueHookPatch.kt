@@ -11,7 +11,7 @@ package com.extenre.patches.music.utils.dismiss
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patches.music.utils.extension.Constants.EXTENSION_PATH
 import com.extenre.util.addStaticFieldToExtension
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getWalkerMethod
 
 private const val EXTENSION_VIDEO_UTILS_CLASS_DESCRIPTOR =
@@ -19,13 +19,13 @@ private const val EXTENSION_VIDEO_UTILS_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val dismissQueueHookPatch = bytecodePatch(
-    name = "dismiss-queue-hook",
+    name = "dismiss-Queue-Hook-Patch",
     description = "dismissQueueHookPatch"
 ) {
 
     execute {
 
-        dismissQueueFingerprint.methodOrThrow().apply {
+        dismissQueueFingerprint.mutableMethodOrThrow().apply {
             val dismissQueueIndex = indexOfDismissQueueInstruction(this)
 
             getWalkerMethod(dismissQueueIndex).apply {

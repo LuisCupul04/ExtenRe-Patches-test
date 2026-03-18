@@ -13,7 +13,7 @@ import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patches.shared.createPlayerRequestBodyWithModelFingerprint
 import com.extenre.patches.shared.indexOfReleaseInstruction
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
@@ -25,7 +25,7 @@ fun baseSpoofAppVersionPatch(
     description = "baseSpoofAppVersionPatch"
 ) {
     execute {
-        createPlayerRequestBodyWithModelFingerprint.methodOrThrow().apply {
+        createPlayerRequestBodyWithModelFingerprint.mutableMethodOrThrow().apply {
             val versionIndex = indexOfReleaseInstruction(this) + 1
             val insertIndex =
                 indexOfFirstInstructionReversedOrThrow(versionIndex, Opcode.IPUT_OBJECT)

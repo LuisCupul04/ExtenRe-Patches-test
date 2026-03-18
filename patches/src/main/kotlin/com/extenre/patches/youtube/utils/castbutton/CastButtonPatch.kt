@@ -22,8 +22,8 @@ import com.extenre.patches.youtube.utils.extension.Constants.PATCH_STATUS_CLASS_
 import com.extenre.patches.youtube.utils.extension.Constants.PLAYER_CLASS_DESCRIPTOR
 import com.extenre.patches.youtube.utils.extension.Constants.UTILS_PATH
 import com.extenre.patches.youtube.utils.resourceid.sharedResourceIdPatch
-import com.extenre.util.findMethodOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.updatePatchStatus
@@ -47,13 +47,13 @@ val castButtonPatch = bytecodePatch(
     dependsOn(sharedResourceIdPatch)
 
     execute {
-        toolbarMenuItemInitializeMethod = menuItemInitializeFingerprint.methodOrThrow()
+        toolbarMenuItemInitializeMethod = menuItemInitializeFingerprint.mutableMethodOrThrow()
         toolbarMenuItemVisibilityMethod =
-            menuItemVisibilityFingerprint.methodOrThrow(menuItemInitializeFingerprint)
+            menuItemVisibilityFingerprint.mutableMethodOrThrow(menuItemInitializeFingerprint)
 
-        playerButtonMethod = playerButtonFingerprint.methodOrThrow()
+        playerButtonMethod = playerButtonFingerprint.mutableMethodOrThrow()
 
-        findMethodOrThrow("Landroidx/mediarouter/app/MediaRouteButton;") {
+        findmutableMethodOrThrow("Landroidx/mediarouter/app/MediaRouteButton;") {
             name == "setVisibility"
         }.addInstructions(
             0, """

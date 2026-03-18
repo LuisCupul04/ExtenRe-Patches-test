@@ -17,7 +17,7 @@ import com.extenre.patches.reddit.utils.extension.Constants.PATCHES_PATH
 import com.extenre.patches.reddit.utils.patch.PatchList.SANITIZE_SHARING_LINKS
 import com.extenre.patches.reddit.utils.settings.settingsPatch
 import com.extenre.patches.reddit.utils.settings.updatePatchStatus
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 
 private const val SANITIZE_METHOD_DESCRIPTOR =
     "$PATCHES_PATH/SanitizeUrlQueryPatch;->stripQueryParameters()Z"
@@ -32,7 +32,7 @@ val sanitizeUrlQueryPatch = bytecodePatch(
     dependsOn(settingsPatch)
 
     execute {
-        shareLinkFormatterFingerprint.methodOrThrow().apply {
+        shareLinkFormatterFingerprint.mutableMethodOrThrow().apply {
             addInstructionsWithLabels(
                 0,
                 """

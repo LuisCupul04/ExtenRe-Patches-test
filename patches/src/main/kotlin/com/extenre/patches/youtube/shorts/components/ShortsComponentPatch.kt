@@ -88,12 +88,12 @@ import com.extenre.util.containsLiteralInstruction
 import com.extenre.util.containsStringInstruction
 import com.extenre.util.copyResources
 import com.extenre.util.doRecursively
-import com.extenre.util.findMethodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
 import com.extenre.util.findMutableMethodOf
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.methodCall
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.resolvable
 import com.extenre.util.getReference
 import com.extenre.util.getWalkerMethod
@@ -132,7 +132,7 @@ private val shortsAnimationPatch = bytecodePatch(
 
     execute {
 
-        reelFeedbackFingerprint.methodOrThrow().apply {
+        reelFeedbackFingerprint.mutableMethodOrThrow().apply {
             val maps = if (is_19_34_or_greater)
                 mapOf(reelFeedbackLike to "setShortsLikeFeedback")
             else
@@ -221,7 +221,7 @@ private val shortsCustomActionsPatch = bytecodePatch(
         hookToolBar("$EXTENSION_CUSTOM_ACTIONS_CLASS_DESCRIPTOR->setToolbarMenu")
 
         // toolbar in Shorts livestream
-        liveHeaderElementsContainerFingerprint.methodOrThrow().apply {
+        liveHeaderElementsContainerFingerprint.mutableMethodOrThrow().apply {
             val addViewIndex = indexOfAddLiveHeaderElementsContainerInstruction(this)
             val viewRegister = getInstruction<FiveRegisterInstruction>(addViewIndex).registerD
 
@@ -300,7 +300,7 @@ private val shortsCustomActionsPatch = bytecodePatch(
                 )
 
                 val addFlyoutMenuMethod =
-                    findMethodOrThrow(EXTENSION_CUSTOM_ACTIONS_CLASS_DESCRIPTOR) {
+                    findmutableMethodOrThrow(EXTENSION_CUSTOM_ACTIONS_CLASS_DESCRIPTOR) {
                         name == "addFlyoutMenu" &&
                                 accessFlags == AccessFlags.PRIVATE or AccessFlags.STATIC
                     }
@@ -326,7 +326,7 @@ private val shortsCustomActionsPatch = bytecodePatch(
                 }
 
                 val bottomSheetMenuItemBuilderMethod = bottomSheetMenuItemBuilderFingerprint
-                    .methodOrThrow()
+                    .mutableMethodOrThrow()
 
                 val newParameter =
                     bottomSheetMenuItemBuilderMethod.parameters + listOf(customActionClass)
@@ -379,7 +379,7 @@ private val shortsCustomActionsPatch = bytecodePatch(
         } else {
             // The type of the Shorts flyout menu is ListView.
             val dismissReference = with(
-                bottomSheetMenuDismissFingerprint.methodOrThrow(
+                bottomSheetMenuDismissFingerprint.mutableMethodOrThrow(
                     bottomSheetMenuListBuilderFingerprint
                 )
             ) {
@@ -388,7 +388,7 @@ private val shortsCustomActionsPatch = bytecodePatch(
             }
 
             bottomSheetMenuItemClickFingerprint
-                .methodOrThrow(bottomSheetMenuListBuilderFingerprint)
+                .mutableMethodOrThrow(bottomSheetMenuListBuilderFingerprint)
                 .addInstructionsWithLabels(
                     0,
                     """
@@ -469,7 +469,7 @@ private val shortsRepeatPatch = bytecodePatch(
             "setMainActivity"
         )
 
-        val endScreenReference = with(reelEnumConstructorFingerprint.methodOrThrow()) {
+        val endScreenReference = with(reelEnumConstructorFingerprint.mutableMethodOrThrow()) {
             val endScreenStringIndex =
                 indexOfFirstStringInstructionOrThrow("REEL_LOOP_BEHAVIOR_END_SCREEN")
             val endScreenReferenceIndex =
@@ -482,7 +482,7 @@ private val shortsRepeatPatch = bytecodePatch(
         var insertMethodFound = false
 
         if (is_18_49_or_greater) {
-            insertMethod = reelPlaybackRepeatFingerprint.methodOrThrow()
+            insertMethod = reelPlaybackRepeatFingerprint.mutableMethodOrThrow()
         } else {
             val isInsertMethod: Method.() -> Boolean = {
                 parameters.size == 1 &&
@@ -508,9 +508,9 @@ private val shortsRepeatPatch = bytecodePatch(
         }
 
         val enumMethod =
-            reelEnumStaticFingerprint.methodOrThrow(reelEnumConstructorFingerprint)
+            reelEnumStaticFingerprint.mutableMethodOrThrow(reelEnumConstructorFingerprint)
 
-        findMethodOrThrow(EXTENSION_REPEAT_STATE_CLASS_DESCRIPTOR) {
+        findmutableMethodOrThrow(EXTENSION_REPEAT_STATE_CLASS_DESCRIPTOR) {
             name == "getShortsLoopBehaviorEnum"
         }.addInstructions(
             0, """
@@ -549,7 +549,7 @@ private val shortsRepeatPatch = bytecodePatch(
         // Tested on YouTube 20.10.
         if (is_20_09_or_greater) {
             val (directReference, virtualReference) = with(
-                reelPlaybackFingerprint.methodOrThrow(
+                reelPlaybackFingerprint.mutableMethodOrThrow(
                     videoIdFingerprintShorts
                 )
             ) {
@@ -664,7 +664,7 @@ private val shortsTimeStampPatch = bytecodePatch(
             )
         }
 
-        shortsTimeStampPrimarySecondaryFingerprint.methodOrThrow().apply {
+        shortsTimeStampPrimarySecondaryFingerprint.mutableMethodOrThrow().apply {
             val literalIndex =
                 indexOfFirstLiteralInstructionOrThrow(TIME_STAMP_RELATIVE_INDEX_LITERAL)
             val literalRegister = getInstruction<OneRegisterInstruction>(literalIndex).registerA
@@ -778,7 +778,7 @@ val shortsComponentPatch = bytecodePatch(
             descriptor: String,
             reversed: Boolean
         ) =
-            methodOrThrow().apply {
+            mutableMethodOrThrow().apply {
                 val constIndex = indexOfFirstLiteralInstructionOrThrow(id)
                 val insertIndex = if (reversed)
                     indexOfFirstInstructionReversedOrThrow(constIndex, Opcode.CHECK_CAST)
@@ -796,7 +796,7 @@ val shortsComponentPatch = bytecodePatch(
             id: Long,
             descriptor: String
         ) =
-            methodOrThrow().apply {
+            mutableMethodOrThrow().apply {
                 val constIndex = indexOfFirstLiteralInstructionOrThrow(id)
                 val insertIndex = indexOfFirstInstructionOrThrow(constIndex, Opcode.CHECK_CAST)
 
@@ -832,7 +832,7 @@ val shortsComponentPatch = bytecodePatch(
 
         // region patch for hide dislike button (non-litho)
 
-        shortsButtonFingerprint.methodOrThrow().apply {
+        shortsButtonFingerprint.mutableMethodOrThrow().apply {
             val constIndex =
                 indexOfFirstLiteralInstructionOrThrow(reelRightDislikeIcon)
             val constRegister = getInstruction<OneRegisterInstruction>(constIndex).registerA
@@ -853,7 +853,7 @@ val shortsComponentPatch = bytecodePatch(
 
         // region patch for hide like button (non-litho)
 
-        shortsButtonFingerprint.methodOrThrow().apply {
+        shortsButtonFingerprint.mutableMethodOrThrow().apply {
             val insertIndex = indexOfFirstLiteralInstructionOrThrow(reelRightLikeIcon)
             val insertRegister = getInstruction<OneRegisterInstruction>(insertIndex).registerA
             val jumpIndex = indexOfFirstInstructionOrThrow(insertIndex, Opcode.CONST_CLASS) + 2
@@ -874,7 +874,7 @@ val shortsComponentPatch = bytecodePatch(
 
         if (shortsPivotLegacyFingerprint.resolvable()) {
             // Legacy method.
-            shortsPivotLegacyFingerprint.methodOrThrow().apply {
+            shortsPivotLegacyFingerprint.mutableMethodOrThrow().apply {
                 val targetIndex =
                     indexOfFirstLiteralInstructionOrThrow(reelForcedMuteButton)
                 val targetRegister = getInstruction<OneRegisterInstruction>(targetIndex).registerA
@@ -924,12 +924,12 @@ val shortsComponentPatch = bytecodePatch(
         // This method is deprecated since YouTube v18.31.xx.
         if (!is_18_31_or_greater) {
             val subscriptionFieldReference =
-                with(shortsSubscriptionsTabletParentFingerprint.methodOrThrow()) {
+                with(shortsSubscriptionsTabletParentFingerprint.mutableMethodOrThrow()) {
                     val targetIndex =
                         indexOfFirstLiteralInstructionOrThrow(reelPlayerFooter) - 1
                     (getInstruction<ReferenceInstruction>(targetIndex)).reference as FieldReference
                 }
-            shortsSubscriptionsTabletFingerprint.methodOrThrow(
+            shortsSubscriptionsTabletFingerprint.mutableMethodOrThrow(
                 shortsSubscriptionsTabletParentFingerprint
             ).apply {
                 implementation!!.instructions.filter { instruction ->
@@ -1033,7 +1033,7 @@ val shortsComponentPatch = bytecodePatch(
             """
 
         if (is_19_25_or_greater) {
-            shortsPlaybackStartIntentFingerprint.methodOrThrow().addInstructionsWithLabels(
+            shortsPlaybackStartIntentFingerprint.mutableMethodOrThrow().addInstructionsWithLabels(
                 0,
                 """
                     move-object/from16 v0, p1
@@ -1041,7 +1041,7 @@ val shortsComponentPatch = bytecodePatch(
                     """
             )
         } else {
-            shortsPlaybackStartIntentLegacyFingerprint.methodOrThrow().apply {
+            shortsPlaybackStartIntentLegacyFingerprint.mutableMethodOrThrow().apply {
                 val index = indexOfFirstInstructionOrThrow {
                     getReference<MethodReference>()?.returnType == PLAYBACK_START_DESCRIPTOR_CLASS_DESCRIPTOR
                 }

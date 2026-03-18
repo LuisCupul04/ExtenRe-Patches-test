@@ -46,10 +46,10 @@ import com.extenre.util.copyResources
 import com.extenre.util.copyXmlNode
 import com.extenre.util.findFreeRegister
 import com.extenre.util.findInstructionIndicesReversedOrThrow
-import com.extenre.util.findMethodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
 import com.extenre.util.fingerprint.definingClassOrThrow
 import com.extenre.util.fingerprint.methodCall
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.hookClassHierarchy
@@ -122,19 +122,19 @@ private val settingsBytecodePatch = bytecodePatch(
                 arrayOf(
                     // Load cairo fragment xml.
                     settingsFragmentSyntheticFingerprint
-                        .methodOrThrow(),
+                        .mutableMethodOrThrow(),
                     // Set style to cairo preference.
                     settingsFragmentStylePrimaryFingerprint
-                        .methodOrThrow(),
+                        .mutableMethodOrThrow(),
                     settingsFragmentStyleSecondaryFingerprint
-                        .methodOrThrow(settingsFragmentStylePrimaryFingerprint),
+                        .mutableMethodOrThrow(settingsFragmentStylePrimaryFingerprint),
                 ).forEach { method ->
                     method.disableCairoFragmentConfig()
                 }
                 cairoFragmentDisabled = true
             } catch (_: Exception) {
                 cairoFragmentConfigFingerprint
-                    .methodOrThrow()
+                    .mutableMethodOrThrow()
                     .returnEarly()
 
                 printWarn("Failed to restore 'Playback' settings. 'Autoplay next video' setting may not appear in the YouTube settings.")
@@ -177,12 +177,12 @@ private val settingsBytecodePatch = bytecodePatch(
         }
 
         targetActivityClassName = targetActivityClass.type.className
-        findMethodOrThrow(PATCH_STATUS_CLASS_DESCRIPTOR) {
+        findmutableMethodOrThrow(PATCH_STATUS_CLASS_DESCRIPTOR) {
             name == "TargetActivityClass"
         }.returnEarly(targetActivityClassName)
 
         // apply the current theme of the settings page
-        themeSetterSystemFingerprint.methodOrThrow().apply {
+        themeSetterSystemFingerprint.mutableMethodOrThrow().apply {
             findInstructionIndicesReversedOrThrow(Opcode.RETURN_OBJECT).forEach { index ->
                 val register = getInstruction<OneRegisterInstruction>(index).registerA
 
@@ -197,7 +197,7 @@ private val settingsBytecodePatch = bytecodePatch(
             val userInterfaceThemeEnum = userInterfaceThemeEnumFingerprint
                 .definingClassOrThrow()
 
-            clientContextBodyBuilderFingerprint.methodOrThrow().apply {
+            clientContextBodyBuilderFingerprint.mutableMethodOrThrow().apply {
                 findInstructionIndicesReversedOrThrow {
                     val fieldReference = getReference<FieldReference>()
                     opcode == Opcode.IGET &&

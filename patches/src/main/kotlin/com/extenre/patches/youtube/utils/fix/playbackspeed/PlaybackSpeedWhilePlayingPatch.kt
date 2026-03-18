@@ -18,7 +18,7 @@ import com.extenre.patches.youtube.utils.extension.sharedExtensionPatch
 import com.extenre.patches.youtube.utils.playertype.playerTypeHookPatch
 import com.extenre.patches.youtube.utils.playservice.is_19_34_or_greater
 import com.extenre.patches.youtube.utils.playservice.versionCheckPatch
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
@@ -53,7 +53,7 @@ val playbackSpeedWhilePlayingPatch = bytecodePatch(
          *
          * This is an issue that Google should fix, but it is not that hard to fix, so it has been implemented in the patch.
          */
-        playbackSpeedInFeedsFingerprint.methodOrThrow().apply {
+        playbackSpeedInFeedsFingerprint.mutableMethodOrThrow().apply {
             val freeRegister = implementation!!.registerCount - parameters.size - 2
             val playbackSpeedIndex = indexOfGetPlaybackSpeedInstruction(this)
             val playbackSpeedRegister =

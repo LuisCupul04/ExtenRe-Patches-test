@@ -24,8 +24,8 @@ import com.extenre.util.addInstructionsAtControlFlowLabel
 import com.extenre.util.findInstructionIndicesReversedOrThrow
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
-import com.extenre.util.fingerprint.originalMethodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
+import com.extenre.util.fingerprint.originalmutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.returnEarly
 import com.android.tools.smali.dexlib2.Opcode
@@ -54,7 +54,7 @@ val backgroundPlaybackPatch = bytecodePatch(
             backgroundPlaybackManagerFingerprint to "isBackgroundPlaybackAllowed",
             backgroundPlaybackManagerShortsFingerprint to "isBackgroundShortsPlaybackAllowed",
         ).forEach { (fingerprint, extensionsMethod) ->
-            fingerprint.methodOrThrow().apply {
+            fingerprint.mutableMethodOrThrow().apply {
                 findInstructionIndicesReversedOrThrow(Opcode.RETURN).forEach { index ->
                     val register = getInstruction<OneRegisterInstruction>(index).registerA
 
@@ -70,7 +70,7 @@ val backgroundPlaybackPatch = bytecodePatch(
         }
 
         // Enable background playback option in YouTube settings
-        backgroundPlaybackSettingsFingerprint.originalMethodOrThrow().apply {
+        backgroundPlaybackSettingsFingerprint.originalmutableMethodOrThrow().apply {
             val booleanCalls = instructions.withIndex().filter {
                 it.value.getReference<MethodReference>()?.returnType == "Z"
             }
@@ -115,7 +115,7 @@ val backgroundPlaybackPatch = bytecodePatch(
         }
 
         // Force allowing background play for videos labeled for kids.
-        kidsBackgroundPlaybackPolicyControllerFingerprint.methodOrThrow(
+        kidsBackgroundPlaybackPolicyControllerFingerprint.mutableMethodOrThrow(
             kidsBackgroundPlaybackPolicyControllerParentFingerprint
         ).returnEarly()
 

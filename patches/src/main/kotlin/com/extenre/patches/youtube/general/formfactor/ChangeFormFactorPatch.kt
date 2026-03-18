@@ -24,7 +24,7 @@ import com.extenre.patches.youtube.utils.settings.ResourceUtils.addPreference
 import com.extenre.patches.youtube.utils.settings.settingsPatch
 import com.extenre.util.fingerprint.definingClassOrThrow
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.android.tools.smali.dexlib2.Opcode
@@ -55,7 +55,7 @@ val changeFormFactorPatch = bytecodePatch(
         val formFactorEnumClass = formFactorEnumConstructorFingerprint
             .definingClassOrThrow()
 
-        createPlayerRequestBodyWithModelFingerprint.methodOrThrow().apply {
+        createPlayerRequestBodyWithModelFingerprint.mutableMethodOrThrow().apply {
             val ordinalIndex = indexOfFirstInstructionOrThrow {
                 val reference = getReference<FieldReference>()
                 opcode == Opcode.IGET &&

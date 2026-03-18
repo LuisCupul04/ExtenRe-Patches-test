@@ -42,7 +42,7 @@ import com.extenre.patches.shared.litho.lithoFilterPatch
 import com.extenre.patches.shared.settingmenu.settingsMenuPatch
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstLiteralInstructionOrThrow
@@ -90,7 +90,7 @@ val layoutComponentsPatch = bytecodePatch(
         }
 
         // hide floating cast banner
-        playerOverlayChipFingerprint.methodOrThrow().apply {
+        playerOverlayChipFingerprint.mutableMethodOrThrow().apply {
             val targetIndex =
                 indexOfFirstLiteralInstructionOrThrow(playerOverlayChip) + 2
             val targetRegister = getInstruction<OneRegisterInstruction>(targetIndex).registerA
@@ -121,7 +121,7 @@ val layoutComponentsPatch = bytecodePatch(
 
         // region patch for hide floating button
 
-        floatingButtonFingerprint.methodOrThrow(floatingButtonParentFingerprint).apply {
+        floatingButtonFingerprint.mutableMethodOrThrow(floatingButtonParentFingerprint).apply {
             addInstructionsWithLabels(
                 1, """
                     invoke-static {}, $GENERAL_CLASS_DESCRIPTOR->hideFloatingButton()Z
@@ -161,7 +161,7 @@ val layoutComponentsPatch = bytecodePatch(
         // region patch for hide notification button
 
         if (is_6_42_or_greater) {
-            topBarMenuItemImageViewFingerprint.methodOrThrow().apply {
+            topBarMenuItemImageViewFingerprint.mutableMethodOrThrow().apply {
                 val constIndex =
                     indexOfFirstLiteralInstructionOrThrow(topBarMenuItemImageView)
                 val targetIndex =
@@ -179,7 +179,7 @@ val layoutComponentsPatch = bytecodePatch(
 
         // region patch for hide setting menus
 
-        preferenceScreenFingerprint.methodOrThrow().apply {
+        preferenceScreenFingerprint.mutableMethodOrThrow().apply {
             addInstructions(
                 implementation!!.instructions.lastIndex, """
                     invoke-virtual/range {p0 .. p0}, Lcom/google/android/apps/youtube/music/settings/fragment/SettingsHeadersFragment;->getPreferenceScreen()Landroidx/preference/PreferenceScreen;
@@ -210,7 +210,7 @@ val layoutComponentsPatch = bytecodePatch(
 
         // region patch for hide search button
 
-        searchActionViewFingerprint.methodOrThrow().apply {
+        searchActionViewFingerprint.mutableMethodOrThrow().apply {
             val constIndex =
                 indexOfFirstLiteralInstructionOrThrow(searchButton)
             val targetIndex =
@@ -229,7 +229,7 @@ val layoutComponentsPatch = bytecodePatch(
 
         if (is_6_48_or_greater) {
             if (is_8_05_or_greater) {
-                soundSearchFingerprint.methodOrThrow(soundSearchConstructorFingerprint)
+                soundSearchFingerprint.mutableMethodOrThrow(soundSearchConstructorFingerprint)
                     .addInstructionsWithLabels(
                         0, """
                         invoke-static {}, $GENERAL_CLASS_DESCRIPTOR->hideSoundSearchButton()Z
@@ -254,7 +254,7 @@ val layoutComponentsPatch = bytecodePatch(
 
         if (!is_8_15_or_greater) {
             contentPillFingerprint
-                .methodOrThrow()
+                .mutableMethodOrThrow()
                 .addInstructionsWithLabels(
                     0, """
                         invoke-static {}, $GENERAL_CLASS_DESCRIPTOR->hideTapToUpdateButton()Z
@@ -271,7 +271,7 @@ val layoutComponentsPatch = bytecodePatch(
 
         // region patch for hide taste builder
 
-        tasteBuilderConstructorFingerprint.methodOrThrow().apply {
+        tasteBuilderConstructorFingerprint.mutableMethodOrThrow().apply {
             val constIndex =
                 indexOfFirstLiteralInstructionOrThrow(musicTasteBuilderShelf)
             val targetIndex =
@@ -300,7 +300,7 @@ val layoutComponentsPatch = bytecodePatch(
 
         // region patch for hide tooltip content
 
-        tooltipContentViewFingerprint.methodOrThrow().addInstruction(
+        tooltipContentViewFingerprint.mutableMethodOrThrow().addInstruction(
             0,
             "return-void"
         )
@@ -309,7 +309,7 @@ val layoutComponentsPatch = bytecodePatch(
 
         // region patch for hide voice search button
 
-        searchBarFingerprint.methodOrThrow(searchBarParentFingerprint).apply {
+        searchBarFingerprint.mutableMethodOrThrow(searchBarParentFingerprint).apply {
             val setVisibilityIndex = indexOfVisibilityInstruction(this)
             val setVisibilityInstruction =
                 getInstruction<FiveRegisterInstruction>(setVisibilityIndex)

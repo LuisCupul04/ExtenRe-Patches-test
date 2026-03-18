@@ -37,7 +37,7 @@ import com.extenre.patches.youtube.video.information.videoTimeHook
 import com.extenre.util.ResourceGroup
 import com.extenre.util.copyResources
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.getStringOptionValue
 import com.extenre.util.indexOfFirstInstructionOrThrow
@@ -86,7 +86,7 @@ val sponsorBlockBytecodePatch = bytecodePatch(
         )
 
 
-        seekbarOnDrawFingerprint.methodOrThrow(seekbarFingerprint).apply {
+        seekbarOnDrawFingerprint.mutableMethodOrThrow(seekbarFingerprint).apply {
             // Get left and right of seekbar rectangle
             val moveObjectIndex = indexOfFirstInstructionOrThrow(Opcode.MOVE_OBJECT_FROM16)
 
@@ -136,7 +136,7 @@ val sponsorBlockBytecodePatch = bytecodePatch(
         )
 
         // Append timestamp
-        totalTimeFingerprint.methodOrThrow().apply {
+        totalTimeFingerprint.mutableMethodOrThrow().apply {
             val targetIndex = indexOfFirstInstructionOrThrow {
                 getReference<MethodReference>()?.name == "getString"
             } + 1
@@ -167,7 +167,7 @@ val sponsorBlockBytecodePatch = bytecodePatch(
         }
 
         // Replace strings
-        rectangleFieldInvalidatorFingerprint.methodOrThrow(seekbarFingerprint).apply {
+        rectangleFieldInvalidatorFingerprint.mutableMethodOrThrow(seekbarFingerprint).apply {
             val invalidateIndex = indexOfInvalidateInstruction(this)
             val rectangleIndex = indexOfFirstInstructionReversedOrThrow(invalidateIndex + 1) {
                 getReference<FieldReference>()?.type == "Landroid/graphics/Rect;"

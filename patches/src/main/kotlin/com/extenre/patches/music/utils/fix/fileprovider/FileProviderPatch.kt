@@ -12,7 +12,7 @@ import com.extenre.patcher.extensions.InstructionExtensions.addInstructionsWithL
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patcher.util.smali.ExternalLabel
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 
 fun fileProviderPatch(
     youtubePackageName: String,
@@ -32,7 +32,7 @@ fun fileProviderPatch(
          *
          * To solve this issue, replace the package name of YouTube with YT Music's package name.
          */
-        fileProviderResolverFingerprint.methodOrThrow().apply {
+        fileProviderResolverFingerprint.mutableMethodOrThrow().apply {
             addInstructionsWithLabels(
                 0, """
                     const-string v0, "com.google.android.youtube.fileprovider"

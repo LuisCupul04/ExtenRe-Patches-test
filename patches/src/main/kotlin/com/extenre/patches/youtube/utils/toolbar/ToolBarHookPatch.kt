@@ -17,7 +17,7 @@ import com.extenre.patches.youtube.utils.extension.Constants.UTILS_PATH
 import com.extenre.patches.youtube.utils.indexOfGetDrawableInstruction
 import com.extenre.patches.youtube.utils.resourceid.sharedResourceIdPatch
 import com.extenre.patches.youtube.utils.toolBarButtonFingerprint
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
@@ -40,7 +40,7 @@ val toolBarHookPatch = bytecodePatch(
     dependsOn(sharedResourceIdPatch)
 
     execute {
-        toolBarButtonFingerprint.methodOrThrow().apply {
+        toolBarButtonFingerprint.mutableMethodOrThrow().apply {
             val getDrawableIndex = indexOfGetDrawableInstruction(this)
             val enumOrdinalIndex = indexOfFirstInstructionReversedOrThrow(getDrawableIndex) {
                 opcode == Opcode.INVOKE_INTERFACE &&
@@ -71,7 +71,7 @@ val toolBarHookPatch = bytecodePatch(
             removeInstruction(enumOrdinalIndex)
         }
 
-        toolbarMethod = toolBarPatchFingerprint.methodOrThrow()
+        toolbarMethod = toolBarPatchFingerprint.mutableMethodOrThrow()
     }
 }
 

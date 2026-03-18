@@ -15,7 +15,7 @@ import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod
 import com.extenre.patches.shared.extension.Constants.PATCHES_PATH
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
@@ -57,7 +57,7 @@ val baseSanitizeUrlQueryPatch = bytecodePatch(
             shareLinkFormatterFingerprint,
             systemShareLinkFormatterFingerprint
         ).forEach { fingerprint ->
-            fingerprint.methodOrThrow().apply {
+            fingerprint.mutableMethodOrThrow().apply {
                 for ((index, instruction) in implementation!!.instructions.withIndex()) {
                     if (instruction.opcode != Opcode.INVOKE_VIRTUAL)
                         continue

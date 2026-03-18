@@ -14,7 +14,7 @@ import com.extenre.patches.reddit.utils.compatibility.Constants.COMPATIBLE_PACKA
 import com.extenre.patches.reddit.utils.fix.signature.spoofSignaturePatch
 import com.extenre.patches.reddit.utils.patch.PatchList.PREMIUM_ICON
 import com.extenre.patches.reddit.utils.settings.updatePatchStatus
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 
 @Suppress("unused")
 val premiumIconPatch = bytecodePatch(
@@ -26,7 +26,7 @@ val premiumIconPatch = bytecodePatch(
     dependsOn(spoofSignaturePatch)
 
     execute {
-        premiumIconFingerprint.methodOrThrow().addInstructions(
+        premiumIconFingerprint.mutableMethodOrThrow().addInstructions(
             0, """
                 const/4 v0, 0x1
                 return v0

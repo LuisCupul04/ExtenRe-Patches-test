@@ -24,9 +24,9 @@ import com.extenre.patches.reddit.utils.patch.PatchList
 import com.extenre.patches.reddit.utils.patch.PatchList.SETTINGS_FOR_REDDIT
 import com.extenre.patches.shared.extension.Constants.EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR
 import com.extenre.patches.shared.sharedSettingFingerprint
-import com.extenre.util.findMethodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
@@ -65,7 +65,7 @@ private val settingsBytecodePatch = bytecodePatch(
         /**
          * Set version info
          */
-        redditInternalFeaturesFingerprint.methodOrThrow().apply {
+        redditInternalFeaturesFingerprint.mutableMethodOrThrow().apply {
             val versionIndex = indexOfFirstInstructionOrThrow {
                 opcode == Opcode.CONST_STRING
                         && (this as? BuilderInstruction21c)?.reference.toString().startsWith("202")
@@ -85,7 +85,7 @@ private val settingsBytecodePatch = bytecodePatch(
         /**
          * Set SharedPrefCategory
          */
-        sharedSettingFingerprint.methodOrThrow().apply {
+        sharedSettingFingerprint.mutableMethodOrThrow().apply {
             val stringIndex = indexOfFirstInstructionOrThrow(Opcode.CONST_STRING)
             val stringRegister = getInstruction<OneRegisterInstruction>(stringIndex).registerA
 
@@ -99,7 +99,7 @@ private val settingsBytecodePatch = bytecodePatch(
          * Replace settings label
          */
         acknowledgementsLabelBuilderMethod =
-            acknowledgementsLabelBuilderFingerprint.methodOrThrow()
+            acknowledgementsLabelBuilderFingerprint.mutableMethodOrThrow()
 
         /**
          * Initialize settings activity
@@ -117,9 +117,9 @@ private val settingsBytecodePatch = bytecodePatch(
             }
         }
 
-        settingsStatusLoadMethod = settingsStatusLoadFingerprint.methodOrThrow()
+        settingsStatusLoadMethod = settingsStatusLoadFingerprint.mutableMethodOrThrow()
 
-        findMethodOrThrow(EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR) {
+        findmutableMethodOrThrow(EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR) {
             name == "setThemeColor"
         }.addInstruction(
             0,

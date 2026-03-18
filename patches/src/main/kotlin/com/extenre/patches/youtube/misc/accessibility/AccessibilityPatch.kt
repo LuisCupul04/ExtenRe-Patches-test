@@ -14,7 +14,7 @@ import com.extenre.patches.youtube.utils.compatibility.Constants.COMPATIBLE_PACK
 import com.extenre.patches.youtube.utils.patch.PatchList.HIDE_ACCESSIBILITY_CONTROLS_DIALOG
 import com.extenre.patches.youtube.utils.settings.ResourceUtils.addPreference
 import com.extenre.patches.youtube.utils.settings.settingsPatch
-import com.extenre.util.findMethodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
 import com.extenre.util.indexOfFirstInstruction
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
@@ -45,7 +45,7 @@ val accessibilityPatch = bytecodePatch(
                 val lifecycleObserverClass =
                     getInstruction<ReferenceInstruction>(lifecycleObserverIndex).reference.toString()
 
-                findMethodOrThrow(lifecycleObserverClass) {
+                findmutableMethodOrThrow(lifecycleObserverClass) {
                     accessFlags == AccessFlags.PUBLIC or AccessFlags.FINAL &&
                             parameterTypes.size == 1 &&
                             indexOfFirstInstruction(Opcode.INVOKE_DIRECT) >= 0

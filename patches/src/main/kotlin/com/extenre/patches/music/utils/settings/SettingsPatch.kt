@@ -39,9 +39,9 @@ import com.extenre.util.ResourceGroup
 import com.extenre.util.Utils.printInfo
 import com.extenre.util.copyResources
 import com.extenre.util.copyXmlNode
-import com.extenre.util.findMethodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.removeStringsElements
 import com.extenre.util.valueOrThrow
@@ -58,7 +58,7 @@ private const val EXTENSION_INITIALIZATION_CLASS_DESCRIPTOR =
     "$UTILS_PATH/InitializationPatch;"
 
 private val settingsBytecodePatch = bytecodePatch(
-    name = "settings-bytecode-patch",
+    name = "settings-Bytecode-Patch",
     description = "settingsBytecodePatch"
 ) {
     dependsOn(
@@ -73,7 +73,7 @@ private val settingsBytecodePatch = bytecodePatch(
 
         // region patch for set SharedPrefCategory
 
-        sharedSettingFingerprint.methodOrThrow().apply {
+        sharedSettingFingerprint.mutableMethodOrThrow().apply {
             val stringIndex = indexOfFirstInstructionOrThrow(Opcode.CONST_STRING)
             val stringRegister = getInstruction<OneRegisterInstruction>(stringIndex).registerA
 
@@ -120,7 +120,7 @@ private val settingsBytecodePatch = bytecodePatch(
 
         // region patch for hook dummy Activity for intent
 
-        googleApiActivityFingerprint.methodOrThrow().apply {
+        googleApiActivityFingerprint.mutableMethodOrThrow().apply {
             addInstructionsWithLabels(
                 1,
                 """
@@ -136,7 +136,7 @@ private val settingsBytecodePatch = bytecodePatch(
         // endregion
 
         // apply the current theme of the settings page
-        findMethodOrThrow(EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR) {
+        findmutableMethodOrThrow(EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR) {
             name == "setThemeColor"
         }.addInstruction(
             0,
@@ -153,7 +153,7 @@ private val settingsBytecodePatch = bytecodePatch(
         )
 
         accountIdentityConstructorFingerprint
-            .methodOrThrow()
+            .mutableMethodOrThrow()
             .addInstruction(
                 1,
                 "invoke-static/range { p7 .. p7 }, $EXTENSION_INITIALIZATION_CLASS_DESCRIPTOR->" +

@@ -28,7 +28,7 @@ import com.extenre.patches.music.utils.settings.settingsPatch
 import com.extenre.util.Utils.printWarn
 import com.extenre.util.findFreeRegister
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstLiteralInstructionOrThrow
@@ -103,7 +103,7 @@ val actionBarComponentsPatch = bytecodePatch(
                 EXTENSION_METHOD_DESCRIPTOR
             )
         } else {
-            cairoSplashAnimationConfigFingerprint.methodOrThrow().apply {
+            cairoSplashAnimationConfigFingerprint.mutableMethodOrThrow().apply {
                 val stringIndex = indexOfFirstStringInstructionOrThrow("sa_e")
                 val gotoIndex = indexOfFirstInstructionOrThrow(stringIndex) {
                     opcode == Opcode.GOTO || opcode == Opcode.GOTO_16

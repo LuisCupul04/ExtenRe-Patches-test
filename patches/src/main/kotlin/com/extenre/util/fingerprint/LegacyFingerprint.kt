@@ -98,6 +98,14 @@ internal fun Pair<String, Fingerprint>.mutableMethodOrThrow(): MutableMethod {
     return mutableClass.methods.first { MethodUtil.methodSignaturesMatch(it, method) }
 }
 
+/** Sobrecarga para cuando se usa un fingerprint padre */
+context(BytecodePatchContext)
+internal fun Pair<String, Fingerprint>.mutableMethodOrThrow(parentFingerprint: Pair<String, Fingerprint>): MutableMethod {
+    val method = methodOrThrow(parentFingerprint)
+    val mutableClass = mutableClassOrThrow()
+    return mutableClass.methods.first { MethodUtil.methodSignaturesMatch(it, method) }
+}
+
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.methodCall(): String =
     mutableMethodOrThrow().methodCall()

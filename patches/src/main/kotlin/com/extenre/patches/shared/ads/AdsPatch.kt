@@ -21,7 +21,7 @@ import com.extenre.patches.shared.mapping.ResourceType.STYLE
 import com.extenre.patches.shared.mapping.getResourceId
 import com.extenre.patches.shared.mapping.resourceMappingPatch
 import com.extenre.util.addInstructionsAtControlFlowLabel
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.getWalkerMethod
 import com.extenre.util.indexOfFirstInstructionOrThrow
@@ -65,7 +65,7 @@ fun adsPatch(
     dependsOn(adsResourcePatch)
 
     execute {
-        videoAdsLegacyFingerprint.methodOrThrow().apply {
+        videoAdsLegacyFingerprint.mutableMethodOrThrow().apply {
             val targetIndex = indexOfFirstInstructionOrThrow {
                 val reference = getReference<MethodReference>()
                 opcode == Opcode.INVOKE_VIRTUAL &&
@@ -87,7 +87,7 @@ fun adsPatch(
             playerBytesAdLayoutFingerprint,
             videoAdsFingerprint,
         ).forEach { fingerprint ->
-            fingerprint.methodOrThrow().addInstructionsWithLabels(
+            fingerprint.mutableMethodOrThrow().addInstructionsWithLabels(
                 0, """
                     invoke-static {}, $classDescriptor->$methodDescriptor()Z
                     move-result v0
@@ -100,7 +100,7 @@ fun adsPatch(
         }
 
         // non-litho view, used in some old clients
-        interstitialsContainerFingerprint.methodOrThrow().apply {
+        interstitialsContainerFingerprint.mutableMethodOrThrow().apply {
             val targetIndex = indexOfFirstLiteralInstructionOrThrow(interstitialsContainer) + 2
             val targetRegister = getInstruction<OneRegisterInstruction>(targetIndex).registerA
 
@@ -111,7 +111,7 @@ fun adsPatch(
         }
 
         // litho view, used in 'ShowDialogCommandOuterClass' in innertube
-        showDialogCommandFingerprint.methodOrThrow().apply {
+        showDialogCommandFingerprint.mutableMethodOrThrow().apply {
             // It is ideal to check the dialog type and proto buffer before closing the dialog.
             // There is no register that can be used freely, so it is divided into two hooking.
             val showDialogIndex = indexOfFirstInstructionOrThrow {
@@ -160,9 +160,9 @@ fun adsPatch(
 
             // Set close dialog method
             val customDialogOnBackPressedMethod = customDialogOnBackPressedFingerprint
-                .methodOrThrow(customDialogOnBackPressedParentFingerprint)
+                .mutableMethodOrThrow(customDialogOnBackPressedParentFingerprint)
 
-            fullscreenAdsPatchFingerprint.methodOrThrow().addInstructions(
+            fullscreenAdsPatchFingerprint.mutableMethodOrThrow().addInstructions(
                 0, """
                     check-cast p0, ${customDialogOnBackPressedMethod.definingClass}
                     invoke-virtual { p0 }, $customDialogOnBackPressedMethod

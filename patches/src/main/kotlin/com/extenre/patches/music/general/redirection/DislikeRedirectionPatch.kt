@@ -22,7 +22,7 @@ import com.extenre.patches.music.utils.settings.CategoryType
 import com.extenre.patches.music.utils.settings.ResourceUtils.updatePatchStatus
 import com.extenre.patches.music.utils.settings.addSwitchPreference
 import com.extenre.patches.music.utils.settings.settingsPatch
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
@@ -48,7 +48,7 @@ val dislikeRedirectionPatch = bytecodePatch(
     execute {
 
         notificationLikeButtonOnClickListenerFingerprint
-            .methodOrThrow(notificationLikeButtonControllerFingerprint)
+            .mutableMethodOrThrow(notificationLikeButtonControllerFingerprint)
             .apply {
                 val mapIndex = indexOfMapInstruction(this)
                 val onClickIndex = indexOfFirstInstructionOrThrow(mapIndex) {
@@ -66,11 +66,11 @@ val dislikeRedirectionPatch = bytecodePatch(
 
         if (is_7_29_or_greater) {
             dislikeButtonOnClickListenerFingerprint
-                .methodOrThrow()
+                .mutableMethodOrThrow()
                 .disableDislikeRedirection()
         } else {
             dislikeButtonOnClickListenerLegacyFingerprint
-                .methodOrThrow()
+                .mutableMethodOrThrow()
                 .disableDislikeRedirection()
         }
 

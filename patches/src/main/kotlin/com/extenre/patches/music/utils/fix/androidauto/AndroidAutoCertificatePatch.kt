@@ -13,7 +13,7 @@ import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patches.music.utils.compatibility.Constants.COMPATIBLE_PACKAGE
 import com.extenre.patches.music.utils.patch.PatchList.CERTIFICATE_SPOOF
 import com.extenre.patches.music.utils.settings.ResourceUtils.updatePatchStatus
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 
 @Suppress("unused")
 val androidAutoCertificatePatch = bytecodePatch(
@@ -23,7 +23,7 @@ val androidAutoCertificatePatch = bytecodePatch(
     compatibleWith(COMPATIBLE_PACKAGE)
 
     execute {
-        certificateCheckFingerprint.methodOrThrow().addInstructions(
+        certificateCheckFingerprint.mutableMethodOrThrow().addInstructions(
             0,
             """
                 const/4 v0, 0x1

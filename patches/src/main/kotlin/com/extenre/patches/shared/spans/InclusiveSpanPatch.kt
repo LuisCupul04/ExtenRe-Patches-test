@@ -20,9 +20,9 @@ import com.extenre.patches.shared.indexOfSpannableStringInstruction
 import com.extenre.patches.shared.spannableStringBuilderFingerprint
 import com.extenre.patches.shared.textcomponent.hookSpannableString
 import com.extenre.patches.shared.textcomponent.textComponentPatch
-import com.extenre.util.findMethodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
 import com.extenre.util.findMethodsOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
 import com.extenre.util.getFiveRegisters
 import com.extenre.util.getReference
@@ -64,7 +64,7 @@ val inclusiveSpanPatch = bytecodePatch(
             "setConversionContext"
         )
 
-        spannableStringBuilderFingerprint.methodOrThrow().apply {
+        spannableStringBuilderFingerprint.mutableMethodOrThrow().apply {
             val spannedIndex = indexOfSpannableStringInstruction(this)
             val setInclusiveSpanIndex = indexOfFirstInstructionOrThrow(spannedIndex) {
                 val reference = getReference<MethodReference>()
@@ -92,7 +92,7 @@ val inclusiveSpanPatch = bytecodePatch(
             val customCharacterStyle =
                 customCharacterStyleFingerprint.mutableClassOrThrow().type
 
-            findMethodOrThrow(EXTENSION_SPANS_CLASS_DESCRIPTOR) {
+            findmutableMethodOrThrow(EXTENSION_SPANS_CLASS_DESCRIPTOR) {
                 name == "getSpanType" &&
                         returnType != "Ljava/lang/String;"
             }.apply {

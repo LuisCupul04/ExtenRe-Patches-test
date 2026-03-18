@@ -36,7 +36,7 @@ import com.extenre.patches.youtube.utils.settings.settingsPatch
 import com.extenre.util.ResourceGroup
 import com.extenre.util.copyResources
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.getWalkerMethod
@@ -89,7 +89,7 @@ val swipeControlsPatch = bytecodePatch(
         // Since it does not support all versions,
         // add settings only if the patch is successful.
         if (!is_19_09_or_greater) {
-            hdrBrightnessFingerprint.methodOrThrow().apply {
+            hdrBrightnessFingerprint.mutableMethodOrThrow().apply {
                 addInstructionsWithLabels(
                     0, """
                         invoke-static {}, $EXTENSION_SWIPE_CONTROLS_PATCH_CLASS_DESCRIPTOR->disableHDRAutoBrightness()Z
@@ -136,7 +136,7 @@ val swipeControlsPatch = bytecodePatch(
                 "$EXTENSION_SWIPE_CONTROLS_PATCH_CLASS_DESCRIPTOR->disableSwipeToEnterFullscreenModeBelowThePlayer()Z"
             )
         } else {
-            watchPanelGesturesAlternativeFingerprint.methodOrThrow().apply {
+            watchPanelGesturesAlternativeFingerprint.mutableMethodOrThrow().apply {
                 val literalIndex = indexOfFirstLiteralInstruction(autoNavScrollCancelPadding)
                 val middleIndex = indexOfFirstInstructionOrThrow(literalIndex) {
                     val reference = getReference<MethodReference>()
@@ -194,7 +194,7 @@ val swipeControlsPatch = bytecodePatch(
 
         // region patch for disable swipe to enter fullscreen mode (in the player) and disable swipe to exit fullscreen mode
 
-        playerGestureConfigSyntheticFingerprint.methodOrThrow().apply {
+        playerGestureConfigSyntheticFingerprint.mutableMethodOrThrow().apply {
             val disableSwipeToExitFullscreenModeIndex =
                 indexOfPlayerConfigModelBooleanInstruction(this)
             val disableSwipeToEnterFullscreenModeInThePlayerIndex =

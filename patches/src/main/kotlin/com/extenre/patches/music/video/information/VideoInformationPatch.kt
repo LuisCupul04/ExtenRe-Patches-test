@@ -26,9 +26,9 @@ import com.extenre.patches.music.video.playerresponse.playerResponseMethodHookPa
 import com.extenre.patches.shared.mdxPlayerDirectorSetVideoStageFingerprint
 import com.extenre.patches.shared.videoLengthFingerprint
 import com.extenre.util.addStaticFieldToExtension
-import com.extenre.util.findMethodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.getWalkerMethod
@@ -136,7 +136,7 @@ val videoInformationPatch = bytecodePatch(
         }
 
         fun Pair<String, Fingerprint>.getPlayerResponseInstruction(returnType: String): String {
-            methodOrThrow().apply {
+            mutableMethodOrThrow().apply {
                 val targetReference = getInstruction<ReferenceInstruction>(
                     indexOfFirstInstructionOrThrow {
                         val reference = getReference<MethodReference>()
@@ -150,8 +150,8 @@ val videoInformationPatch = bytecodePatch(
             }
         }
 
-        videoEndFingerprint.methodOrThrow().apply {
-            findMethodOrThrow(definingClass).let {
+        videoEndFingerprint.mutableMethodOrThrow().apply {
+            findmutableMethodOrThrow(definingClass).let {
                 playerConstructorMethod = it
                 playerConstructorInsertIndex = it.indexOfFirstInstructionOrThrow {
                     opcode == Opcode.INVOKE_DIRECT && getReference<MethodReference>()?.name == "<init>"
@@ -174,8 +174,8 @@ val videoInformationPatch = bytecodePatch(
             )
         }
 
-        mdxPlayerDirectorSetVideoStageFingerprint.methodOrThrow().apply {
-            findMethodOrThrow(definingClass).let {
+        mdxPlayerDirectorSetVideoStageFingerprint.mutableMethodOrThrow().apply {
+            findmutableMethodOrThrow(definingClass).let {
                 mdxConstructorMethod = it
                 mdxConstructorInsertIndex = it.indexOfFirstInstructionOrThrow {
                     opcode == Opcode.INVOKE_DIRECT && getReference<MethodReference>()?.name == "<init>"

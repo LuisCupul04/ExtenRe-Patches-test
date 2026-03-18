@@ -18,7 +18,7 @@ import com.extenre.patches.music.utils.settings.CategoryType
 import com.extenre.patches.music.utils.settings.ResourceUtils.updatePatchStatus
 import com.extenre.patches.music.utils.settings.addSwitchPreference
 import com.extenre.patches.music.utils.settings.settingsPatch
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
 import com.extenre.util.indexOfFirstStringInstructionOrThrow
 import com.android.tools.smali.dexlib2.Opcode
@@ -35,7 +35,7 @@ val oldStyleLibraryShelfPatch = bytecodePatch(
 
     execute {
 
-        browseIdFingerprint.methodOrThrow().apply {
+        browseIdFingerprint.mutableMethodOrThrow().apply {
             val stringIndex = indexOfFirstStringInstructionOrThrow("FEmusic_offline")
             val targetIndex =
                 indexOfFirstInstructionReversedOrThrow(stringIndex, Opcode.IGET_OBJECT)

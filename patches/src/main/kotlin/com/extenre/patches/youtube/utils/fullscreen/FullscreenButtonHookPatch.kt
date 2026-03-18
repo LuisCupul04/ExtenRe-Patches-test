@@ -18,8 +18,8 @@ import com.extenre.patches.youtube.utils.extension.sharedExtensionPatch
 import com.extenre.patches.youtube.utils.playservice.is_20_02_or_greater
 import com.extenre.patches.youtube.utils.playservice.versionCheckPatch
 import com.extenre.util.addStaticFieldToExtension
-import com.extenre.util.findMethodOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.getWalkerMethod
 import com.extenre.util.indexOfFirstInstructionOrThrow
@@ -48,7 +48,7 @@ val fullscreenButtonHookPatch = bytecodePatch(
 
     execute {
         fun getParameters(): Pair<MutableMethod, String> {
-            nextGenWatchLayoutFullscreenModeFingerprint.methodOrThrow().apply {
+            nextGenWatchLayoutFullscreenModeFingerprint.mutableMethodOrThrow().apply {
                 val methodIndex = indexOfFirstInstructionReversedOrThrow {
                     opcode == Opcode.INVOKE_DIRECT &&
                             getReference<MethodReference>()?.parameterTypes?.size == 2
@@ -73,7 +73,7 @@ val fullscreenButtonHookPatch = bytecodePatch(
                             )
                         ).reference.toString()
                         return Pair(
-                            findMethodOrThrow(animatorListenerAdapterClass) { parameters.isEmpty() },
+                            findmutableMethodOrThrow(animatorListenerAdapterClass) { parameters.isEmpty() },
                             fullscreenActionClass
                         )
                     }
@@ -81,7 +81,7 @@ val fullscreenButtonHookPatch = bytecodePatch(
                     val animatorListenerClass =
                         (getInstruction<ReferenceInstruction>(methodIndex).reference as MethodReference).definingClass
                     return Pair(
-                        findMethodOrThrow(animatorListenerClass) { parameters == listOf("I") },
+                        findmutableMethodOrThrow(animatorListenerClass) { parameters == listOf("I") },
                         fullscreenActionClass
                     )
                 }
@@ -132,7 +132,7 @@ val fullscreenButtonHookPatch = bytecodePatch(
                     }
                 } else {
                     val enterFullscreenMethod =
-                        findMethodOrThrow(enterFullscreenClass) {
+                        findmutableMethodOrThrow(enterFullscreenClass) {
                             name == enterFullscreenReference.name
                         }
                     enterFullscreenMethods.add(enterFullscreenMethod)
@@ -145,7 +145,7 @@ val fullscreenButtonHookPatch = bytecodePatch(
                 )
             }
 
-        nextGenWatchLayoutConstructorFingerprint.methodOrThrow().apply {
+        nextGenWatchLayoutConstructorFingerprint.mutableMethodOrThrow().apply {
             val targetIndex = indexOfFirstInstructionReversedOrThrow {
                 opcode == Opcode.CHECK_CAST &&
                         getReference<TypeReference>()?.type == fullscreenActionClass

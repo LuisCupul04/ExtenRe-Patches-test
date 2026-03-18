@@ -12,7 +12,7 @@ import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.replaceInstruction
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.util.Utils.printWarn
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
 import com.extenre.util.indexOfFirstStringInstructionOrThrow
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
@@ -22,7 +22,10 @@ class AppInfo(
     val certificateData: String? = "",
 )
 
-fun baseSpoofSignaturePatch(appInfoSupplier: () -> AppInfo) = bytecodePatch {
+fun baseSpoofSignaturePatch(appInfoSupplier: () -> AppInfo) = bytecodePatch(
+    name = "Base Spoof Signature",
+    description = "Base patch for spoofing app signature.",
+) {
     // Lazy, so that patch options above are initialized before they are accessed.
     val replacements by lazy {
         with(appInfoSupplier()) {
@@ -42,7 +45,7 @@ fun baseSpoofSignaturePatch(appInfoSupplier: () -> AppInfo) = bytecodePatch {
             return@execute
         }
 
-        spoofSignatureFingerprint.methodOrThrow().apply {
+        spoofSignatureFingerprint.mutableMethodOrThrow().apply {
             replacements.forEach { (k, v) ->
                 val index = indexOfFirstStringInstructionOrThrow(k)
                 val register = getInstruction<OneRegisterInstruction>(index).registerA

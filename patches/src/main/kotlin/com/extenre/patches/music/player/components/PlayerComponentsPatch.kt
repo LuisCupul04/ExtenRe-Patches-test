@@ -63,14 +63,14 @@ import com.extenre.util.adoptChild
 import com.extenre.util.cloneMutable
 import com.extenre.util.doRecursively
 import com.extenre.util.findInstructionIndicesReversed
-import com.extenre.util.findMethodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.injectLiteralInstructionViewCall
 import com.extenre.util.fingerprint.legacyFingerprint
 import com.extenre.util.fingerprint.matchOrNull
 import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.methodCall
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
 import com.extenre.util.fingerprint.resolvable
 import com.extenre.util.getReference
@@ -298,7 +298,7 @@ val playerComponentsPatch = bytecodePatch(
             val onClickReference = getInstruction<ReferenceInstruction>(onClickIndex).reference
             val onClickReferenceDefiningClass = (onClickReference as MethodReference).definingClass
 
-            findMethodOrThrow(onClickReferenceDefiningClass)
+            findmutableMethodOrThrow(onClickReferenceDefiningClass)
                 .apply {
                     addInstruction(
                         implementation!!.instructions.lastIndex,
@@ -360,13 +360,13 @@ val playerComponentsPatch = bytecodePatch(
         }
 
         val miniPlayerConstructorMutableMethod =
-            miniPlayerConstructorFingerprint.methodOrThrow()
+            miniPlayerConstructorFingerprint.mutableMethodOrThrow()
 
         val mppWatchWhileLayoutMutableMethod =
-            mppWatchWhileLayoutFingerprint.methodOrThrow()
+            mppWatchWhileLayoutFingerprint.mutableMethodOrThrow()
 
         val pendingIntentReceiverMutableMethod =
-            pendingIntentReceiverFingerprint.methodOrThrow()
+            pendingIntentReceiverFingerprint.mutableMethodOrThrow()
 
         if (!is_6_42_or_greater) {
             nextButtonVisibilityFingerprint.matchOrThrow(miniPlayerParentFingerprint).let {
@@ -458,7 +458,7 @@ val playerComponentsPatch = bytecodePatch(
             }
         }
 
-        val colorMathPlayerIPutReference = with(miniPlayerConstructorFingerprint.methodOrThrow()) {
+        val colorMathPlayerIPutReference = with(miniPlayerConstructorFingerprint.mutableMethodOrThrow()) {
             val colorGreyIndex = indexOfFirstLiteralInstructionOrThrow(colorGrey)
             val iPutIndex = indexOfFirstInstructionOrThrow(colorGreyIndex, Opcode.IPUT)
             getInstruction<ReferenceInstruction>(iPutIndex).reference
@@ -539,7 +539,7 @@ val playerComponentsPatch = bytecodePatch(
                         getReference<MethodReference>()?.toString() == thickSeekBarMethodCall
             }
 
-            thickSeekBarInflateFingerprint.methodOrThrow().apply {
+            thickSeekBarInflateFingerprint.mutableMethodOrThrow().apply {
                 val indexes = findInstructionIndicesReversed(filter)
 
                 thickSeekBarHook(indexes.first(), "changeSeekBarPosition")
@@ -547,7 +547,7 @@ val playerComponentsPatch = bytecodePatch(
             }
 
             if (is_7_29_or_greater) {
-                thickSeekBarColorFingerprint.methodOrThrow().apply {
+                thickSeekBarColorFingerprint.mutableMethodOrThrow().apply {
                     findInstructionIndicesReversed(filter).forEach { thickSeekBarHook(it) }
                 }
             }
@@ -566,7 +566,7 @@ val playerComponentsPatch = bytecodePatch(
         // region patch for disable gesture in player
 
         val playerViewPagerConstructorMethod =
-            playerViewPagerConstructorFingerprint.methodOrThrow()
+            playerViewPagerConstructorFingerprint.mutableMethodOrThrow()
         val mainActivityOnStartMethod =
             getMainActivityMethod("onStart")
 
@@ -664,7 +664,7 @@ val playerComponentsPatch = bytecodePatch(
             )
 
             smoothTransitionAnimationInvertedFingerprint
-                .methodOrThrow(smoothTransitionAnimationInvertedParentFingerprint)
+                .mutableMethodOrThrow(smoothTransitionAnimationInvertedParentFingerprint)
                 .apply {
                     val index = indexOfSmoothTransitionAnimation(this)
                     val register = getInstruction<OneRegisterInstruction>(index + 1).registerA
@@ -690,7 +690,7 @@ val playerComponentsPatch = bytecodePatch(
 
         if (swipeToDismissMiniPlayer == true) {
             if (!is_6_42_or_greater) {
-                swipeToCloseFingerprint.methodOrThrow().apply {
+                swipeToCloseFingerprint.mutableMethodOrThrow().apply {
                     val insertIndex = implementation!!.instructions.lastIndex
                     val targetRegister =
                         getInstruction<OneRegisterInstruction>(insertIndex).registerA
@@ -707,7 +707,7 @@ val playerComponentsPatch = bytecodePatch(
                 // region dismiss mini player by swiping down
 
                 val swipeToDismissSGetObjectReference =
-                    with(interactionLoggingEnumFingerprint.methodOrThrow()) {
+                    with(interactionLoggingEnumFingerprint.mutableMethodOrThrow()) {
                         val stringIndex =
                             indexOfFirstStringInstructionOrThrow("INTERACTION_LOGGING_GESTURE_TYPE_SWIPE")
                         val sPutObjectIndex =
@@ -717,7 +717,7 @@ val playerComponentsPatch = bytecodePatch(
                     }
 
                 val musicActivityWidgetMethod =
-                    musicActivityWidgetFingerprint.methodOrThrow()
+                    musicActivityWidgetFingerprint.mutableMethodOrThrow()
 
                 val swipeToDismissWidgetIndex =
                     musicActivityWidgetMethod.indexOfFirstLiteralInstructionOrThrow(79500L)
@@ -994,7 +994,7 @@ val playerComponentsPatch = bytecodePatch(
 
         // region patch for hide song video toggle
 
-        audioVideoSwitchToggleFingerprint.methodOrThrow().apply {
+        audioVideoSwitchToggleFingerprint.mutableMethodOrThrow().apply {
             implementation!!.instructions
                 .withIndex()
                 .filter { (_, instruction) ->
@@ -1058,9 +1058,9 @@ val playerComponentsPatch = bytecodePatch(
 
         // region patch for remember shuffle state
 
-        shuffleOnClickFingerprint.methodOrThrow().apply {
+        shuffleOnClickFingerprint.mutableMethodOrThrow().apply {
             // region set shuffle enum
-            val enumClass = shuffleEnumFingerprint.methodOrThrow().definingClass
+            val enumClass = shuffleEnumFingerprint.mutableMethodOrThrow().definingClass
 
             val startIndex = indexOfFirstLiteralInstructionOrThrow(SHUFFLE_BUTTON_ID)
 
@@ -1176,7 +1176,7 @@ val playerComponentsPatch = bytecodePatch(
 
         }
 
-        musicPlaybackControlsFingerprint.methodOrThrow().addInstruction(
+        musicPlaybackControlsFingerprint.mutableMethodOrThrow().addInstruction(
             0,
             "invoke-static {}, $PLAYER_CLASS_DESCRIPTOR->shuffleTracks()V"
         )
@@ -1210,7 +1210,7 @@ val playerComponentsPatch = bytecodePatch(
 
             // region disable player from being pushed to the top when opening a comment
 
-            mppWatchWhileLayoutFingerprint.methodOrThrow().apply {
+            mppWatchWhileLayoutFingerprint.mutableMethodOrThrow().apply {
                 val callableIndex = indexOfCallableInstruction(this)
                 val insertIndex =
                     indexOfFirstInstructionReversedOrThrow(callableIndex, Opcode.NEW_INSTANCE)

@@ -15,8 +15,8 @@ import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod
 import com.extenre.patches.youtube.utils.extension.Constants.EXTENSION_PATH
 import com.extenre.patches.youtube.utils.extension.sharedExtensionPatch
 import com.extenre.util.addStaticFieldToExtension
-import com.extenre.util.findMethodOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.getWalkerMethod
 import com.extenre.util.indexOfFirstInstructionOrThrow
@@ -40,7 +40,7 @@ val dismissPlayerHookPatch = bytecodePatch(
     dependsOn(sharedExtensionPatch)
 
     execute {
-        dismissPlayerOnClickListenerFingerprint.methodOrThrow().apply {
+        dismissPlayerOnClickListenerFingerprint.mutableMethodOrThrow().apply {
             val literalIndex =
                 indexOfFirstLiteralInstructionOrThrow(DISMISS_PLAYER_LITERAL)
             val dismissPlayerIndex = indexOfFirstInstructionOrThrow(literalIndex) {
@@ -78,7 +78,7 @@ val dismissPlayerHookPatch = bytecodePatch(
             val fieldReference =
                 getInstruction<ReferenceInstruction>(fieldIndex).reference as FieldReference
 
-            findMethodOrThrow(fieldReference.definingClass).apply {
+            findmutableMethodOrThrow(fieldReference.definingClass).apply {
                 val insertIndex = indexOfFirstInstructionOrThrow {
                     opcode == Opcode.IPUT_OBJECT &&
                             getReference<FieldReference>() == fieldReference

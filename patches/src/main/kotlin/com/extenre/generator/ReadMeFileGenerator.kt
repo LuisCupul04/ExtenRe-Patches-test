@@ -43,7 +43,6 @@ internal class ReadMeFileGenerator : PatchesFileGenerator {
         readMeFile.writeText(readMeTemplateFile.readText())
 
         // Reemplazar los marcadores de versiones compatibles
-        // Especificamos el tipo explícitamente para evitar problemas de inferencia
         val markers: Map<Pair<String, Set<String>?>, String> = mapOf(
             com.extenre.patches.music.utils.compatibility.Constants.COMPATIBLE_PACKAGE to "\"COMPATIBLE_PACKAGE_MUSIC\"",
             com.extenre.patches.reddit.utils.compatibility.Constants.COMPATIBLE_PACKAGE to "\"COMPATIBLE_PACKAGE_REDDIT\"",
@@ -86,9 +85,8 @@ internal class ReadMeFileGenerator : PatchesFileGenerator {
                     val versions = patch.compatiblePackages?.get(pkg)
                     val supportedVersion = when {
                         versions != null && versions.isNotEmpty() -> {
-                            // Usamos min() y max() en lugar de minOrNull/maxOrNull para compatibilidad
-                            val min = versions.min()
-                            val max = versions.max()
+                            val min = versions.minOrNull()!!
+                            val max = versions.maxOrNull()!!
                             if (min == max) max else "$min ~ $max"
                         }
                         exception.containsKey(pkg) -> exception[pkg] + "+"
@@ -96,8 +94,8 @@ internal class ReadMeFileGenerator : PatchesFileGenerator {
                     }
 
                     output.appendLine(
-                        "| `${patch.key}` " +                // Usamos patch.key (nombre original)
-                                "| ${patch.title} " +         // Usamos patch.title
+                        "| `${patch.name}` " +
+                                "| ${patch.description} " +
                                 "| $supportedVersion |"
                     )
                 }

@@ -34,7 +34,7 @@ import com.extenre.patches.shared.litho.lithoFilterPatch
 import com.extenre.patches.shared.mainactivity.onStartMethod
 import com.extenre.patches.shared.mainactivity.onStopMethod
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.getWalkerMethod
 import com.extenre.util.indexOfFirstInstructionOrThrow
@@ -78,7 +78,7 @@ val adsPatch = adsPatch(
         // region patch for hide premium promotion popup
 
         // get premium bottom sheet
-        floatingLayoutFingerprint.methodOrThrow().apply {
+        floatingLayoutFingerprint.mutableMethodOrThrow().apply {
             val targetIndex = indexOfFirstLiteralInstructionOrThrow(floatingLayout) + 2
             val targetRegister = getInstruction<OneRegisterInstruction>(targetIndex).registerA
 
@@ -102,7 +102,7 @@ val adsPatch = adsPatch(
             }
 
             getPremiumDialogFingerprint
-                .methodOrThrow(getPremiumDialogParentFingerprint)
+                .mutableMethodOrThrow(getPremiumDialogParentFingerprint)
                 .apply {
                     val setContentViewIndex = indexOfSetContentViewInstruction(this)
                     val dialogInstruction =
@@ -122,7 +122,7 @@ val adsPatch = adsPatch(
 
         // region patch for hide premium renewal banner
 
-        notifierShelfFingerprint.methodOrThrow().apply {
+        notifierShelfFingerprint.mutableMethodOrThrow().apply {
             val linearLayoutIndex =
                 indexOfFirstLiteralInstructionOrThrow(buttonContainer) + 3
             val linearLayoutRegister =
@@ -152,7 +152,7 @@ val adsPatch = adsPatch(
         }
 
         // get premium button at the bottom of the account switching menu
-        accountMenuFooterFingerprint.methodOrThrow().apply {
+        accountMenuFooterFingerprint.mutableMethodOrThrow().apply {
             val constIndex =
                 indexOfFirstLiteralInstructionOrThrow(privacyTosFooter)
             val walkerIndex =

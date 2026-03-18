@@ -27,7 +27,7 @@ import com.extenre.patches.youtube.video.playbackstart.playbackStartVideoIdRefer
 import com.extenre.patches.youtube.video.playbackstart.shortsPlaybackStartIntentFingerprint
 import com.extenre.patches.youtube.video.playbackstart.shortsPlaybackStartIntentLegacyFingerprint
 import com.extenre.util.copyXmlNode
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
@@ -81,7 +81,7 @@ val openChannelOfLiveAvatarPatch = bytecodePatch(
 
     execute {
 
-        clientSettingEndpointFingerprint.methodOrThrow().apply {
+        clientSettingEndpointFingerprint.mutableMethodOrThrow().apply {
             val eqzIndex = indexOfFirstInstructionReversedOrThrow(Opcode.IF_EQZ)
             var freeIndex = indexOfFirstInstructionReversedOrThrow(eqzIndex, Opcode.NEW_INSTANCE)
             var freeRegister = getInstruction<OneRegisterInstruction>(freeIndex).registerA
@@ -160,7 +160,7 @@ val openChannelOfLiveAvatarPatch = bytecodePatch(
             """
 
         if (is_19_25_or_greater) {
-            shortsPlaybackStartIntentFingerprint.methodOrThrow().apply {
+            shortsPlaybackStartIntentFingerprint.mutableMethodOrThrow().apply {
                 openChannel()
 
                 addInstructionsWithLabels(
@@ -172,7 +172,7 @@ val openChannelOfLiveAvatarPatch = bytecodePatch(
                 )
             }
         } else {
-            shortsPlaybackStartIntentLegacyFingerprint.methodOrThrow().apply {
+            shortsPlaybackStartIntentLegacyFingerprint.mutableMethodOrThrow().apply {
                 openChannel()
 
                 val playbackStartIndex = indexOfFirstInstructionOrThrow {

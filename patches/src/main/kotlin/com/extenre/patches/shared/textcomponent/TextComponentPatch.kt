@@ -18,7 +18,7 @@ import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod
 import com.extenre.patches.shared.SPANNABLE_STRING_REFERENCE
 import com.extenre.patches.shared.indexOfSpannableStringInstruction
 import com.extenre.patches.shared.spannableStringBuilderFingerprint
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstruction
 import com.extenre.util.indexOfFirstInstructionOrThrow
@@ -45,7 +45,7 @@ val textComponentPatch = bytecodePatch(
     description = "textComponentPatch"
 ) {
     execute {
-        spannableStringBuilderFingerprint.methodOrThrow().apply {
+        spannableStringBuilderFingerprint.mutableMethodOrThrow().apply {
             spannedMethod = this
             spannedIndex = indexOfSpannableStringInstruction(this)
             spannedRegister = getInstruction<FiveRegisterInstruction>(spannedIndex).registerC
@@ -62,7 +62,7 @@ val textComponentPatch = bytecodePatch(
             )
         }
 
-        textComponentContextFingerprint.methodOrThrow(textComponentConstructorFingerprint).apply {
+        textComponentContextFingerprint.mutableMethodOrThrow(textComponentConstructorFingerprint).apply {
             textComponentMethod = this
             val conversionContextFieldIndex = indexOfFirstInstructionOrThrow {
                 getReference<FieldReference>()?.type == "Ljava/util/Map;"

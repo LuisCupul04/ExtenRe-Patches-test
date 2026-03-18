@@ -16,7 +16,7 @@ import com.extenre.patches.youtube.utils.patch.PatchList.DISABLE_SIGN_IN_TO_TV_P
 import com.extenre.patches.youtube.utils.resourceid.sharedResourceIdPatch
 import com.extenre.patches.youtube.utils.settings.ResourceUtils.addPreference
 import com.extenre.patches.youtube.utils.settings.settingsPatch
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 
 @Suppress("unused")
 val signInToTvPopupPatch = bytecodePatch(
@@ -32,7 +32,7 @@ val signInToTvPopupPatch = bytecodePatch(
 
     execute {
 
-        signInToTvPopupFingerprint.methodOrThrow().addInstructionsWithLabels(
+        signInToTvPopupFingerprint.mutableMethodOrThrow().addInstructionsWithLabels(
             0, """
                 invoke-static { }, $GENERAL_CLASS_DESCRIPTOR->disableSignInToTvPopup()Z
                 move-result v0

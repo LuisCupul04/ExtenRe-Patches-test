@@ -32,7 +32,7 @@ import com.extenre.patches.music.video.information.videoInformationPatch
 import com.extenre.patches.music.video.information.videoTimeHook
 import com.extenre.util.adoptChild
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
@@ -67,7 +67,7 @@ private val sponsorBlockBytecodePatch = bytecodePatch(
          * Responsible for seekbar in fullscreen
          */
         var rectangleFieldName =
-            with(rectangleFieldInvalidatorFingerprint.methodOrThrow(seekBarConstructorFingerprint)) {
+            with(rectangleFieldInvalidatorFingerprint.mutableMethodOrThrow(seekBarConstructorFingerprint)) {
                 val invalidateIndex = indexOfInvalidateInstruction(this)
                 val rectangleIndex =
                     indexOfFirstInstructionReversedOrThrow(invalidateIndex + 1) {
@@ -79,7 +79,7 @@ private val sponsorBlockBytecodePatch = bytecodePatch(
                 (rectangleReference as FieldReference).name
             }
 
-        seekbarOnDrawFingerprint.methodOrThrow(seekBarConstructorFingerprint).apply {
+        seekbarOnDrawFingerprint.mutableMethodOrThrow(seekBarConstructorFingerprint).apply {
             // Initialize seekbar method
             addInstructions(
                 0, """
@@ -130,7 +130,7 @@ private val sponsorBlockBytecodePatch = bytecodePatch(
                 }
             }
 
-        musicPlaybackControlsTimeBarDrawFingerprint.methodOrThrow().apply {
+        musicPlaybackControlsTimeBarDrawFingerprint.mutableMethodOrThrow().apply {
             // Initialize seekbar method
             addInstructions(
                 1, """

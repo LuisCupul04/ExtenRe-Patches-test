@@ -13,7 +13,7 @@ import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.getWalkerMethod
 import com.extenre.util.indexOfFirstInstructionOrThrow
@@ -29,7 +29,7 @@ fun baseViewerDiscretionDialogPatch(
 ) {
     execute {
         createDialogFingerprint
-            .methodOrThrow()
+            .mutableMethodOrThrow()
             .invoke(classDescriptor, "confirmDialog")
 
         if (isAgeVerified) {

@@ -17,7 +17,7 @@ import com.extenre.patches.reddit.utils.extension.Constants.PATCHES_PATH
 import com.extenre.patches.reddit.utils.patch.PatchList.HIDE_RECOMMENDED_COMMUNITIES_SHELF
 import com.extenre.patches.reddit.utils.settings.settingsPatch
 import com.extenre.patches.reddit.utils.settings.updatePatchStatus
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 
 private const val EXTENSION_METHOD_DESCRIPTOR =
     "$PATCHES_PATH/RecommendedCommunitiesPatch;->hideRecommendedCommunitiesShelf()Z"
@@ -32,7 +32,7 @@ val recommendedCommunitiesPatch = bytecodePatch(
     dependsOn(settingsPatch)
 
     execute {
-        communityRecommendationSectionFingerprint.methodOrThrow(
+        communityRecommendationSectionFingerprint.mutableMethodOrThrow(
             communityRecommendationSectionParentFingerprint
         ).apply {
             addInstructionsWithLabels(

@@ -55,7 +55,7 @@ import com.extenre.util.findElementByAttributeValueOrThrow
 import com.extenre.util.findMethodsOrThrow
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.resolvable
 import com.extenre.util.getReference
 import com.extenre.util.getWalkerMethod
@@ -137,7 +137,7 @@ val seekbarComponentsPatch = bytecodePatch(
 
         // region patch for enable seekbar tapping patch
 
-        seekbarTappingFingerprint.methodOrThrow().apply {
+        seekbarTappingFingerprint.mutableMethodOrThrow().apply {
             val pointIndex = indexOfPointInstruction(this)
             val pointInstruction = getInstruction<FiveRegisterInstruction>(pointIndex)
             val freeRegister = pointInstruction.registerE
@@ -208,7 +208,7 @@ val seekbarComponentsPatch = bytecodePatch(
 
         // region patch for append time stamps information
 
-        totalTimeFingerprint.methodOrThrow().apply {
+        totalTimeFingerprint.mutableMethodOrThrow().apply {
             val charSequenceIndex = indexOfFirstInstructionOrThrow {
                 getReference<MethodReference>()?.name == "getString"
             } + 1
@@ -249,12 +249,12 @@ val seekbarComponentsPatch = bytecodePatch(
             )
         }
 
-        playerSeekbarColorFingerprint.methodOrThrow().apply {
+        playerSeekbarColorFingerprint.mutableMethodOrThrow().apply {
             addColorChangeInstructions(inlineTimeBarColorizedBarPlayedColorDark)
             addColorChangeInstructions(inlineTimeBarPlayedNotHighlightedColor)
         }
 
-        shortsSeekbarColorFingerprint.methodOrThrow().apply {
+        shortsSeekbarColorFingerprint.mutableMethodOrThrow().apply {
             addColorChangeInstructions(reelTimeBarPlayedColor)
         }
 
@@ -285,7 +285,7 @@ val seekbarComponentsPatch = bytecodePatch(
                 playerSeekbarHandleColorPrimaryFingerprint,
                 playerSeekbarHandleColorSecondaryFingerprint
             ).forEach {
-                it.methodOrThrow().addColorChangeInstructions(
+                it.mutableMethodOrThrow().addColorChangeInstructions(
                     ytStaticBrandRed,
                     "getVideoPlayerSeekbarColorAccent"
                 )
@@ -294,7 +294,7 @@ val seekbarComponentsPatch = bytecodePatch(
             // of the watch history menu items as they use the same gradient as the
             // player and there is no easy way to distinguish which to use a transparent color.
             if (is_19_34_or_greater) {
-                watchHistoryMenuUseProgressDrawableFingerprint.methodOrThrow().apply {
+                watchHistoryMenuUseProgressDrawableFingerprint.mutableMethodOrThrow().apply {
                     val progressIndex = indexOfFirstInstructionOrThrow {
                         val reference = getReference<MethodReference>()
                         reference?.definingClass == "Landroid/widget/ProgressBar;" &&
@@ -312,7 +312,7 @@ val seekbarComponentsPatch = bytecodePatch(
                 }
             }
 
-            lithoLinearGradientFingerprint.methodOrThrow().addInstructions(
+            lithoLinearGradientFingerprint.mutableMethodOrThrow().addInstructions(
                 0,
                 """
                     invoke-static/range { p4 .. p5 },  $EXTENSION_SEEKBAR_COLOR_CLASS_DESCRIPTOR->getLithoLinearGradient([I[F)[I
@@ -358,7 +358,7 @@ val seekbarComponentsPatch = bytecodePatch(
             if (!restoreOldSplashAnimationIncluded) {
                 // Don't use the lotte splash screen layout if using custom seekbar.
                 arrayOf(
-                    launchScreenLayoutTypeFingerprint.methodOrThrow(),
+                    launchScreenLayoutTypeFingerprint.mutableMethodOrThrow(),
                     onCreateMethod
                 ).forEach { method ->
                     method.apply {
@@ -502,7 +502,7 @@ val seekbarComponentsPatch = bytecodePatch(
 
         // region patch for hide chapter
 
-        timelineMarkerArrayFingerprint.methodOrThrow().apply {
+        timelineMarkerArrayFingerprint.mutableMethodOrThrow().apply {
             addInstructionsWithLabels(
                 0, """
                     invoke-static {}, $PLAYER_CLASS_DESCRIPTOR->disableSeekbarChapters()Z
@@ -515,7 +515,7 @@ val seekbarComponentsPatch = bytecodePatch(
             )
         }
 
-        playerButtonsVisibilityFingerprint.methodOrThrow(playerButtonsResourcesFingerprint).apply {
+        playerButtonsVisibilityFingerprint.mutableMethodOrThrow(playerButtonsResourcesFingerprint).apply {
             val freeRegister = implementation!!.registerCount - parameters.size - 2
             val viewIndex = indexOfFirstInstructionOrThrow(Opcode.INVOKE_INTERFACE)
             val viewRegister = getInstruction<FiveRegisterInstruction>(viewIndex).registerD
@@ -534,7 +534,7 @@ val seekbarComponentsPatch = bytecodePatch(
 
         // region patch for hide seekbar
 
-        seekbarOnDrawFingerprint.methodOrThrow(seekbarFingerprint).apply {
+        seekbarOnDrawFingerprint.mutableMethodOrThrow(seekbarFingerprint).apply {
             addInstructionsWithLabels(
                 0, """
                     invoke-static {}, $PLAYER_CLASS_DESCRIPTOR->hideSeekbar()Z
@@ -549,7 +549,7 @@ val seekbarComponentsPatch = bytecodePatch(
 
         // region patch for hide time stamp
 
-        timeCounterFingerprint.methodOrThrow(playerSeekbarColorFingerprint).apply {
+        timeCounterFingerprint.mutableMethodOrThrow(playerSeekbarColorFingerprint).apply {
             addInstructionsWithLabels(
                 0, """
                     invoke-static {}, $PLAYER_CLASS_DESCRIPTOR->hideTimeStamp()Z

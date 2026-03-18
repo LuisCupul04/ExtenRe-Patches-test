@@ -32,9 +32,9 @@ import com.extenre.patches.youtube.utils.settings.settingsPatch
 import com.extenre.patches.youtube.utils.settingsFragmentSyntheticFingerprint
 import com.extenre.patches.youtube.utils.toolBarButtonFingerprint
 import com.extenre.util.Utils.printWarn
-import com.extenre.util.findMethodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
@@ -58,7 +58,7 @@ private val spoofAppVersionBytecodePatch = bytecodePatch(
             return@execute
         }
 
-        findMethodOrThrow(PATCH_STATUS_CLASS_DESCRIPTOR) {
+        findmutableMethodOrThrow(PATCH_STATUS_CLASS_DESCRIPTOR) {
             name == "SpoofAppVersion"
         }.returnEarly(true)
 
@@ -66,7 +66,7 @@ private val spoofAppVersionBytecodePatch = bytecodePatch(
          * When spoofing the app version to YouTube 19.20.xx or earlier via Spoof app version on YouTube 19.23.xx+, the Library tab will crash.
          * As a temporary workaround, do not set an image in the toolbar when the enum name is UNKNOWN.
          */
-        toolBarButtonFingerprint.methodOrThrow().apply {
+        toolBarButtonFingerprint.mutableMethodOrThrow().apply {
             val getDrawableIndex = indexOfGetDrawableInstruction(this)
             val enumOrdinalIndex = indexOfFirstInstructionReversedOrThrow(getDrawableIndex) {
                 opcode == Opcode.INVOKE_INTERFACE &&
@@ -97,7 +97,7 @@ private val spoofAppVersionBytecodePatch = bytecodePatch(
                 "$GENERAL_CLASS_DESCRIPTOR->disableCairoFragment(Z)Z"
             )
 
-            settingsFragmentSyntheticFingerprint.methodOrThrow().apply {
+            settingsFragmentSyntheticFingerprint.mutableMethodOrThrow().apply {
                 val index = indexOfFirstLiteralInstructionOrThrow(settingsFragment)
                 val register = getInstruction<OneRegisterInstruction>(index).registerA
 

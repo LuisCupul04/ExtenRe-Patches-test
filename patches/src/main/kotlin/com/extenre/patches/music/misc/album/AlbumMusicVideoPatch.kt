@@ -26,8 +26,8 @@ import com.extenre.patches.music.video.information.videoInformationPatch
 import com.extenre.patches.music.video.playerresponse.Hook
 import com.extenre.patches.music.video.playerresponse.addPlayerResponseMethodHook
 import com.extenre.patches.music.video.playerresponse.playerResponseMethodHookPatch
-import com.extenre.util.findMethodOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
 import com.android.tools.smali.dexlib2.Opcode
@@ -42,7 +42,6 @@ private const val EXTENSION_CLASS_DESCRIPTOR =
 val albumMusicVideoPatch = bytecodePatch(
     name = DISABLE_MUSIC_VIDEO_IN_ALBUM.key,
     description = "${DISABLE_MUSIC_VIDEO_IN_ALBUM.title}: ${DISABLE_MUSIC_VIDEO_IN_ALBUM.summary}",
-    optimized = false,
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 
@@ -74,7 +73,7 @@ val albumMusicVideoPatch = bytecodePatch(
         // region patch for hide snack bar
 
         snackBarFingerprint
-            .methodOrThrow(snackBarAttributeFingerprint)
+            .mutableMethodOrThrow(snackBarAttributeFingerprint)
             .addInstructionsWithLabels(
                 0, """
                 invoke-static {}, $EXTENSION_CLASS_DESCRIPTOR->hideSnackBar()Z
@@ -90,7 +89,7 @@ val albumMusicVideoPatch = bytecodePatch(
 
         // region patch for setOnClick / setOnLongClick listener
 
-        audioVideoSwitchToggleConstructorFingerprint.methodOrThrow().apply {
+        audioVideoSwitchToggleConstructorFingerprint.mutableMethodOrThrow().apply {
             val onClickListenerIndex = indexOfAudioVideoSwitchSetOnClickListenerInstruction(this)
             val viewRegister =
                 getInstruction<FiveRegisterInstruction>(onClickListenerIndex).registerC
@@ -109,7 +108,7 @@ val albumMusicVideoPatch = bytecodePatch(
             val onClickListenerSyntheticClass =
                 (getInstruction<ReferenceInstruction>(onClickListenerSyntheticIndex).reference as MethodReference).definingClass
 
-            findMethodOrThrow(onClickListenerSyntheticClass) {
+            findmutableMethodOrThrow(onClickListenerSyntheticClass) {
                 name == "onClick"
             }.addInstructionsWithLabels(
                 0, """

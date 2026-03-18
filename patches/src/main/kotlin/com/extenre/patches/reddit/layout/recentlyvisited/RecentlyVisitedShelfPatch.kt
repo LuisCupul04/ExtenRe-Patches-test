@@ -16,7 +16,7 @@ import com.extenre.patches.reddit.utils.extension.Constants.PATCHES_PATH
 import com.extenre.patches.reddit.utils.patch.PatchList.HIDE_RECENTLY_VISITED_SHELF
 import com.extenre.patches.reddit.utils.settings.settingsPatch
 import com.extenre.patches.reddit.utils.settings.updatePatchStatus
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
 import com.android.tools.smali.dexlib2.Opcode
@@ -40,7 +40,7 @@ val recentlyVisitedShelfPatch = bytecodePatch(
     execute {
 
         val recentlyVisitedReference =
-            with(communityDrawerPresenterConstructorFingerprint.methodOrThrow()) {
+            with(communityDrawerPresenterConstructorFingerprint.mutableMethodOrThrow()) {
                 val recentlyVisitedFieldIndex = indexOfHeaderItemInstruction(this)
                 val recentlyVisitedObjectIndex =
                     indexOfFirstInstructionOrThrow(recentlyVisitedFieldIndex, Opcode.IPUT_OBJECT)
@@ -48,7 +48,7 @@ val recentlyVisitedShelfPatch = bytecodePatch(
                 getInstruction<ReferenceInstruction>(recentlyVisitedObjectIndex).reference.toString()
             }
 
-        communityDrawerPresenterFingerprint.methodOrThrow(
+        communityDrawerPresenterFingerprint.mutableMethodOrThrow(
             communityDrawerPresenterConstructorFingerprint
         ).apply {
             val recentlyVisitedObjectIndex =

@@ -13,7 +13,7 @@ import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patches.music.utils.extension.Constants.SHARED_PATH
 import com.extenre.patches.music.utils.extension.sharedExtensionPatch
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
@@ -22,13 +22,13 @@ internal const val EXTENSION_CLASS_DESCRIPTOR =
     "$SHARED_PATH/NavigationBar;"
 
 val navigationBarHookPatch = bytecodePatch(
-    name = "navigation-BarHook-Patch",
+    name = "navigation-Bar-Hook-Patch",
     description = "navigationBarHookPatch"
 ) {
     dependsOn(sharedExtensionPatch)
 
     execute {
-        tabLayoutViewSetSelectedFingerprint.methodOrThrow().apply {
+        tabLayoutViewSetSelectedFingerprint.mutableMethodOrThrow().apply {
             val childAtIndex = indexOfChildAtInstruction(this)
             val tabIndexRegister =
                 getInstruction<FiveRegisterInstruction>(childAtIndex).registerD

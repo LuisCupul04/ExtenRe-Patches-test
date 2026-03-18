@@ -35,7 +35,7 @@ import com.extenre.patches.youtube.utils.rollingNumberTextViewFingerprint
 import com.extenre.patches.youtube.utils.settings.ResourceUtils.addPreference
 import com.extenre.patches.youtube.utils.settings.settingsPatch
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.android.tools.smali.dexlib2.Opcode
@@ -106,7 +106,7 @@ val descriptionComponentsPatch = bytecodePatch(
         // region patch for disable video description interaction and expand video description
 
         if (is_19_05_or_greater) {
-            textViewComponentFingerprint.methodOrThrow().apply {
+            textViewComponentFingerprint.mutableMethodOrThrow().apply {
                 val insertIndex = indexOfTextIsSelectableInstruction(this)
                 val insertInstruction = getInstruction<FiveRegisterInstruction>(insertIndex)
 

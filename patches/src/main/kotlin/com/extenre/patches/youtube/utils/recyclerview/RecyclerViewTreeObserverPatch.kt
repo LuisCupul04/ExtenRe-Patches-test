@@ -12,7 +12,7 @@ import com.extenre.patcher.extensions.InstructionExtensions.addInstruction
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
@@ -38,7 +38,7 @@ val recyclerViewTreeObserverPatch = bytecodePatch(
             "0x1"
         )
 
-        recyclerViewTreeObserverFingerprint.methodOrThrow().apply {
+        recyclerViewTreeObserverFingerprint.mutableMethodOrThrow().apply {
             recyclerViewTreeObserverMutableMethod = this
 
             val onDrawListenerIndex = indexOfFirstInstructionOrThrow {

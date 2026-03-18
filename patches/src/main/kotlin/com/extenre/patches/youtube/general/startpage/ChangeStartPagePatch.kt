@@ -17,7 +17,7 @@ import com.extenre.patches.youtube.utils.extension.Constants.GENERAL_PATH
 import com.extenre.patches.youtube.utils.patch.PatchList.CHANGE_START_PAGE
 import com.extenre.patches.youtube.utils.settings.ResourceUtils.addPreference
 import com.extenre.patches.youtube.utils.settings.settingsPatch
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.android.tools.smali.dexlib2.Opcode
@@ -39,7 +39,7 @@ val changeStartPagePatch = bytecodePatch(
     execute {
 
         // Hook browseId.
-        browseIdFingerprint.methodOrThrow().apply {
+        browseIdFingerprint.mutableMethodOrThrow().apply {
             val browseIdIndex = indexOfFirstInstructionOrThrow {
                 opcode == Opcode.CONST_STRING &&
                         getReference<StringReference>()?.string == "FEwhat_to_watch"
@@ -56,7 +56,7 @@ val changeStartPagePatch = bytecodePatch(
 
         // There is no browseId assigned to Shorts and Search.
         // Just hook the Intent action.
-        intentFingerprint.methodOrThrow().addInstruction(
+        intentFingerprint.mutableMethodOrThrow().addInstruction(
             0,
             "invoke-static { p1 }, $EXTENSION_CLASS_DESCRIPTOR->overrideIntent(Landroid/content/Intent;)V"
         )

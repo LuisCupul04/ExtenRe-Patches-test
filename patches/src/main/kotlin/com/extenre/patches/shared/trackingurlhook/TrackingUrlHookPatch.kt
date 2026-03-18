@@ -13,7 +13,7 @@ import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod
 import com.extenre.patches.shared.extension.Constants.PATCHES_PATH
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.android.tools.smali.dexlib2.Opcode
@@ -35,7 +35,7 @@ val trackingUrlHookPatch = bytecodePatch(
 ) {
     execute {
         trackingUrlMethod =
-            trackingUrlModelFingerprint.methodOrThrow(trackingUrlModelToStringFingerprint)
+            trackingUrlModelFingerprint.mutableMethodOrThrow(trackingUrlModelToStringFingerprint)
     }
 }
 

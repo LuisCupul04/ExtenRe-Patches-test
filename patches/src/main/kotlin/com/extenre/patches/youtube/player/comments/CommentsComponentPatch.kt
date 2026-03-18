@@ -29,7 +29,7 @@ import com.extenre.patches.youtube.utils.playertype.playerTypeHookPatch
 import com.extenre.patches.youtube.utils.resourceid.sharedResourceIdPatch
 import com.extenre.patches.youtube.utils.settings.ResourceUtils.addPreference
 import com.extenre.patches.youtube.utils.settings.settingsPatch
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getWalkerMethod
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstLiteralInstructionOrThrow
@@ -63,7 +63,7 @@ val commentsComponentPatch = bytecodePatch(
 
         // region patch for emoji picker button in shorts
 
-        shortsLiveStreamEmojiPickerOpacityFingerprint.methodOrThrow().apply {
+        shortsLiveStreamEmojiPickerOpacityFingerprint.mutableMethodOrThrow().apply {
             val insertIndex = implementation!!.instructions.lastIndex
             val insertRegister = getInstruction<OneRegisterInstruction>(insertIndex).registerA
 
@@ -73,7 +73,7 @@ val commentsComponentPatch = bytecodePatch(
             )
         }
 
-        shortsLiveStreamEmojiPickerOnClickListenerFingerprint.methodOrThrow().apply {
+        shortsLiveStreamEmojiPickerOnClickListenerFingerprint.mutableMethodOrThrow().apply {
             val emojiPickerEndpointIndex =
                 indexOfFirstLiteralInstructionOrThrow(126326492L)
             val emojiPickerOnClickListenerIndex =

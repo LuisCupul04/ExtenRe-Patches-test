@@ -37,12 +37,12 @@ import com.extenre.patches.shared.opus.baseOpusCodecsPatch
 import com.extenre.patches.shared.playbackStartParametersConstructorFingerprint
 import com.extenre.patches.shared.playbackStartParametersToStringFingerprint
 import com.extenre.util.findFieldFromToString
-import com.extenre.util.findMethodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
 import com.extenre.util.findMutableClassOrThrow
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
-import com.extenre.util.fingerprint.originalMethodOrThrow
+import com.extenre.util.fingerprint.originalmutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstruction
 import com.extenre.util.indexOfFirstInstructionOrThrow
@@ -64,8 +64,8 @@ private const val EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val videoPlaybackPatch = bytecodePatch(
-    name = DISABLE_CAIRO_SPLASH_ANIMATION.key,
-    description = "${VIDEO_PLAYBACK.title}: ${DISABLE_CAIRO_SPLASH_ANIMATION.summary}",
+    name = VIDEO_PLAYBACK.key,
+    description = "${VIDEO_PLAYBACK.title}: ${VIDEO_PLAYBACK.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 
@@ -178,7 +178,7 @@ val videoPlaybackPatch = bytecodePatch(
                         """
                 )
 
-                findMethodOrThrow(EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR) {
+                findmutableMethodOrThrow(EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR) {
                     name == "getVideoQualityResolution"
                 }.addInstructions(
                     0, """
@@ -191,11 +191,11 @@ val videoPlaybackPatch = bytecodePatch(
         }
 
         val initialResolutionField =
-            playbackStartParametersToStringFingerprint.originalMethodOrThrow()
+            playbackStartParametersToStringFingerprint.originalmutableMethodOrThrow()
                 .findFieldFromToString(FIXED_RESOLUTION_STRING)
 
         playbackStartParametersConstructorFingerprint
-            .methodOrThrow(playbackStartParametersToStringFingerprint)
+            .mutableMethodOrThrow(playbackStartParametersToStringFingerprint)
             .apply {
                 val index = indexOfFirstInstructionReversedOrThrow {
                     opcode == Opcode.IPUT_OBJECT &&
@@ -219,7 +219,7 @@ val videoPlaybackPatch = bytecodePatch(
                 val qualityChangedClass =
                     getInstruction<ReferenceInstruction>(endIndex).reference.toString()
 
-                findMethodOrThrow(qualityChangedClass) {
+                findmutableMethodOrThrow(qualityChangedClass) {
                     name == "onItemClick"
                 }.addInstruction(
                     0,

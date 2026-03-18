@@ -44,10 +44,10 @@ import com.extenre.patches.youtube.video.information.hookVideoInformation
 import com.extenre.patches.youtube.video.information.speedSelectionInsertMethod
 import com.extenre.patches.youtube.video.information.videoInformationPatch
 import com.extenre.patches.youtube.video.videoid.videoIdPatch
-import com.extenre.util.findMethodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
 import com.extenre.util.fingerprint.definingClassOrThrow
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstruction
 import com.extenre.util.indexOfFirstInstructionOrThrow
@@ -123,7 +123,7 @@ val videoPlaybackPatch = bytecodePatch(
         // region patch for default playback speed
 
         val newMethod =
-            playbackSpeedChangedFromRecyclerViewFingerprint.methodOrThrow(
+            playbackSpeedChangedFromRecyclerViewFingerprint.mutableMethodOrThrow(
                 qualityChangedFromRecyclerViewFingerprint
             )
 
@@ -152,7 +152,7 @@ val videoPlaybackPatch = bytecodePatch(
                 val targetReference =
                     getInstruction<ReferenceInstruction>(targetIndex).reference as FieldReference
 
-                findMethodOrThrow(targetReference.definingClass) {
+                findmutableMethodOrThrow(targetReference.definingClass) {
                     returnType == "F" &&
                             indexOfFirstInstruction {
                                 opcode == Opcode.IGET &&
@@ -196,7 +196,7 @@ val videoPlaybackPatch = bytecodePatch(
             }
         }
 
-        videoQualityItemOnClickFingerprint.methodOrThrow(
+        videoQualityItemOnClickFingerprint.mutableMethodOrThrow(
             videoQualityItemOnClickParentFingerprint
         ).addInstruction(
             0,
@@ -207,7 +207,7 @@ val videoPlaybackPatch = bytecodePatch(
 
         // region patch for show advanced video quality menu
 
-        qualityMenuViewInflateFingerprint.methodOrThrow().apply {
+        qualityMenuViewInflateFingerprint.mutableMethodOrThrow().apply {
             val insertIndex = indexOfFirstInstructionOrThrow(Opcode.CHECK_CAST)
             val insertRegister = getInstruction<OneRegisterInstruction>(insertIndex).registerA
 
@@ -219,7 +219,7 @@ val videoPlaybackPatch = bytecodePatch(
         }
 
         qualityMenuViewInflateOnItemClickFingerprint
-            .methodOrThrow(qualityMenuViewInflateFingerprint)
+            .mutableMethodOrThrow(qualityMenuViewInflateFingerprint)
             .apply {
                 val contextIndex = indexOfContextInstruction(this)
                 val contextField =
@@ -256,7 +256,7 @@ val videoPlaybackPatch = bytecodePatch(
 
         // region patch for spoof device dimensions
 
-        findMethodOrThrow(
+        findmutableMethodOrThrow(
             deviceDimensionsModelToStringFingerprint.definingClassOrThrow()
         ).addInstructions(
             1, // Add after super call.
@@ -277,7 +277,7 @@ val videoPlaybackPatch = bytecodePatch(
 
         // region patch for disable VP9 codec
 
-        vp9CapabilityFingerprint.methodOrThrow().apply {
+        vp9CapabilityFingerprint.mutableMethodOrThrow().apply {
             addInstructionsWithLabels(
                 0, """
                     invoke-static {}, $EXTENSION_VP9_CODEC_CLASS_DESCRIPTOR->disableVP9Codec()Z

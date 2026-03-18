@@ -46,7 +46,7 @@ import com.extenre.util.copyXmlNode
 import com.extenre.util.findInstructionIndicesReversedOrThrow
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.getWalkerMethod
 import com.extenre.util.indexOfFirstInstructionOrThrow
@@ -200,7 +200,7 @@ val navigationBarComponentsPatch = bytecodePatch(
         else
             searchBarOnClickListenerLegacyFingerprint
 
-        onClickListenerFingerprint.methodOrThrow().apply {
+        onClickListenerFingerprint.mutableMethodOrThrow().apply {
             val searchBoxIdIndex = indexOfFirstLiteralInstructionOrThrow(searchBox)
 
             val onClickMethodIndex = indexOfFirstInstructionOrThrow(searchBoxIdIndex) {
@@ -291,7 +291,7 @@ val navigationBarComponentsPatch = bytecodePatch(
             )
         }
 
-        val enumClass = with(imageEnumConstructorFingerprint.methodOrThrow()) {
+        val enumClass = with(imageEnumConstructorFingerprint.mutableMethodOrThrow()) {
             arrayOf(
                 SEARCH_STRING to "search",
                 SEARCH_CAIRO_STRING to "searchCairo",
@@ -357,7 +357,7 @@ val navigationBarComponentsPatch = bytecodePatch(
             }
         }
 
-        pivotBarBuilderFingerprint.methodOrThrow().apply {
+        pivotBarBuilderFingerprint.mutableMethodOrThrow().apply {
             mapOf(
                 newContentCount to "getContentCountId",
                 newContentDot to "getContentDotId"
@@ -377,7 +377,7 @@ val navigationBarComponentsPatch = bytecodePatch(
             }
         }
 
-        actionBarSearchResultsFingerprint.methodOrThrow().apply {
+        actionBarSearchResultsFingerprint.mutableMethodOrThrow().apply {
             val searchQueryId = indexOfFirstLiteralInstructionOrThrow(searchQuery)
 
             val castIndex = indexOfFirstInstructionOrThrow(searchQueryId) {
@@ -430,7 +430,7 @@ val navigationBarComponentsPatch = bytecodePatch(
          */
         if (is_19_28_or_greater && !is_20_28_or_greater) {
             val cairoNotificationEnumReference =
-                with(imageEnumConstructorFingerprint.methodOrThrow()) {
+                with(imageEnumConstructorFingerprint.mutableMethodOrThrow()) {
                     val stringIndex =
                         indexOfFirstStringInstructionOrThrow(TAB_ACTIVITY_CAIRO_STRING)
                     val cairoNotificationEnumIndex = indexOfFirstInstructionOrThrow(stringIndex) {
@@ -439,7 +439,7 @@ val navigationBarComponentsPatch = bytecodePatch(
                     getInstruction<ReferenceInstruction>(cairoNotificationEnumIndex).reference
                 }
 
-            setEnumMapFingerprint.methodOrThrow().apply {
+            setEnumMapFingerprint.mutableMethodOrThrow().apply {
                 val enumMapIndex = indexOfFirstInstructionReversedOrThrow {
                     val reference = getReference<MethodReference>()
                     opcode == Opcode.INVOKE_VIRTUAL &&
@@ -461,7 +461,7 @@ val navigationBarComponentsPatch = bytecodePatch(
                 )
             }
 
-            setEnumMapSecondaryFingerprint.methodOrThrow().apply {
+            setEnumMapSecondaryFingerprint.mutableMethodOrThrow().apply {
                 val index = indexOfFirstLiteralInstructionOrThrow(ytOutlineLibrary)
                 val register = getInstruction<OneRegisterInstruction>(index).registerA
 

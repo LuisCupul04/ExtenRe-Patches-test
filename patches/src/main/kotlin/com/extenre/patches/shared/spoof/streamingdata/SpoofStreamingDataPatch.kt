@@ -32,12 +32,12 @@ import com.extenre.util.addInstructionsAtControlFlowLabel
 import com.extenre.util.cloneMutable
 import com.extenre.util.copyResources
 import com.extenre.util.findInstructionIndicesReversedOrThrow
-import com.extenre.util.findMethodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
 import com.extenre.util.fingerprint.definingClassOrThrow
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.legacyFingerprint
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
@@ -108,7 +108,7 @@ fun spoofStreamingDataPatch(
 
         // region Block /initplayback requests to fall back to /get_watch requests.
 
-        buildInitPlaybackRequestFingerprint.methodOrThrow().apply {
+        buildInitPlaybackRequestFingerprint.mutableMethodOrThrow().apply {
             val index = indexOfUriToStringInstruction(this) + 1
             val register =
                 getInstruction<OneRegisterInstruction>(index).registerA
@@ -126,7 +126,7 @@ fun spoofStreamingDataPatch(
 
         // region Block /get_watch requests to fall back to /player requests.
 
-        buildPlayerRequestURIFingerprint.methodOrThrow().apply {
+        buildPlayerRequestURIFingerprint.mutableMethodOrThrow().apply {
             val invokeToStringIndex = indexOfUriToStringInstruction(this)
             val uriRegister =
                 getInstruction<FiveRegisterInstruction>(invokeToStringIndex).registerC
@@ -144,7 +144,7 @@ fun spoofStreamingDataPatch(
 
         // region Remove /videoplayback request body to fix playback.
 
-        buildMediaDataSourceFingerprint.methodOrThrow().apply {
+        buildMediaDataSourceFingerprint.mutableMethodOrThrow().apply {
             val targetIndex = instructions.lastIndex
 
             addInstructions(
@@ -447,7 +447,7 @@ fun spoofStreamingDataPatch(
             )
         }
 
-        findMethodOrThrow(EXTENSION_UTILS_CLASS_DESCRIPTOR) {
+        findmutableMethodOrThrow(EXTENSION_UTILS_CLASS_DESCRIPTOR) {
             name == "setContext"
         }.apply {
             addInstruction(
@@ -523,7 +523,7 @@ fun spoofStreamingDataPatch(
             }
 
             progressBarVisibilityFingerprint
-                .methodOrThrow(progressBarVisibilityParentFingerprint).apply {
+                .mutableMethodOrThrow(progressBarVisibilityParentFingerprint).apply {
                     val index = indexOfProgressBarVisibilityInstruction(this)
                     val register = getInstruction<FiveRegisterInstruction>(index).registerD
 
@@ -538,7 +538,7 @@ fun spoofStreamingDataPatch(
 
         // region Append spoof info.
 
-        nerdsStatsFormatBuilderFingerprint.methodOrThrow().apply {
+        nerdsStatsFormatBuilderFingerprint.mutableMethodOrThrow().apply {
             findInstructionIndicesReversedOrThrow(Opcode.RETURN_OBJECT).forEach { index ->
                 val register = getInstruction<OneRegisterInstruction>(index).registerA
 
@@ -557,7 +557,7 @@ fun spoofStreamingDataPatch(
         // If SABR is disabled, it seems 'MediaFetchHotConfig' may no longer need to be overridden, but I'm not sure.
 
         val (mediaFetchEnumClass, sabrFieldReference) =
-            with(mediaFetchEnumConstructorFingerprint.methodOrThrow()) {
+            with(mediaFetchEnumConstructorFingerprint.mutableMethodOrThrow()) {
                 val mediaFetchEnumClass = definingClass
                 val stringIndex =
                     indexOfFirstStringInstructionOrThrow(DISABLED_BY_SABR_STREAMING_URI_STRING)
@@ -587,7 +587,7 @@ fun spoofStreamingDataPatch(
         )
 
         getMediaFetchEnumFingerprint
-            .methodOrThrow()
+            .mutableMethodOrThrow()
             .addInstructionsWithLabels(
                 0, """
                     invoke-static { }, $EXTENSION_CLASS_DESCRIPTOR->disableSABR()Z
@@ -637,7 +637,7 @@ fun spoofStreamingDataPatch(
 
         // endregion
 
-        findMethodOrThrow("$PATCHES_PATH/PatchStatus;") {
+        findmutableMethodOrThrow("$PATCHES_PATH/PatchStatus;") {
             name == "SpoofStreamingData"
         }.returnEarly(true)
 

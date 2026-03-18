@@ -31,9 +31,9 @@ import com.extenre.patches.youtube.utils.resourceid.sharedResourceIdPatch
 import com.extenre.patches.youtube.utils.settings.ResourceUtils.addPreference
 import com.extenre.patches.youtube.utils.settings.settingsPatch
 import com.extenre.util.findElementByAttributeValueOrThrow
-import com.extenre.util.findMethodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getNode
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
@@ -63,7 +63,7 @@ private val snackBarComponentsBytecodePatch = bytecodePatch(
     )
 
     execute {
-        bottomUiContainerFingerprint.methodOrThrow().apply {
+        bottomUiContainerFingerprint.mutableMethodOrThrow().apply {
             addInstructionsWithLabels(
                 0, """
                     invoke-static {}, $EXTENSION_CLASS_DESCRIPTOR->hideSnackBar()Z
@@ -123,7 +123,7 @@ private val snackBarComponentsBytecodePatch = bytecodePatch(
                 "invoke-static {v$register}, $EXTENSION_CLASS_DESCRIPTOR->setLithoSnackBarBackground(Landroid/view/View;)V"
             )
 
-        lithoSnackBarFingerprint.methodOrThrow().apply {
+        lithoSnackBarFingerprint.mutableMethodOrThrow().apply {
             val backGroundColorIndex = indexOfBackGroundColor(this)
             val viewRegister =
                 getInstruction<FiveRegisterInstruction>(backGroundColorIndex).registerC
@@ -152,7 +152,7 @@ private val snackBarComponentsBytecodePatch = bytecodePatch(
                     setBackground(index + 1, register)
                 }
 
-            findMethodOrThrow(definingClass).apply {
+            findmutableMethodOrThrow(definingClass).apply {
                 val contextIndex = indexOfFirstInstructionOrThrow {
                     opcode == Opcode.IPUT_OBJECT &&
                             getReference<FieldReference>()?.type == "Landroid/content/Context;"

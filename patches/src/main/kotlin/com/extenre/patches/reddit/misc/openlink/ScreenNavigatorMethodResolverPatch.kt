@@ -10,7 +10,7 @@ package com.extenre.patches.reddit.misc.openlink
 
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getWalkerMethod
 
 lateinit var screenNavigatorMethod: MutableMethod
@@ -24,7 +24,7 @@ val screenNavigatorMethodResolverPatch = bytecodePatch(
                 // ~ Reddit 2024.25.3
             screenNavigatorFingerprint.second.methodOrNull
                     // Reddit 2024.26.1 ~
-                ?: with(customReportsFingerprint.methodOrThrow()) {
+                ?: with(customReportsFingerprint.mutableMethodOrThrow()) {
                     getWalkerMethod(indexOfScreenNavigatorInstruction(this))
                 }
     }

@@ -14,7 +14,7 @@ import com.extenre.patcher.extensions.InstructionExtensions.replaceInstruction
 import com.extenre.patches.all.misc.transformation.IMethodCall
 import com.extenre.patches.all.misc.transformation.filterMapInstruction35c
 import com.extenre.patches.all.misc.transformation.transformInstructionsPatch
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstruction
 import com.extenre.util.indexOfFirstInstructionOrThrow
@@ -81,7 +81,7 @@ fun baseSpoofUserAgentPatch(
         }
     },
     executeBlock = {
-        apiStatsFingerprint.methodOrThrow().apply {
+        apiStatsFingerprint.mutableMethodOrThrow().apply {
             val stringIndex = indexOfFirstStringInstructionOrThrow(CLIENT_PACKAGE_NAME)
             val putIndex = indexOfFirstInstructionOrThrow(stringIndex) {
                 opcode == Opcode.INVOKE_INTERFACE &&

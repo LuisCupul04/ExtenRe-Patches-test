@@ -25,9 +25,9 @@ import com.extenre.patches.youtube.utils.resourceid.reelWatchPlayer
 import com.extenre.patches.youtube.utils.resourceid.sharedResourceIdPatch
 import com.extenre.util.addInstructionsAtControlFlowLabel
 import com.extenre.util.addStaticFieldToExtension
-import com.extenre.util.findMethodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstLiteralInstructionOrThrow
@@ -69,7 +69,7 @@ val playerTypeHookPatch = bytecodePatch(
 
         // region patch for set ad progress text visibility
 
-        adProgressTextViewVisibilityFingerprint.methodOrThrow().apply {
+        adProgressTextViewVisibilityFingerprint.mutableMethodOrThrow().apply {
             val index =
                 indexOfAdProgressTextViewVisibilityInstruction(this)
             val register =
@@ -87,7 +87,7 @@ val playerTypeHookPatch = bytecodePatch(
 
         // region patch for set context
 
-        componentHostFingerprint.methodOrThrow().apply {
+        componentHostFingerprint.mutableMethodOrThrow().apply {
             val index = indexOfGetContextInstruction(this)
             val register =
                 getInstruction<TwoRegisterInstruction>(index).registerA
@@ -104,7 +104,7 @@ val playerTypeHookPatch = bytecodePatch(
 
         // region patch for set player type
 
-        playerTypeFingerprint.methodOrThrow().addInstruction(
+        playerTypeFingerprint.mutableMethodOrThrow().addInstruction(
             0,
             "invoke-static {p1}, " +
                     "$EXTENSION_PLAYER_TYPE_HOOK_CLASS_DESCRIPTOR->setPlayerType(Ljava/lang/Enum;)V"
@@ -114,7 +114,7 @@ val playerTypeHookPatch = bytecodePatch(
 
         // region patch for set shorts player state
 
-        reelWatchPagerFingerprint.methodOrThrow().apply {
+        reelWatchPagerFingerprint.mutableMethodOrThrow().apply {
             val literIndex = indexOfFirstLiteralInstructionOrThrow(reelWatchPlayer) + 2
             val registerIndex = indexOfFirstInstructionOrThrow(literIndex) {
                 opcode == Opcode.MOVE_RESULT_OBJECT
@@ -159,7 +159,7 @@ val playerTypeHookPatch = bytecodePatch(
                     ?.definingClass
                     ?: throw PatchException("Could not find browseId class")
 
-                findMethodOrThrow(targetClass).apply {
+                findmutableMethodOrThrow(targetClass).apply {
                     val browseIdFieldReference = getInstruction<ReferenceInstruction>(
                         indexOfFirstInstructionOrThrow(Opcode.IPUT_OBJECT)
                     ).reference
@@ -191,13 +191,13 @@ val playerTypeHookPatch = bytecodePatch(
 
         // region patch for hook search bar
 
-        searchQueryClassFingerprint.methodOrThrow().apply {
+        searchQueryClassFingerprint.mutableMethodOrThrow().apply {
             val searchQueryIndex = indexOfStringIsEmptyInstruction(this) - 1
             val searchQueryFieldReference =
                 getInstruction<ReferenceInstruction>(searchQueryIndex).reference
             val searchQueryClass = (searchQueryFieldReference as FieldReference).definingClass
 
-            findMethodOrThrow(searchQueryClass).apply {
+            findmutableMethodOrThrow(searchQueryClass).apply {
                 val smaliInstructions =
                     """
                         if-eqz v0, :ignore
@@ -223,7 +223,7 @@ val playerTypeHookPatch = bytecodePatch(
 
         // region patch for hook back button visibility
 
-        toolbarLayoutFingerprint.methodOrThrow().apply {
+        toolbarLayoutFingerprint.mutableMethodOrThrow().apply {
             val index = indexOfMainCollapsingToolbarLayoutInstruction(this)
             val register = getInstruction<OneRegisterInstruction>(index).registerA
 

@@ -22,7 +22,7 @@ import com.extenre.patches.youtube.utils.recyclerview.recyclerViewTreeObserverPa
 import com.extenre.patches.youtube.utils.resourceid.sharedResourceIdPatch
 import com.extenre.patches.youtube.utils.settings.ResourceUtils.addPreference
 import com.extenre.patches.youtube.utils.settings.settingsPatch
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 
 private const val EXTENSION_CLASS_DESCRIPTOR =
     "$MISC_PATH/ShareSheetPatch;"
@@ -51,7 +51,7 @@ val shareSheetPatch = bytecodePatch(
         recyclerViewTreeObserverHook("$EXTENSION_CLASS_DESCRIPTOR->onShareSheetMenuCreate(Landroid/support/v7/widget/RecyclerView;)V")
 
         // Remove the app list from the Share sheet panel on YouTube.
-        queryIntentListFingerprint.methodOrThrow().addInstructionsWithLabels(
+        queryIntentListFingerprint.mutableMethodOrThrow().addInstructionsWithLabels(
             0, """
                 invoke-static {}, $EXTENSION_CLASS_DESCRIPTOR->changeShareSheetEnabled()Z
                 move-result v0

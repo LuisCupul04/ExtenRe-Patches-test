@@ -24,9 +24,9 @@ import com.extenre.patches.youtube.utils.playlist.playlistPatch
 import com.extenre.patches.youtube.utils.resourceid.sharedResourceIdPatch
 import com.extenre.patches.youtube.utils.settings.ResourceUtils.addPreference
 import com.extenre.patches.youtube.utils.settings.settingsPatch
-import com.extenre.util.findMethodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.android.tools.smali.dexlib2.Opcode
@@ -61,7 +61,7 @@ val downloadActionsPatch = bytecodePatch(
 
         // region patch for hook download actions (video action bar and flyout panel)
 
-        offlineVideoEndpointFingerprint.methodOrThrow().apply {
+        offlineVideoEndpointFingerprint.mutableMethodOrThrow().apply {
             addInstructionsWithLabels(
                 0, """
                     invoke-static/range {p1 .. p3}, $EXTENSION_CLASS_DESCRIPTOR->inAppVideoDownloadButtonOnClick(Ljava/util/Map;Ljava/lang/Object;Ljava/lang/String;)Z
@@ -77,7 +77,7 @@ val downloadActionsPatch = bytecodePatch(
         // region patch for hook download actions (playlist)
 
         val onClickListenerClass =
-            downloadPlaylistButtonOnClickFingerprint.methodOrThrow().let {
+            downloadPlaylistButtonOnClickFingerprint.mutableMethodOrThrow().let {
                 val playlistDownloadActionInvokeIndex =
                     indexOfPlaylistDownloadActionInvokeInstruction(it)
 
@@ -91,7 +91,7 @@ val downloadActionsPatch = bytecodePatch(
                     ?: throw PatchException("Could not find onClickListenerClass")
             }
 
-        findMethodOrThrow(onClickListenerClass) {
+        findmutableMethodOrThrow(onClickListenerClass) {
             name == "onClick"
         }.apply {
             val insertIndex = indexOfFirstInstructionOrThrow {
@@ -108,7 +108,7 @@ val downloadActionsPatch = bytecodePatch(
             )
         }
 
-        offlinePlaylistEndpointFingerprint.methodOrThrow().apply {
+        offlinePlaylistEndpointFingerprint.mutableMethodOrThrow().apply {
             val playlistIdParameter = parameterTypes.indexOf("Ljava/lang/String;") + 1
             if (playlistIdParameter > 0) {
                 addInstructionsWithLabels(

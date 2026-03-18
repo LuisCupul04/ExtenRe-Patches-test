@@ -19,9 +19,9 @@ import com.extenre.patches.youtube.utils.playservice.is_19_41_or_greater
 import com.extenre.patches.youtube.utils.playservice.versionCheckPatch
 import com.extenre.patches.youtube.utils.settings.ResourceUtils.addPreference
 import com.extenre.patches.youtube.utils.settings.settingsPatch
-import com.extenre.util.findMethodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
@@ -53,7 +53,7 @@ val ambientModeSwitchPatch = bytecodePatch(
             powerSaveModeBroadcastReceiverFingerprint to false,
             powerSaveModeSyntheticFingerprint to true
         ).forEach { (fingerprint, reversed) ->
-            fingerprint.methodOrThrow().apply {
+            fingerprint.mutableMethodOrThrow().apply {
                 val stringIndex =
                     indexOfFirstStringInstructionOrThrow("android.os.action.POWER_SAVE_MODE_CHANGED")
                 val targetIndex =
@@ -69,7 +69,7 @@ val ambientModeSwitchPatch = bytecodePatch(
         }
 
         syntheticClassList.distinct().forEach { className ->
-            findMethodOrThrow(className) {
+            findmutableMethodOrThrow(className) {
                 name == "accept"
             }.apply {
                 implementation!!.instructions
@@ -107,7 +107,7 @@ val ambientModeSwitchPatch = bytecodePatch(
         }
 
         if (is_19_34_or_greater) {
-            setFullScreenBackgroundColorFingerprint.methodOrThrow().apply {
+            setFullScreenBackgroundColorFingerprint.mutableMethodOrThrow().apply {
                 val insertIndex = indexOfFirstInstructionReversedOrThrow {
                     getReference<MethodReference>()?.name == "setBackgroundColor"
                 }

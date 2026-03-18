@@ -35,10 +35,10 @@ import com.extenre.patches.shared.litho.addLithoFilter
 import com.extenre.patches.shared.litho.lithoFilterPatch
 import com.extenre.util.ResourceGroup
 import com.extenre.util.copyResources
-import com.extenre.util.findMethodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.resolvable
 import com.extenre.util.getReference
 import com.extenre.util.getWalkerMethod
@@ -106,7 +106,7 @@ val flyoutMenuComponentsPatch = bytecodePatch(
                 "$FLYOUT_CLASS_DESCRIPTOR->disableTrimSilence(Z)Z"
             )
 
-            trimSilenceSwitchFingerprint.methodOrThrow().apply {
+            trimSilenceSwitchFingerprint.mutableMethodOrThrow().apply {
                 val constIndex =
                     indexOfFirstLiteralInstructionOrThrow(trimSilenceSwitch)
                 val onCheckedChangedListenerIndex =
@@ -116,7 +116,7 @@ val flyoutMenuComponentsPatch = bytecodePatch(
                 val onCheckedChangedListenerDefiningClass =
                     (onCheckedChangedListenerReference as MethodReference).definingClass
 
-                findMethodOrThrow(onCheckedChangedListenerDefiningClass) {
+                findmutableMethodOrThrow(onCheckedChangedListenerDefiningClass) {
                     name == "onCheckedChanged"
                 }.apply {
                     val onCheckedChangedWalkerIndex =
@@ -200,7 +200,7 @@ val flyoutMenuComponentsPatch = bytecodePatch(
             }
         }
 
-        touchOutsideFingerprint.methodOrThrow().apply {
+        touchOutsideFingerprint.mutableMethodOrThrow().apply {
             val setOnClickListenerIndex = indexOfFirstInstructionOrThrow {
                 opcode == Opcode.INVOKE_VIRTUAL &&
                         getReference<MethodReference>()?.name == "setOnClickListener"
@@ -214,7 +214,7 @@ val flyoutMenuComponentsPatch = bytecodePatch(
             )
         }
 
-        endButtonsContainerFingerprint.methodOrThrow().apply {
+        endButtonsContainerFingerprint.mutableMethodOrThrow().apply {
             val startIndex =
                 indexOfFirstLiteralInstructionOrThrow(endButtonsContainer)
             val targetIndex =
@@ -236,7 +236,7 @@ val flyoutMenuComponentsPatch = bytecodePatch(
          * This method may be desperate in the future.
          */
         if (sleepTimerFingerprint.resolvable()) {
-            sleepTimerFingerprint.methodOrThrow().apply {
+            sleepTimerFingerprint.mutableMethodOrThrow().apply {
                 val insertIndex = implementation!!.instructions.lastIndex
                 val targetRegister = getInstruction<OneRegisterInstruction>(insertIndex).registerA
 

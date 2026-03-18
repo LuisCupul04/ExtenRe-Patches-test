@@ -12,7 +12,7 @@ import com.extenre.patcher.extensions.InstructionExtensions.addInstructionsWithL
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patches.music.utils.extension.Constants.UTILS_PATH
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.android.tools.smali.dexlib2.Opcode
@@ -26,13 +26,13 @@ private const val EXTENSION_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val videoTypeHookPatch = bytecodePatch(
-    name = "video-TypeHook-Patch",
+    name = "video-Type-Hook-Patch",
     description = "videoTypeHookPatch"
 ) {
 
     execute {
 
-        videoTypeFingerprint.methodOrThrow(videoTypeParentFingerprint).apply {
+        videoTypeFingerprint.mutableMethodOrThrow(videoTypeParentFingerprint).apply {
             val getEnumIndex = indexOfGetEnumInstruction(this)
             val enumClass =
                 (getInstruction<ReferenceInstruction>(getEnumIndex).reference as MethodReference).definingClass

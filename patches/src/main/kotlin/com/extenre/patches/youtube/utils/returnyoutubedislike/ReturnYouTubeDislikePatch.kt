@@ -40,10 +40,10 @@ import com.extenre.patches.youtube.video.information.videoInformationPatch
 import com.extenre.patches.youtube.video.videoid.hookPlayerResponseVideoId
 import com.extenre.patches.youtube.video.videoid.hookVideoId
 import com.extenre.util.findFreeRegister
-import com.extenre.util.findMethodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
@@ -74,7 +74,7 @@ private val returnYouTubeDislikeRollingNumberPatch = bytecodePatch(
                 val rollingNumberClassReference =
                     getInstruction<ReferenceInstruction>(rollingNumberClassIndex).reference.toString()
                 val rollingNumberConstructorMethod =
-                    findMethodOrThrow(rollingNumberClassReference)
+                    findmutableMethodOrThrow(rollingNumberClassReference)
                 val charSequenceFieldReference = with(rollingNumberConstructorMethod) {
                     getInstruction<ReferenceInstruction>(
                         indexOfFirstInstructionOrThrow(Opcode.IPUT_OBJECT)
@@ -152,12 +152,12 @@ private val returnYouTubeDislikeRollingNumberPatch = bytecodePatch(
         arrayOf(
             // Initial TextView is set in this method.
             rollingNumberTextViewFingerprint
-                .methodOrThrow(),
+                .mutableMethodOrThrow(),
 
             // Video less than 24 hours after uploaded, like counts will be updated in real time.
             // Whenever like counts are updated, TextView is set in this method.
             rollingNumberTextViewAnimationUpdateFingerprint
-                .methodOrThrow(rollingNumberTextViewFingerprint)
+                .mutableMethodOrThrow(rollingNumberTextViewFingerprint)
         ).forEach { method ->
             method.apply {
                 val setTextIndex = indexOfFirstInstructionOrThrow {
@@ -261,7 +261,7 @@ val returnYouTubeDislikePatch = bytecodePatch(
             dislikeFingerprint to Vote.DISLIKE,
             removeLikeFingerprint to Vote.REMOVE_LIKE,
         ).forEach { (fingerprint, vote) ->
-            fingerprint.methodOrThrow().addInstructions(
+            fingerprint.mutableMethodOrThrow().addInstructions(
                 0,
                 """
                     const/4 v0, ${vote.value}

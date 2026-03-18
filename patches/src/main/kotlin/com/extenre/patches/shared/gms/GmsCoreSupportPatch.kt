@@ -34,9 +34,9 @@ import com.extenre.patches.shared.gms.Constants.PERMISSIONS
 import com.extenre.patches.shared.gms.Constants.PERMISSIONS_LEGACY
 import com.extenre.util.Utils.printWarn
 import com.extenre.util.Utils.trimIndentMultiline
-import com.extenre.util.findMethodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
 import com.extenre.util.fingerprint.methodOrNull
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstruction
@@ -317,7 +317,7 @@ fun gmsCoreSupportPatch(
                     primesBackgroundInitializationFingerprint,
                     primesLifecycleEventFingerprint
                 ).forEach { fingerprint ->
-                    fingerprint.methodOrThrow().apply {
+                    fingerprint.mutableMethodOrThrow().apply {
                         val exceptionIndex = indexOfFirstInstructionReversedOrThrow {
                             opcode == Opcode.NEW_INSTANCE &&
                                     (this as? ReferenceInstruction)?.reference?.toString() == "Ljava/lang/IllegalStateException;"
@@ -389,18 +389,18 @@ fun gmsCoreSupportPatch(
             earlyReturnFingerprints += listOf(sslGuardFingerprint)
 
             // Prevent spam logs.
-            eCatcherFingerprint.methodOrThrow().apply {
+            eCatcherFingerprint.mutableMethodOrThrow().apply {
                 val index = indexOfFirstInstructionOrThrow(Opcode.NEW_ARRAY)
                 addInstruction(index, "return-void")
             }
         }
 
         // Return these methods early to prevent the app from crashing.
-        earlyReturnFingerprints.forEach { it.methodOrThrow().returnEarly() }
+        earlyReturnFingerprints.forEach { it.mutableMethodOrThrow().returnEarly() }
 
         // Passes signature check of DroidGaurdResult (the.apk).
         droidGuardSignatureFingerprint
-            .methodOrThrow().returnEarly(true)
+            .mutableMethodOrThrow().returnEarly(true)
 
         // Specific method that needs to be patched.
         transformPrimeMethod(packageName)
@@ -434,7 +434,7 @@ fun gmsCoreSupportPatch(
             "PackageNameYouTube" to packageNameYouTubeOption.valueOrThrow(),
             "PackageNameYouTubeMusic" to packageNameYouTubeMusicOption.valueOrThrow()
         ).forEach { (methodName, value) ->
-            findMethodOrThrow("$PATCHES_PATH/PatchStatus;") {
+            findmutableMethodOrThrow("$PATCHES_PATH/PatchStatus;") {
                 name == methodName
             }.returnEarly(value)
         }

@@ -21,7 +21,7 @@ import com.extenre.patches.reddit.utils.settings.is_2025_06_or_greater
 import com.extenre.patches.reddit.utils.settings.settingsPatch
 import com.extenre.patches.reddit.utils.settings.updatePatchStatus
 import com.extenre.util.findMutableMethodOf
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstStringInstruction
@@ -46,7 +46,7 @@ val adsPatch = bytecodePatch(
 
     execute {
         // region Filter promoted ads (does not work in popular or latest feed)
-        adPostFingerprint.methodOrThrow().apply {
+        adPostFingerprint.mutableMethodOrThrow().apply {
             val targetIndex = indexOfFirstInstructionOrThrow {
                 getReference<FieldReference>()?.name == "children"
             }
@@ -64,7 +64,7 @@ val adsPatch = bytecodePatch(
         // AdElementConverter is conveniently responsible for inserting all feed ads.
         // By removing the appending instruction no ad posts gets appended to the feed.
         val newAdPostMethod = newAdPostFingerprint.second.methodOrNull
-            ?: newAdPostLegacyFingerprint.methodOrThrow()
+            ?: newAdPostLegacyFingerprint.mutableMethodOrThrow()
 
         newAdPostMethod.apply {
             val startIndex =
@@ -97,7 +97,7 @@ val adsPatch = bytecodePatch(
                 commentAdDetailListHeaderViewFingerprint,
                 commentsViewModelFingerprint
             ).forEach { fingerprint ->
-                fingerprint.methodOrThrow().hook()
+                fingerprint.mutableMethodOrThrow().hook()
             }
         } else {
             val isCommentAdsMethod: Method.() -> Boolean = {

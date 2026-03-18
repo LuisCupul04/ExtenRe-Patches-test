@@ -19,7 +19,7 @@ import com.extenre.patches.shared.indexOfEntrySetInstruction
 import com.extenre.patches.shared.indexOfNewUrlRequestBuilderInstruction
 import com.extenre.patches.youtube.utils.extension.sharedExtensionPatch
 import com.extenre.util.findFreeRegister
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
@@ -40,7 +40,7 @@ val buildRequestPatch = bytecodePatch(
     dependsOn(sharedExtensionPatch)
 
     execute {
-        buildInitPlaybackRequestFingerprint.methodOrThrow().apply {
+        buildInitPlaybackRequestFingerprint.mutableMethodOrThrow().apply {
             buildInitPlaybackRequestMethod = this
             val mapIndex = indexOfMapInstruction(this)
             val mapField = getInstruction<ReferenceInstruction>(mapIndex).reference
@@ -58,7 +58,7 @@ val buildRequestPatch = bytecodePatch(
             )
         }
 
-        buildRequestFingerprint.methodOrThrow(buildRequestParentFingerprint).apply {
+        buildRequestFingerprint.mutableMethodOrThrow(buildRequestParentFingerprint).apply {
             buildRequestMethod = this
 
             val newRequestBuilderIndex = indexOfNewUrlRequestBuilderInstruction(this)

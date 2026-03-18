@@ -33,7 +33,7 @@ import com.extenre.patches.youtube.video.information.videoInformationPatch
 import com.extenre.util.REGISTER_TEMPLATE_REPLACEMENT
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.injectLiteralInstructionViewCall
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
 
@@ -81,7 +81,7 @@ val playerFlyoutMenuPatch = bytecodePatch(
             advancedQualityBottomSheetFingerprint,
             qualityMenuViewInflateFingerprint
         ).forEach { fingerprint ->
-            fingerprint.methodOrThrow().apply {
+            fingerprint.mutableMethodOrThrow().apply {
                 val insertIndex = indexOfAddHeaderViewInstruction(this)
                 val insertRegister = getInstruction<FiveRegisterInstruction>(insertIndex).registerD
 
@@ -98,7 +98,7 @@ val playerFlyoutMenuPatch = bytecodePatch(
 
         // region patch for hide '1080p Premium' label
 
-        currentVideoFormatConstructorFingerprint.methodOrThrow(
+        currentVideoFormatConstructorFingerprint.mutableMethodOrThrow(
             currentVideoFormatToStringFingerprint
         ).apply {
             val videoQualitiesIndex =

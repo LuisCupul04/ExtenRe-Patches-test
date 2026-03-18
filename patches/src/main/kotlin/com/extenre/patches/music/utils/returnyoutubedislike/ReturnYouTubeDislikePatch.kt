@@ -36,7 +36,7 @@ import com.extenre.patches.shared.textcomponent.hookSpannableString
 import com.extenre.patches.shared.textcomponent.textComponentPatch
 import com.extenre.util.adoptChild
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
@@ -63,7 +63,7 @@ private val returnYouTubeDislikeBytecodePatch = bytecodePatch(
             dislikeFingerprint to Vote.DISLIKE,
             removeLikeFingerprint to Vote.REMOVE_LIKE,
         ).forEach { (fingerprint, vote) ->
-            fingerprint.methodOrThrow().addInstructions(
+            fingerprint.mutableMethodOrThrow().addInstructions(
                 0,
                 """
                     const/4 v0, ${vote.value}
@@ -73,7 +73,7 @@ private val returnYouTubeDislikeBytecodePatch = bytecodePatch(
         }
 
         if (!is_7_25_or_greater) {
-            textComponentFingerprint.methodOrThrow().apply {
+            textComponentFingerprint.mutableMethodOrThrow().apply {
                 val insertIndex = indexOfFirstInstructionOrThrow {
                     opcode == Opcode.INVOKE_STATIC
                             && (this as ReferenceInstruction).reference.toString()

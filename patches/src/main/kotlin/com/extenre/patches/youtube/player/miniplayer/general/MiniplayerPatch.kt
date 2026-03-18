@@ -44,7 +44,7 @@ import com.extenre.util.addInstructionsAtControlFlowLabel
 import com.extenre.util.findInstructionIndicesReversedOrThrow
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.getWalkerMethod
@@ -143,7 +143,7 @@ val miniplayerPatch = bytecodePatch(
 
         // region Enable tablet miniplayer.
 
-        miniplayerOverrideNoContextFingerprint.methodOrThrow(
+        miniplayerOverrideNoContextFingerprint.mutableMethodOrThrow(
             miniplayerDimensionsCalculatorParentFingerprint
         ).apply {
             findReturnIndicesReversed().forEach { index ->
@@ -243,7 +243,7 @@ val miniplayerPatch = bytecodePatch(
         }
 
         if (is_19_26_or_greater) {
-            miniplayerModernConstructorFingerprint.methodOrThrow().apply {
+            miniplayerModernConstructorFingerprint.mutableMethodOrThrow().apply {
                 val literalIndex = indexOfFirstLiteralInstructionOrThrow(
                     MINIPLAYER_INITIAL_SIZE_FEATURE_KEY,
                 )
@@ -260,7 +260,7 @@ val miniplayerPatch = bytecodePatch(
             }
 
             // Override a minimum size constant.
-            miniplayerMinimumSizeFingerprint.methodOrThrow().apply {
+            miniplayerMinimumSizeFingerprint.mutableMethodOrThrow().apply {
                 val index = indexOfFirstInstructionOrThrow {
                     opcode == Opcode.CONST_16 &&
                             (this as NarrowLiteralInstruction).narrowLiteral == 192
@@ -322,7 +322,7 @@ val miniplayerPatch = bytecodePatch(
         // YT fixed this mistake in 19.17.
         // Fix this, by swapping the drawable resource values with each other.
         if (shouldFixMixedUpDrawables) {
-            miniplayerModernExpandCloseDrawablesFingerprint.methodOrThrow(
+            miniplayerModernExpandCloseDrawablesFingerprint.mutableMethodOrThrow(
                 miniplayerModernViewParentFingerprint
             ).apply {
                 listOf(
@@ -386,7 +386,7 @@ val miniplayerPatch = bytecodePatch(
                 "adjustMiniplayerOpacity"
             )
         ).forEach { (fingerprint, literalValue, methodName) ->
-            fingerprint.methodOrThrow(miniplayerModernViewParentFingerprint).apply {
+            fingerprint.mutableMethodOrThrow(miniplayerModernViewParentFingerprint).apply {
                 val literalIndex = indexOfFirstLiteralInstructionOrThrow(literalValue)
                 val checkCastIndex = indexOfFirstInstruction(literalIndex) {
                     opcode == Opcode.CHECK_CAST &&
@@ -406,7 +406,7 @@ val miniplayerPatch = bytecodePatch(
             }
         }
 
-        miniplayerModernAddViewListenerFingerprint.methodOrThrow(
+        miniplayerModernAddViewListenerFingerprint.mutableMethodOrThrow(
             miniplayerModernViewParentFingerprint
         ).addInstruction(
             0,

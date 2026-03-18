@@ -23,7 +23,7 @@ import com.extenre.patches.youtube.utils.playservice.is_20_21_or_greater
 import com.extenre.patches.youtube.utils.playservice.is_20_28_or_greater
 import com.extenre.patches.youtube.utils.playservice.versionCheckPatch
 import com.extenre.patches.youtube.utils.resourceid.sharedResourceIdPatch
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
 import com.extenre.util.getReference
 import com.android.tools.smali.dexlib2.Opcode
@@ -77,7 +77,7 @@ val navigationBarHookPatch = bytecodePatch(
             }
         }
 
-        initializeButtonsFingerprint.methodOrThrow(pivotBarConstructorFingerprint).apply {
+        initializeButtonsFingerprint.mutableMethodOrThrow(pivotBarConstructorFingerprint).apply {
             navigationButtonsMethod = this
 
             // Hook the current navigation bar enum value. Note, the 'You' tab does not have an enum value.
@@ -89,7 +89,7 @@ val navigationBarHookPatch = bytecodePatch(
 
             // Hook the creation of navigation tab views.
             val drawableTabMethod =
-                pivotBarButtonsCreateDrawableViewFingerprint.methodOrThrow()
+                pivotBarButtonsCreateDrawableViewFingerprint.mutableMethodOrThrow()
             addHook(NavigationHook.NAVIGATION_TAB_LOADED) predicate@{
                 MethodUtil.methodSignaturesMatch(
                     getReference<MethodReference>() ?: return@predicate false,
@@ -99,7 +99,7 @@ val navigationBarHookPatch = bytecodePatch(
 
             if (is_20_21_or_greater && !is_20_28_or_greater) {
                 val imageResourceIntTabMethod =
-                    pivotBarButtonsCreateResourceIntViewFingerprint.methodOrThrow()
+                    pivotBarButtonsCreateResourceIntViewFingerprint.mutableMethodOrThrow()
                 addHook(NavigationHook.NAVIGATION_TAB_LOADED) predicate@{
                     MethodUtil.methodSignaturesMatch(
                         getReference<MethodReference>() ?: return@predicate false,
@@ -109,7 +109,7 @@ val navigationBarHookPatch = bytecodePatch(
             }
 
             val imageResourceTabMethod =
-                pivotBarButtonsCreateResourceViewFingerprint.methodOrThrow()
+                pivotBarButtonsCreateResourceViewFingerprint.mutableMethodOrThrow()
             addHook(NavigationHook.NAVIGATION_IMAGE_RESOURCE_TAB_LOADED) predicate@{
                 MethodUtil.methodSignaturesMatch(
                     getReference<MethodReference>() ?: return@predicate false,
@@ -118,7 +118,7 @@ val navigationBarHookPatch = bytecodePatch(
             }
         }
 
-        pivotBarButtonsViewSetSelectedFingerprint.methodOrThrow().apply {
+        pivotBarButtonsViewSetSelectedFingerprint.mutableMethodOrThrow().apply {
             val index = indexOfSetViewSelectedInstruction(this)
             val instruction = getInstruction<FiveRegisterInstruction>(index)
             val viewRegister = instruction.registerC
@@ -136,10 +136,10 @@ val navigationBarHookPatch = bytecodePatch(
             "onBackPressed"
         )
 
-        bottomBarContainerMethod = initializeBottomBarContainerFingerprint.methodOrThrow()
+        bottomBarContainerMethod = initializeBottomBarContainerFingerprint.mutableMethodOrThrow()
 
         hookNavigationButtonCreated = { extensionClassDescriptor ->
-            navigationBarHookCallbackFingerprint.methodOrThrow().addInstruction(
+            navigationBarHookCallbackFingerprint.mutableMethodOrThrow().addInstruction(
                 0,
                 "invoke-static { p0, p1 }, $extensionClassDescriptor->navigationTabCreated" +
                         "(${EXTENSION_NAVIGATION_BUTTON_DESCRIPTOR}Landroid/view/View;)V",

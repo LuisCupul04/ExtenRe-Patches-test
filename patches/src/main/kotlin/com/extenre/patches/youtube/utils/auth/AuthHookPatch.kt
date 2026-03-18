@@ -15,7 +15,7 @@ import com.extenre.patches.youtube.utils.extension.sharedExtensionPatch
 import com.extenre.patches.youtube.utils.request.buildRequestPatch
 import com.extenre.patches.youtube.utils.request.hookBuildRequest
 import com.extenre.patches.youtube.utils.request.hookInitPlaybackBuildRequest
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 
 private const val EXTENSION_AUTH_UTILS_CLASS_DESCRIPTOR =
     "$EXTENSION_PATH/innertube/utils/AuthUtils;"
@@ -31,7 +31,7 @@ val authHookPatch = bytecodePatch(
 
     execute {
         // Get incognito status and data sync id.
-        accountIdentityFingerprint.methodOrThrow().addInstruction(
+        accountIdentityFingerprint.mutableMethodOrThrow().addInstruction(
             1,
             "invoke-static {p3, p4}, $EXTENSION_AUTH_UTILS_CLASS_DESCRIPTOR->setAccountIdentity(Ljava/lang/String;Z)V"
         )

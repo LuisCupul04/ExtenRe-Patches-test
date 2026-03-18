@@ -21,10 +21,10 @@ import com.extenre.patches.shared.mapping.resourceMappingPatch
 import com.extenre.util.REGISTER_TEMPLATE_REPLACEMENT
 import com.extenre.util.addInstructionsAtControlFlowLabel
 import com.extenre.util.findFreeRegister
-import com.extenre.util.findMethodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
 import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.methodCall
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.injectLiteralInstructionViewCall
@@ -67,13 +67,13 @@ val commentsPanelPatch = bytecodePatch(
     execute {
         // Method to find the engagement panel id.
         val (engagementPanelIdMethodCall, engagementPanelMessageClass) =
-            with(engagementPanelIdFingerprint.methodOrThrow()) {
+            with(engagementPanelIdFingerprint.mutableMethodOrThrow()) {
                 Pair(methodCall(), parameterTypes.first().toString())
             }
 
         // Method that finds the RecyclerView to which comments will be bound.
         val recyclerViewOptionalMethodCall = recyclerViewOptionalFingerprint
-            .methodOrThrow(engagementPanelRecyclerViewFingerprint)
+            .mutableMethodOrThrow(engagementPanelRecyclerViewFingerprint)
             .methodCall()
 
         engagementPanelRecyclerViewFingerprint.matchOrThrow().let { result ->
@@ -166,14 +166,14 @@ val commentsPanelPatch = bytecodePatch(
             title to "setContentHeader"
         ).forEach { (literal, methodName) ->
             engagementPanelTitleFingerprint
-                .methodOrThrow(engagementPanelTitleParentFingerprint)
+                .mutableMethodOrThrow(engagementPanelTitleParentFingerprint)
                 .injectLiteralInstructionViewCall(
                     literal,
                     "invoke-static {v$REGISTER_TEMPLATE_REPLACEMENT}, $EXTENSION_CLASS_DESCRIPTOR->$methodName(Landroid/view/View;)V"
                 )
         }
 
-        findMethodOrThrow(EXTENSION_CLASS_DESCRIPTOR) {
+        findmutableMethodOrThrow(EXTENSION_CLASS_DESCRIPTOR) {
             name == "smoothScrollToPosition"
         }.addInstruction(
             0,

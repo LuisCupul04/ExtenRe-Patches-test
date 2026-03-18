@@ -14,7 +14,7 @@ import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patcher.util.proxy.mutableTypes.MutableClass
 import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.android.tools.smali.dexlib2.Opcode
@@ -44,7 +44,7 @@ fun baseMainActivityResolvePatch(
     description = "Resolves the main activity for other patches.",
 ) {
     execute {
-        onCreateMethod = mainActivityOnCreateFingerprint.methodOrThrow()
+        onCreateMethod = mainActivityOnCreateFingerprint.mutableMethodOrThrow()
         mainActivityMutableClass = mainActivityOnCreateFingerprint.mutableClassOrThrow()
 
         // set constructor method

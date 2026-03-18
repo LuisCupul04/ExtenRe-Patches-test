@@ -35,7 +35,7 @@ import com.extenre.patches.youtube.utils.settings.ResourceUtils.addPreference
 import com.extenre.patches.youtube.utils.settings.settingsPatch
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
@@ -141,7 +141,7 @@ val layoutComponentsPatch = bytecodePatch(
         // region patch for hide account menu
 
         // for you tab
-        accountListFingerprint.methodOrThrow(accountListParentFingerprint).apply {
+        accountListFingerprint.mutableMethodOrThrow(accountListParentFingerprint).apply {
             val literalIndex = indexOfFirstLiteralInstructionOrThrow(ytCallToAction)
             val targetIndex = indexOfFirstInstructionOrThrow(literalIndex) {
                 opcode == Opcode.INVOKE_VIRTUAL &&
@@ -174,7 +174,7 @@ val layoutComponentsPatch = bytecodePatch(
 
         // region patch for hide floating microphone
 
-        floatingMicrophoneFingerprint.methodOrThrow().apply {
+        floatingMicrophoneFingerprint.mutableMethodOrThrow().apply {
             val literalIndex = indexOfFirstLiteralInstructionOrThrow(fab)
             val booleanIndex = indexOfFirstInstructionOrThrow(literalIndex, Opcode.IGET_BOOLEAN)
             val insertRegister = getInstruction<TwoRegisterInstruction>(booleanIndex).registerA
@@ -191,7 +191,7 @@ val layoutComponentsPatch = bytecodePatch(
 
         // region patch for hide handle
 
-        accountSwitcherAccessibilityLabelFingerprint.methodOrThrow().apply {
+        accountSwitcherAccessibilityLabelFingerprint.mutableMethodOrThrow().apply {
             val constIndex =
                 indexOfFirstLiteralInstructionOrThrow(accountSwitcherAccessibility)
             val insertIndex = indexOfFirstInstructionOrThrow(constIndex, Opcode.IF_EQZ)
@@ -214,7 +214,7 @@ val layoutComponentsPatch = bytecodePatch(
 
         // region patch for hide setting menus
 
-        preferenceScreenFingerprint.methodOrThrow().apply {
+        preferenceScreenFingerprint.mutableMethodOrThrow().apply {
             val targetIndex = indexOfPreferenceScreenInstruction(this)
             val targetRegister = getInstruction<FiveRegisterInstruction>(targetIndex).registerC
             val targetReference = getInstruction<ReferenceInstruction>(targetIndex).reference
@@ -232,7 +232,7 @@ val layoutComponentsPatch = bytecodePatch(
             removeInstruction(insertIndex)
         }
 
-        preferencePairWithTVFingerprint.methodOrThrow().apply {
+        preferencePairWithTVFingerprint.mutableMethodOrThrow().apply {
             val literalIndex = indexOfFirstLiteralInstructionOrThrow(pairWithTVKey)
             val setPairWithTVPreferenceIndex = indexOfFirstInstructionOrThrow(literalIndex) {
                 opcode == Opcode.IPUT_OBJECT &&
@@ -260,7 +260,7 @@ val layoutComponentsPatch = bytecodePatch(
 
         // region patch for hide tooltip content
 
-        tooltipContentFullscreenFingerprint.methodOrThrow().apply {
+        tooltipContentFullscreenFingerprint.mutableMethodOrThrow().apply {
             val literalIndex = indexOfFirstLiteralInstructionOrThrow(45384061L)
             val targetIndex = indexOfFirstInstructionOrThrow(literalIndex, Opcode.MOVE_RESULT)
             val targetRegister = getInstruction<OneRegisterInstruction>(targetIndex).registerA
@@ -271,7 +271,7 @@ val layoutComponentsPatch = bytecodePatch(
             )
         }
 
-        tooltipContentViewFingerprint.methodOrThrow().addInstruction(
+        tooltipContentViewFingerprint.mutableMethodOrThrow().addInstruction(
             0,
             "return-void"
         )

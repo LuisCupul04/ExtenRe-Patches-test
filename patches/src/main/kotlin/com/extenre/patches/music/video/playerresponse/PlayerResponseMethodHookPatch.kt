@@ -15,7 +15,7 @@ import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod
 import com.extenre.patches.music.utils.extension.sharedExtensionPatch
 import com.extenre.patches.music.utils.playservice.is_7_03_or_greater
 import com.extenre.patches.music.utils.playservice.versionCheckPatch
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 
 private val hooks = mutableSetOf<Hook>()
 
@@ -32,7 +32,7 @@ private lateinit var playerResponseMethod: MutableMethod
 private var numberOfInstructionsAdded = 0
 
 val playerResponseMethodHookPatch = bytecodePatch(
-    name = "player-ResponseMethodHook-Patch",
+    name = "player-Response-Method-Hook-Patch",
     description = "playerResponseMethodHookPatch"
 ) {
     dependsOn(
@@ -45,7 +45,7 @@ val playerResponseMethodHookPatch = bytecodePatch(
             playerParameterBuilderFingerprint
         } else {
             playerParameterBuilderLegacyFingerprint
-        }.methodOrThrow()
+        }.mutableMethodOrThrow()
     }
 
     finalize {

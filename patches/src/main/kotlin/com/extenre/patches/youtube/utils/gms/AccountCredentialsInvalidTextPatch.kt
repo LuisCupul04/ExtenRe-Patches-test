@@ -15,7 +15,7 @@ import com.extenre.patches.youtube.utils.extension.Constants.UTILS_PATH
 import com.extenre.patches.youtube.utils.extension.sharedExtensionPatch
 import com.extenre.patches.youtube.utils.resourceid.offlineNoContentBodyTextNotOfflineEligible
 import com.extenre.patches.youtube.utils.resourceid.sharedResourceIdPatch
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstLiteralInstructionOrThrow
@@ -48,7 +48,7 @@ val accountCredentialsInvalidTextPatch = bytecodePatch(
             specificNetworkErrorViewControllerFingerprint,
             loadingFrameLayoutControllerFingerprint
         ).forEach { fingerprint ->
-            fingerprint.methodOrThrow().apply {
+            fingerprint.mutableMethodOrThrow().apply {
                 val resourceIndex = indexOfFirstLiteralInstructionOrThrow(
                     offlineNoContentBodyTextNotOfflineEligible
                 )

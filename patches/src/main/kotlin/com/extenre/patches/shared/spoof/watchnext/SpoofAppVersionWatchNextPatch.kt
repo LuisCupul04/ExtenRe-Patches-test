@@ -22,7 +22,7 @@ import com.extenre.patches.shared.createPlayerRequestBodyFingerprint
 import com.extenre.patches.shared.indexOfClientInfoInstruction
 import com.extenre.util.fingerprint.legacyFingerprint
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstruction
 import com.extenre.util.indexOfFirstInstructionOrThrow
@@ -155,7 +155,7 @@ fun spoofAppVersionWatchNextPatch(
             // region patch for spoof client body for the '/next' endpoint.
 
             val watchNextResponseModelClass =
-                with(watchNextResponseModelClassResolverFingerprint.methodOrThrow()) {
+                with(watchNextResponseModelClassResolverFingerprint.mutableMethodOrThrow()) {
                     val listenableFutureIndex =
                         indexOfListenableFutureReference(this)
                     val watchNextResponseModelClassIndex =

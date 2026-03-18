@@ -66,12 +66,12 @@ import com.extenre.patches.youtube.video.information.hookVideoInformation
 import com.extenre.patches.youtube.video.information.videoInformationPatch
 import com.extenre.util.REGISTER_TEMPLATE_REPLACEMENT
 import com.extenre.util.Utils.printWarn
-import com.extenre.util.findMethodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
 import com.extenre.util.findMutableMethodOf
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.injectLiteralInstructionViewCall
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.getWalkerMethod
@@ -150,7 +150,7 @@ private val speedOverlayPatch = bytecodePatch(
 
             // region patch for Custom speed overlay float value
 
-            val speedFieldReference = with(speedOverlayFloatValueFingerprint.methodOrThrow()) {
+            val speedFieldReference = with(speedOverlayFloatValueFingerprint.mutableMethodOrThrow()) {
                 val literalIndex =
                     indexOfFirstLiteralInstructionOrThrow(SPEED_OVERLAY_LEGACY_FEATURE_FLAG)
                 val floatIndex =
@@ -207,7 +207,7 @@ private val speedOverlayPatch = bytecodePatch(
 
             // region patch for Disable speed overlay (Enable slide to seek)
 
-            nextGenWatchLayoutFingerprint.methodOrThrow().apply {
+            nextGenWatchLayoutFingerprint.mutableMethodOrThrow().apply {
                 val booleanValueIndex = indexOfFirstInstructionOrThrow {
                     getReference<MethodReference>()?.name == "booleanValue"
                 }
@@ -248,7 +248,7 @@ private val speedOverlayPatch = bytecodePatch(
                             getWalkerMethod(patternMatch.startIndex + 1)
 
                         val slideToSeekConstructorMethod =
-                            findMethodOrThrow(slideToSeekBooleanMethod.definingClass)
+                            findmutableMethodOrThrow(slideToSeekBooleanMethod.definingClass)
 
                         val slideToSeekSyntheticIndex = slideToSeekConstructorMethod
                             .indexOfFirstInstructionReversedOrThrow {
@@ -261,7 +261,7 @@ private val speedOverlayPatch = bytecodePatch(
                             .toString()
 
                         val slideToSeekSyntheticMethod =
-                            findMethodOrThrow(slideToSeekSyntheticClass) {
+                            findmutableMethodOrThrow(slideToSeekSyntheticClass) {
                                 name == "run"
                             }
 
@@ -328,7 +328,7 @@ private val speedOverlayPatch = bytecodePatch(
                     "onCharSequenceLoaded"
                 )
             } else {
-                speedOverlayTextValueFingerprint.methodOrThrow().apply {
+                speedOverlayTextValueFingerprint.mutableMethodOrThrow().apply {
                     val targetIndex =
                         indexOfFirstInstructionOrThrow(Opcode.CONST_WIDE_HIGH16)
                     val targetRegister =
@@ -428,7 +428,7 @@ val playerComponentsPatch = bytecodePatch(
 
         // region patch for custom player overlay opacity
 
-        youtubeControlsOverlayFingerprint.methodOrThrow().apply {
+        youtubeControlsOverlayFingerprint.mutableMethodOrThrow().apply {
             val constIndex = indexOfFirstLiteralInstructionOrThrow(scrimOverlay)
             val targetIndex = indexOfFirstInstructionOrThrow(constIndex, Opcode.CHECK_CAST)
             val targetParameter = getInstruction<ReferenceInstruction>(targetIndex).reference
@@ -474,14 +474,14 @@ val playerComponentsPatch = bytecodePatch(
                 lithoComponentOnClickListenerFingerprint,
                 offlineActionsOnClickListenerFingerprint,
             ).forEach { fingerprint ->
-                fingerprint.methodOrThrow().apply {
+                fingerprint.mutableMethodOrThrow().apply {
                     val syntheticIndex =
                         indexOfFirstInstruction(Opcode.NEW_INSTANCE)
                     if (syntheticIndex >= 0) {
                         val syntheticReference =
                             getInstruction<ReferenceInstruction>(syntheticIndex).reference.toString()
 
-                        findMethodOrThrow(syntheticReference) {
+                        findmutableMethodOrThrow(syntheticReference) {
                             name == "onClick"
                         }.hookInitVideoPanel(0)
                     } else {
@@ -490,13 +490,13 @@ val playerComponentsPatch = bytecodePatch(
                 }
             }
 
-            findMethodOrThrow(
-                engagementPanelPlaylistSyntheticFingerprint.methodOrThrow().definingClass
+            findmutableMethodOrThrow(
+                engagementPanelPlaylistSyntheticFingerprint.mutableMethodOrThrow().definingClass
             ) {
                 name == "onClick"
             }.hookInitVideoPanel(0)
 
-            startVideoInformerFingerprint.methodOrThrow().hookInitVideoPanel(1)
+            startVideoInformerFingerprint.mutableMethodOrThrow().hookInitVideoPanel(1)
 
             engagementPanelBuilderMethod.addInstructionsWithLabels(
                 0, """
@@ -527,7 +527,7 @@ val playerComponentsPatch = bytecodePatch(
             doubleTapInfoGetSeekSourceFingerprint to "p1",
         ).forEach { (fingerprint, parameter) ->
             fingerprint
-                .methodOrThrow(doubleTapInfoFloatFingerprint)
+                .mutableMethodOrThrow(doubleTapInfoFloatFingerprint)
                 .addInstructions(
                     0, """
                         invoke-static { $parameter }, $PLAYER_CLASS_DESCRIPTOR->disableDoubleTapChapters(Z)Z
@@ -612,7 +612,7 @@ val playerComponentsPatch = bytecodePatch(
 
         if (is_19_43_or_greater) {
             endScreenPlayerResponseModelFingerprint
-                .methodOrThrow()
+                .mutableMethodOrThrow()
                 .addInstructionsWithLabels(
                     0, """
                     invoke-static {}, $PLAYER_CLASS_DESCRIPTOR->hideEndScreenCards()Z
@@ -695,12 +695,12 @@ val playerComponentsPatch = bytecodePatch(
         }
 
         filmStripOverlayFingerprints.forEach { fingerprint ->
-            fingerprint.methodOrThrow(filmStripOverlayEnterParentFingerprint).hookFilmstripOverlay()
+            fingerprint.mutableMethodOrThrow(filmStripOverlayEnterParentFingerprint).hookFilmstripOverlay()
         }
 
         // Removed in YouTube 20.03+
         if (!is_20_03_or_greater) {
-            youtubeControlsOverlayFingerprint.methodOrThrow().apply {
+            youtubeControlsOverlayFingerprint.mutableMethodOrThrow().apply {
                 val constIndex = indexOfFirstLiteralInstructionOrThrow(fadeDurationFast)
                 val constRegister = getInstruction<OneRegisterInstruction>(constIndex).registerA
                 val insertIndex =
@@ -783,7 +783,7 @@ val playerComponentsPatch = bytecodePatch(
         // region patch for hide seek message (Removed in YouTube 20.03+)
 
         if (!is_20_03_or_greater) {
-            seekEduContainerFingerprint.methodOrThrow().apply {
+            seekEduContainerFingerprint.mutableMethodOrThrow().apply {
                 addInstructionsWithLabels(
                     0, """
                     invoke-static {}, $PLAYER_CLASS_DESCRIPTOR->hideSeekMessage()Z
@@ -795,7 +795,7 @@ val playerComponentsPatch = bytecodePatch(
             }
 
             if (!is_20_02_or_greater) {
-                youtubeControlsOverlayFingerprint.methodOrThrow().apply {
+                youtubeControlsOverlayFingerprint.mutableMethodOrThrow().apply {
                     val insertIndex =
                         indexOfFirstLiteralInstructionOrThrow(seekUndoEduOverlayStub)
                     val insertRegister = getInstruction<OneRegisterInstruction>(insertIndex).registerA
@@ -824,7 +824,7 @@ val playerComponentsPatch = bytecodePatch(
         }
 
         if (is_18_39_or_greater && !is_20_03_or_greater) {
-            playerEduOverlayFeatureFlagFingerprint.methodOrThrow().apply {
+            playerEduOverlayFeatureFlagFingerprint.mutableMethodOrThrow().apply {
                 val targetIndex = implementation!!.instructions.size - 1
                 val targetRegister = getInstruction<OneRegisterInstruction>(targetIndex).registerA
 
@@ -834,7 +834,7 @@ val playerComponentsPatch = bytecodePatch(
                 )
             }
         } else if (is_20_03_or_greater && !is_20_09_or_greater) {
-            youtubeControlsOverlayFingerprint.methodOrThrow().apply {
+            youtubeControlsOverlayFingerprint.mutableMethodOrThrow().apply {
                 val constIndex = indexOfFirstLiteralInstructionOrThrow(eduOverlayStub)
                 val targetIndex = indexOfFirstInstructionOrThrow(constIndex) {
                     opcode == Opcode.CHECK_CAST &&
@@ -895,7 +895,7 @@ val playerComponentsPatch = bytecodePatch(
 
         // region patch for hide video zoom overlay
 
-        videoZoomSnapIndicatorFingerprint.methodOrThrow().apply {
+        videoZoomSnapIndicatorFingerprint.mutableMethodOrThrow().apply {
             addInstructionsWithLabels(
                 0, """
                     invoke-static {}, $PLAYER_CLASS_DESCRIPTOR->hideZoomOverlay()Z

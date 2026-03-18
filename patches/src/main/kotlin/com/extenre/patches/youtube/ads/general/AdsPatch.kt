@@ -35,7 +35,7 @@ import com.extenre.patches.youtube.utils.settings.ResourceUtils.addPreference
 import com.extenre.patches.youtube.utils.settings.settingsPatch
 import com.extenre.util.findMutableMethodOf
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.indexOfFirstStringInstructionOrThrow
 import com.extenre.util.injectHideViewCall
 import com.android.tools.smali.dexlib2.Opcode
@@ -107,33 +107,34 @@ val adsPatch = adsPatch(
 
         // region patch for hide get premium
 
-        compactYpcOfferModuleViewFingerprint.matchOrThrow().let {
-            it.method.apply {
-                val startIndex = it.patternMatch!!.startIndex
-                val measuredWidthRegister =
-                    getInstruction<TwoRegisterInstruction>(startIndex).registerA
-                val measuredHeightInstruction =
-                    getInstruction<TwoRegisterInstruction>(startIndex + 1)
-                val measuredHeightRegister = measuredHeightInstruction.registerA
-                val tempRegister = measuredHeightInstruction.registerB
+        // Usamos matchOrThrow para obtener el Match y luego el mutableMethod
+        val compactMatch = compactYpcOfferModuleViewFingerprint.matchOrThrow()
+        compactMatch.mutableMethod.apply {
+            val startIndex = compactMatch.patternMatch!!.startIndex
+            val measuredWidthRegister =
+                getInstruction<TwoRegisterInstruction>(startIndex).registerA
+            val measuredHeightInstruction =
+                getInstruction<TwoRegisterInstruction>(startIndex + 1)
+            val measuredHeightRegister = measuredHeightInstruction.registerA
+            val tempRegister = measuredHeightInstruction.registerB
 
-                addInstructionsWithLabels(
-                    startIndex + 2, """
-                        invoke-static {}, $ADS_CLASS_DESCRIPTOR->hideGetPremium()Z
-                        move-result v$tempRegister
-                        if-eqz v$tempRegister, :show
-                        const/4 v$measuredWidthRegister, 0x0
-                        const/4 v$measuredHeightRegister, 0x0
-                        """, ExternalLabel("show", getInstruction(startIndex + 2))
-                )
-            }
+            addInstructionsWithLabels(
+                startIndex + 2, """
+                    invoke-static {}, $ADS_CLASS_DESCRIPTOR->hideGetPremium()Z
+                    move-result v$tempRegister
+                    if-eqz v$tempRegister, :show
+                    const/4 v$measuredWidthRegister, 0x0
+                    const/4 v$measuredHeightRegister, 0x0
+                    """,
+                listOf(ExternalLabel("show", getInstruction(startIndex + 2)))
+            )
         }
 
         // endregion
 
         // region patch for hide end screen store banner
 
-        fullScreenEngagementAdContainerFingerprint.methodOrThrow().apply {
+        fullScreenEngagementAdContainerFingerprint.mutableMethodOrThrow().apply {
             val addListIndex = indexOfAddListInstruction(this)
             val addListInstruction =
                 getInstruction<FiveRegisterInstruction>(addListIndex)
@@ -152,7 +153,7 @@ val adsPatch = adsPatch(
         // region patch for hide shorts ad
 
         // Hide Shorts ads by changing 'OSName' to 'Android Automotive'
-        autoMotiveFingerprint.methodOrThrow().apply {
+        autoMotiveFingerprint.mutableMethodOrThrow().apply {
             val insertIndex = indexOfFirstStringInstructionOrThrow(ANDROID_AUTOMOTIVE_STRING) - 1
             val insertRegister = getInstruction<OneRegisterInstruction>(insertIndex).registerA
 
@@ -176,7 +177,7 @@ val adsPatch = adsPatch(
 
         // region patch for hide paid promotion label in Shorts (non-litho)
 
-        shortsPaidPromotionFingerprint.methodOrThrow().apply {
+        shortsPaidPromotionFingerprint.mutableMethodOrThrow().apply {
             when (returnType) {
                 "Landroid/widget/TextView;" -> {
                     val insertIndex = implementation!!.instructions.lastIndex
@@ -199,7 +200,8 @@ val adsPatch = adsPatch(
                             move-result v0
                             if-eqz v0, :show
                             return-void
-                            """, ExternalLabel("show", getInstruction(0))
+                            """,
+                        listOf(ExternalLabel("show", getInstruction(0)))
                     )
                 }
 

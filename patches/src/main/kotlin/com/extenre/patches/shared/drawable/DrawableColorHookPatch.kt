@@ -12,7 +12,7 @@ import com.extenre.patcher.extensions.InstructionExtensions.addInstructions
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
@@ -28,7 +28,7 @@ val drawableColorHookPatch = bytecodePatch(
     description = "drawableColorHookPatch"
 ) {
     execute {
-        drawableColorFingerprint.methodOrThrow().apply {
+        drawableColorFingerprint.mutableMethodOrThrow().apply {
             insertMethod = this
             insertIndex = indexOfFirstInstructionReversedOrThrow {
                 getReference<MethodReference>()?.name == "setColor"

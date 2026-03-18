@@ -42,11 +42,11 @@ import com.extenre.util.REGISTER_TEMPLATE_REPLACEMENT
 import com.extenre.util.Utils.printWarn
 import com.extenre.util.doRecursively
 import com.extenre.util.findInstructionIndicesReversedOrThrow
-import com.extenre.util.findMethodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.methodCall
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.getWalkerMethod
@@ -128,11 +128,11 @@ val toolBarComponentsPatch = bytecodePatch(
         }
 
         // YouTube's headers have the form of AttributeSet, which is decoded from YouTube's built-in classes.
-        val attributeResolverMethod = attributeResolverFingerprint.methodOrThrow()
+        val attributeResolverMethod = attributeResolverFingerprint.mutableMethodOrThrow()
         val attributeResolverMethodCall =
             attributeResolverMethod.definingClass + "->" + attributeResolverMethod.name + "(Landroid/content/Context;I)Landroid/graphics/drawable/Drawable;"
 
-        findMethodOrThrow(GENERAL_CLASS_DESCRIPTOR) {
+        findmutableMethodOrThrow(GENERAL_CLASS_DESCRIPTOR) {
             name == "getHeaderDrawable"
         }.addInstructions(
             0, """
@@ -143,7 +143,7 @@ val toolBarComponentsPatch = bytecodePatch(
         )
 
         // The sidebar's header is lithoView. Add a listener to change it.
-        drawerContentViewFingerprint.methodOrThrow(drawerContentViewConstructorFingerprint).apply {
+        drawerContentViewFingerprint.mutableMethodOrThrow(drawerContentViewConstructorFingerprint).apply {
             val insertIndex = indexOfAddViewInstruction(this)
             val insertRegister = getInstruction<FiveRegisterInstruction>(insertIndex).registerD
 
@@ -179,7 +179,7 @@ val toolBarComponentsPatch = bytecodePatch(
         // Limitation: Premium header will not be applied for YouTube Premium users if the user uses the 'Wide search bar with header' option.
         // This is because it forces the deprecated search bar to be loaded.
         // As a solution to this limitation, 'Change YouTube header' patch is required.
-        actionBarRingoBackgroundFingerprint.methodOrThrow().apply {
+        actionBarRingoBackgroundFingerprint.mutableMethodOrThrow().apply {
             val viewIndex =
                 indexOfFirstLiteralInstructionOrThrow(actionBarRingoBackground) + 2
             val viewRegister = getInstruction<OneRegisterInstruction>(viewIndex).registerA
@@ -199,7 +199,7 @@ val toolBarComponentsPatch = bytecodePatch(
             )
         }
 
-        actionBarRingoTextFingerprint.methodOrThrow(actionBarRingoBackgroundFingerprint).apply {
+        actionBarRingoTextFingerprint.mutableMethodOrThrow(actionBarRingoBackgroundFingerprint).apply {
             val targetIndex = indexOfActionBarRingoTextTabletInstructions(this) + 1
             val targetRegister = getInstruction<OneRegisterInstruction>(targetIndex).registerA
 
@@ -210,7 +210,7 @@ val toolBarComponentsPatch = bytecodePatch(
             )
         }
 
-        actionBarRingoConstructorFingerprint.methodOrThrow().apply {
+        actionBarRingoConstructorFingerprint.mutableMethodOrThrow().apply {
             val staticCalls = implementation!!.instructions
                 .withIndex()
                 .filter { (_, instruction) ->
@@ -287,7 +287,7 @@ val toolBarComponentsPatch = bytecodePatch(
         hookToolBar("$GENERAL_CLASS_DESCRIPTOR->hideSearchButton")
 
         toolbarSearchButtonFingerprint
-            .methodOrThrow(toolbarSearchButtonLabelFingerprint)
+            .mutableMethodOrThrow(toolbarSearchButtonLabelFingerprint)
             .apply {
                 val index = indexOfShowAsActionInstruction(this)
                 val instruction = getInstruction<FiveRegisterInstruction>(index)
@@ -303,7 +303,7 @@ val toolBarComponentsPatch = bytecodePatch(
 
         // region patch for hide search term thumbnail
 
-        createSearchSuggestionsFingerprint.methodOrThrow().apply {
+        createSearchSuggestionsFingerprint.mutableMethodOrThrow().apply {
             val iteratorIndex = indexOfIteratorInstruction(this)
             val replaceIndex = indexOfFirstInstruction(iteratorIndex) {
                 opcode == Opcode.IGET_OBJECT &&
@@ -405,7 +405,7 @@ val toolBarComponentsPatch = bytecodePatch(
             it.method.apply {
                 val voiceInputControllerActivityMethodCall =
                     voiceInputControllerFingerprint
-                        .methodOrThrow(voiceInputControllerParentFingerprint)
+                        .mutableMethodOrThrow(voiceInputControllerParentFingerprint)
                         .methodCall()
 
                 val voiceInputControllerActivityIndex =
@@ -434,7 +434,7 @@ val toolBarComponentsPatch = bytecodePatch(
 
         if (is_19_46_or_greater && !is_20_15_or_greater) {
             val (searchSuggestionEndpointClass, searchSuggestionEndpointField) = with(
-                searchSuggestionEndpointFingerprint.methodOrThrow(
+                searchSuggestionEndpointFingerprint.mutableMethodOrThrow(
                     searchSuggestionEndpointParentFingerprint
                 )
             ) {
@@ -551,7 +551,7 @@ val toolBarComponentsPatch = bytecodePatch(
 
         // region patch for hide YouTube Doodles
 
-        yoodlesImageViewFingerprint.methodOrThrow().apply {
+        yoodlesImageViewFingerprint.mutableMethodOrThrow().apply {
             findInstructionIndicesReversedOrThrow {
                 opcode == Opcode.INVOKE_VIRTUAL
                         && getReference<MethodReference>()?.name == "setImageDrawable"
@@ -573,7 +573,7 @@ val toolBarComponentsPatch = bytecodePatch(
 
         // region patch for replace create button
 
-        createButtonDrawableFingerprint.methodOrThrow().apply {
+        createButtonDrawableFingerprint.mutableMethodOrThrow().apply {
             val index = indexOfFirstLiteralInstructionOrThrow(ytOutlineVideoCamera)
             val register = getInstruction<OneRegisterInstruction>(index).registerA
 
@@ -587,7 +587,7 @@ val toolBarComponentsPatch = bytecodePatch(
 
         hookToolBar("$GENERAL_CLASS_DESCRIPTOR->replaceCreateButton")
 
-        findMethodOrThrow(
+        findmutableMethodOrThrow(
             "Lcom/google/android/apps/youtube/app/application/Shell_SettingsActivity;"
         ) {
             name == "onCreate"

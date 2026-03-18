@@ -24,8 +24,8 @@ import com.extenre.patches.youtube.utils.settings.ResourceUtils.addPreference
 import com.extenre.patches.youtube.utils.settings.settingsPatch
 import com.extenre.patches.youtube.utils.webview.webViewPatch
 import com.extenre.util.findFieldFromToString
-import com.extenre.util.fingerprint.methodOrThrow
-import com.extenre.util.fingerprint.originalMethodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
+import com.extenre.util.fingerprint.originalmutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
 import com.android.tools.smali.dexlib2.Opcode
@@ -56,7 +56,7 @@ val debuggingPatch = bytecodePatch(
 
         if (is_19_16_or_greater) {
             currentWatchNextResponseFingerprint
-                .methodOrThrow(currentWatchNextResponseParentFingerprint)
+                .mutableMethodOrThrow(currentWatchNextResponseParentFingerprint)
                 .addInstructionsWithLabels(
                     0, """
                         invoke-static {}, $EXTENSION_CLASS_DESCRIPTOR->enableWatchNextProcessingDelay()Z
@@ -70,11 +70,11 @@ val debuggingPatch = bytecodePatch(
                 )
 
             val watchNextResponseProcessingDelayField =
-                playbackStartParametersToStringFingerprint.originalMethodOrThrow()
+                playbackStartParametersToStringFingerprint.originalmutableMethodOrThrow()
                     .findFieldFromToString(WATCH_NEXT_RESPONSE_PROCESSING_DELAY_STRING)
 
             playbackStartParametersConstructorFingerprint
-                .methodOrThrow(playbackStartParametersToStringFingerprint)
+                .mutableMethodOrThrow(playbackStartParametersToStringFingerprint)
                 .apply {
                     val index = indexOfFirstInstructionReversedOrThrow {
                         opcode == Opcode.IPUT &&

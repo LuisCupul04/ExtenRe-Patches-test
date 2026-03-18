@@ -16,8 +16,8 @@ import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod
 import com.extenre.patches.youtube.utils.extension.Constants.SHARED_PATH
 import com.extenre.patches.youtube.utils.extension.sharedExtensionPatch
 import com.extenre.patches.youtube.utils.resourceid.sharedResourceIdPatch
-import com.extenre.util.findMethodOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstruction
 import com.extenre.util.indexOfFirstInstructionOrThrow
@@ -59,12 +59,12 @@ val engagementPanelHookPatch = bytecodePatch(
         }
 
         val engagementPanelInfoClass = engagementPanelLayoutFingerprint
-            .methodOrThrow()
+            .mutableMethodOrThrow()
             .parameters[0]
             .toString()
 
         val (engagementPanelIdReference, engagementPanelObjectReference) =
-            with(findMethodOrThrow(engagementPanelInfoClass)) {
+            with(findmutableMethodOrThrow(engagementPanelInfoClass)) {
                 val engagementPanelIdIndex = indexOfFirstInstructionOrThrow {
                     opcode == Opcode.IPUT_OBJECT &&
                             getReference<FieldReference>()?.type == "Ljava/lang/String;"
@@ -79,7 +79,7 @@ val engagementPanelHookPatch = bytecodePatch(
                 )
             }
 
-        engagementPanelBuilderFingerprint.methodOrThrow().apply {
+        engagementPanelBuilderFingerprint.mutableMethodOrThrow().apply {
             val insertIndex = indexOfFirstInstructionOrThrow {
                 opcode == Opcode.IGET_OBJECT &&
                         getReference<FieldReference>()?.toString() == engagementPanelObjectReference
@@ -101,7 +101,7 @@ val engagementPanelHookPatch = bytecodePatch(
         }
 
         engagementPanelUpdateFingerprint
-            .methodOrThrow(engagementPanelBuilderFingerprint)
+            .mutableMethodOrThrow(engagementPanelBuilderFingerprint)
             .addInstruction(
                 0,
                 "invoke-static {}, $EXTENSION_CLASS_DESCRIPTOR->hide()V"

@@ -18,7 +18,7 @@ import com.extenre.patches.youtube.utils.extension.Constants.UTILS_PATH
 import com.extenre.patches.youtube.utils.extension.sharedExtensionPatch
 import com.extenre.util.addInstructionsAtControlFlowLabel
 import com.extenre.util.findFreeRegister
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
@@ -42,8 +42,8 @@ val lazilyConvertedElementHookPatch = bytecodePatch(
     dependsOn(sharedExtensionPatch)
 
     execute {
-        componentListFingerprint.methodOrThrow(componentContextSubParserFingerprint).apply {
-            val identifierReference = with(conversionContextFingerprintToString.methodOrThrow()) {
+        componentListFingerprint.mutableMethodOrThrow(componentContextSubParserFingerprint).apply {
+            val identifierReference = with(conversionContextFingerprintToString.mutableMethodOrThrow()) {
                 val identifierStringIndex =
                     indexOfFirstStringInstructionOrThrow(", identifierProperty=")
                 val identifierStringAppendIndex =
@@ -76,7 +76,7 @@ val lazilyConvertedElementHookPatch = bytecodePatch(
                     """
             )
 
-            lazilyConvertedElementMethod = lazilyConvertedElementPatchFingerprint.methodOrThrow()
+            lazilyConvertedElementMethod = lazilyConvertedElementPatchFingerprint.mutableMethodOrThrow()
         }
     }
 }

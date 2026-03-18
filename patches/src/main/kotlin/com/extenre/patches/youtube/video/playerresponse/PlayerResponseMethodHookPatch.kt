@@ -12,7 +12,7 @@ import com.extenre.patcher.extensions.InstructionExtensions.addInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.addInstructions
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import kotlin.properties.Delegates
 
 private val hooks = mutableSetOf<Hook>()
@@ -43,7 +43,7 @@ val playerResponseMethodHookPatch = bytecodePatch(
 ) {
     execute {
         playerResponseMethod = playerParameterBuilderFingerprint.second.methodOrNull
-            ?: playerParameterBuilderLegacyFingerprint.methodOrThrow()
+            ?: playerParameterBuilderLegacyFingerprint.mutableMethodOrThrow()
 
         playerResponseMethod.apply {
             val setIndex = parameterTypes.indexOfFirst { it == "Ljava/util/Set;" }

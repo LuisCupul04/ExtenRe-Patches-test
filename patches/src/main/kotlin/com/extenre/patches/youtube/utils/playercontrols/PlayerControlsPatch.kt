@@ -31,7 +31,7 @@ import com.extenre.util.copyXmlNode
 import com.extenre.util.findElementByAttributeValueOrThrow
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstLiteralInstructionReversedOrThrow
@@ -203,7 +203,7 @@ val playerControlsPatch = bytecodePatch(
             }
         }
 
-        motionEventFingerprint.methodOrThrow(youtubeControlsOverlayFingerprint).apply {
+        motionEventFingerprint.mutableMethodOrThrow(youtubeControlsOverlayFingerprint).apply {
             visibilityNegatedImmediateMethod = this
             visibilityNegatedImmediateInsertIndex = indexOfTranslationInstruction(this) + 1
         }
@@ -214,7 +214,7 @@ val playerControlsPatch = bytecodePatch(
                     reference.name == "inflate"
         }
 
-        playerBottomControlsInflateFingerprint.methodOrThrow().apply {
+        playerBottomControlsInflateFingerprint.mutableMethodOrThrow().apply {
             inflateBottomControlMethod = this
 
             val inflateReturnObjectIndex = indexOfFirstViewInflateOrThrow() + 1
@@ -223,7 +223,7 @@ val playerControlsPatch = bytecodePatch(
             inflateBottomControlInsertIndex = inflateReturnObjectIndex + 1
         }
 
-        playerTopControlsInflateFingerprint.methodOrThrow().apply {
+        playerTopControlsInflateFingerprint.mutableMethodOrThrow().apply {
             inflateTopControlMethod = this
 
             val inflateReturnObjectIndex = indexOfFirstViewInflateOrThrow() + 1
@@ -232,13 +232,13 @@ val playerControlsPatch = bytecodePatch(
             inflateTopControlInsertIndex = inflateReturnObjectIndex + 1
         }
 
-        visibilityMethod = controlsOverlayVisibilityFingerprint.methodOrThrow(
+        visibilityMethod = controlsOverlayVisibilityFingerprint.mutableMethodOrThrow(
             playerTopControlsInflateFingerprint,
         )
 
         // Hook the fullscreen close button.  Used to fix visibility
         // when seeking and other situations.
-        overlayViewInflateFingerprint.methodOrThrow().apply {
+        overlayViewInflateFingerprint.mutableMethodOrThrow().apply {
             val resourceIndex = indexOfFirstLiteralInstructionReversedOrThrow(fullScreenButton)
 
             val index = indexOfFirstInstructionOrThrow(resourceIndex) {
@@ -256,8 +256,8 @@ val playerControlsPatch = bytecodePatch(
         }
 
         visibilityImmediateCallbacksExistMethod =
-            playerControlsExtensionHookListenersExistFingerprint.methodOrThrow()
-        visibilityImmediateMethod = playerControlsExtensionHookFingerprint.methodOrThrow()
+            playerControlsExtensionHookListenersExistFingerprint.mutableMethodOrThrow()
+        visibilityImmediateMethod = playerControlsExtensionHookFingerprint.mutableMethodOrThrow()
 
         // A/B test for a slightly different bottom overlay controls,
         // that uses layout file youtube_video_exploder_controls_bottom_ui_container.xml
@@ -276,7 +276,7 @@ val playerControlsPatch = bytecodePatch(
         //
         // Flag was removed in 20.19+
         if (is_19_25_or_greater && !is_20_19_or_greater) {
-            playerTopControlsExperimentalLayoutFeatureFlagFingerprint.methodOrThrow().apply {
+            playerTopControlsExperimentalLayoutFeatureFlagFingerprint.mutableMethodOrThrow().apply {
                 val index = indexOfFirstInstructionOrThrow(Opcode.MOVE_RESULT_OBJECT)
                 val register = getInstruction<OneRegisterInstruction>(index).registerA
 

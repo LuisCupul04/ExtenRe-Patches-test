@@ -41,7 +41,7 @@ import com.extenre.patches.shared.textcomponent.textComponentPatch
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.legacyFingerprint
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
@@ -80,12 +80,12 @@ val actionBarComponentsPatch = bytecodePatch(
             addLithoFilter(FILTER_CLASS_DESCRIPTOR)
             hookSpannableString(ACTIONBAR_CLASS_DESCRIPTOR, "onLithoTextLoaded")
 
-            commandResolverFingerprint.methodOrThrow().addInstruction(
+            commandResolverFingerprint.mutableMethodOrThrow().addInstruction(
                 0,
                 "invoke-static {p2}, $ACTIONBAR_CLASS_DESCRIPTOR->inAppDownloadButtonOnClick(Ljava/util/Map;)Z"
             )
 
-            offlineVideoEndpointFingerprint.methodOrThrow().addInstructionsWithLabels(
+            offlineVideoEndpointFingerprint.mutableMethodOrThrow().addInstructionsWithLabels(
                 0, """
                     invoke-static {p2}, $ACTIONBAR_CLASS_DESCRIPTOR->inAppDownloadButtonOnClick(Ljava/util/Map;)Z
                     move-result v0
@@ -199,7 +199,7 @@ val actionBarComponentsPatch = bytecodePatch(
             }
         }
 
-        likeDislikeContainerFingerprint.methodOrThrow().apply {
+        likeDislikeContainerFingerprint.mutableMethodOrThrow().apply {
             val insertIndex =
                 indexOfFirstLiteralInstructionOrThrow(likeDislikeContainer) + 2
             val insertRegister = getInstruction<OneRegisterInstruction>(insertIndex).registerA
@@ -211,7 +211,7 @@ val actionBarComponentsPatch = bytecodePatch(
         }
 
         val (abstractClass, lottieAnimationUrlMethodName) =
-            with (lottieAnimationViewTagFingerprint.methodOrThrow()) {
+            with (lottieAnimationViewTagFingerprint.mutableMethodOrThrow()) {
                 val literalIndex =
                     indexOfFirstLiteralInstructionOrThrow(elementsLottieAnimationViewTagId)
                 val lottieAnimationUrlIndex =
@@ -243,7 +243,7 @@ val actionBarComponentsPatch = bytecodePatch(
             }
         )
 
-        lottieAnimationUrlFingerprint.methodOrThrow().apply {
+        lottieAnimationUrlFingerprint.mutableMethodOrThrow().apply {
             val index = implementation!!.instructions.lastIndex
             val register = getInstruction<OneRegisterInstruction>(index).registerA
 

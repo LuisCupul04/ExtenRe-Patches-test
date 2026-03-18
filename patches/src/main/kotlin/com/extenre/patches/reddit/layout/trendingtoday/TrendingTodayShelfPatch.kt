@@ -18,7 +18,7 @@ import com.extenre.patches.reddit.utils.patch.PatchList.HIDE_TRENDING_TODAY_SHEL
 import com.extenre.patches.reddit.utils.settings.settingsPatch
 import com.extenre.patches.reddit.utils.settings.updatePatchStatus
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
@@ -66,7 +66,7 @@ val trendingTodayShelfPatch = bytecodePatch(
 
         // region patch for hide trending today contents.
 
-        trendingTodayItemFingerprint.methodOrThrow().addInstructionsWithLabels(
+        trendingTodayItemFingerprint.mutableMethodOrThrow().addInstructionsWithLabels(
             0, """
                 invoke-static {}, $EXTENSION_CLASS_DESCRIPTOR->hideTrendingTodayShelf()Z
                 move-result v0

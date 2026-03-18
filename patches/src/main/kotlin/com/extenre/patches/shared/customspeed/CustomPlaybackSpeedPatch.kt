@@ -13,7 +13,7 @@ import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.replaceInstruction
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstLiteralInstructionOrThrow
@@ -75,8 +75,8 @@ fun customPlaybackSpeedPatch(
         }
 
         setOf(
-            limiterFallBackFingerprint.methodOrThrow(),
-            limiterFingerprint.methodOrThrow(limiterFallBackFingerprint)
+            limiterFallBackFingerprint.mutableMethodOrThrow(),
+            limiterFingerprint.mutableMethodOrThrow(limiterFallBackFingerprint)
         ).forEach { method ->
             method.apply {
                 val limitMinIndex =

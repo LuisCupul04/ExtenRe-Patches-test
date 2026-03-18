@@ -19,7 +19,7 @@ import com.extenre.patches.music.utils.settings.addSwitchPreference
 import com.extenre.patches.music.utils.settings.settingsPatch
 import com.extenre.patches.shared.tracking.baseSanitizeUrlQueryPatch
 import com.extenre.patches.shared.tracking.hookQueryParameters
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstStringInstructionOrThrow
@@ -42,7 +42,7 @@ val sanitizeUrlQueryPatch = bytecodePatch(
     execute {
 
         if (is_8_05_or_greater) {
-            imageShareLinkFormatterFingerprint.methodOrThrow().apply {
+            imageShareLinkFormatterFingerprint.mutableMethodOrThrow().apply {
                 val stringIndex = indexOfFirstStringInstructionOrThrow("android.intent.extra.TEXT")
                 val insertIndex = indexOfFirstInstructionOrThrow(stringIndex) {
                     val reference = getReference<MethodReference>()

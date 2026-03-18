@@ -15,7 +15,7 @@ import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patcher.util.smali.ExternalLabel
 import com.extenre.patches.shared.extension.Constants.PATCHES_PATH
 import com.extenre.patches.shared.startVideoInformerFingerprint
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 
 private const val EXTENSION_CLASS_DESCRIPTOR =
     "$PATCHES_PATH/AutoCaptionsPatch;"
@@ -25,7 +25,7 @@ val baseAutoCaptionsPatch = bytecodePatch(
     description = "baseAutoCaptionsPatch"
 ) {
     execute {
-        subtitleTrackFingerprint.methodOrThrow().apply {
+        subtitleTrackFingerprint.mutableMethodOrThrow().apply {
             addInstructionsWithLabels(
                 0, """
                     invoke-static {}, $EXTENSION_CLASS_DESCRIPTOR->disableAutoCaptions()Z
@@ -41,7 +41,7 @@ val baseAutoCaptionsPatch = bytecodePatch(
             startVideoInformerFingerprint to 0,
             storyboardRendererDecoderRecommendedLevelFingerprint to 1
         ).forEach { (fingerprint, enabled) ->
-            fingerprint.methodOrThrow().addInstructions(
+            fingerprint.mutableMethodOrThrow().addInstructions(
                 0, """
                     const/4 v0, 0x$enabled
                     invoke-static {v0}, $EXTENSION_CLASS_DESCRIPTOR->setCaptionsButtonStatus(Z)V

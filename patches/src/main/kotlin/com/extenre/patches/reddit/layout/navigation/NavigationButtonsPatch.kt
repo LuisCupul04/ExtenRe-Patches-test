@@ -19,7 +19,7 @@ import com.extenre.patches.reddit.utils.settings.is_2024_26_or_greater
 import com.extenre.patches.reddit.utils.settings.is_2025_06_or_greater
 import com.extenre.patches.reddit.utils.settings.settingsPatch
 import com.extenre.patches.reddit.utils.settings.updatePatchStatus
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.resolvable
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.android.tools.smali.dexlib2.Opcode
@@ -47,7 +47,7 @@ val navigationButtonsPatch = bytecodePatch(
             if (is_2025_06_or_greater) fingerprints += composeBottomNavScreenFingerprint
 
             fingerprints.forEach { fingerprint ->
-                fingerprint.methodOrThrow().apply {
+                fingerprint.mutableMethodOrThrow().apply {
                     val arrayIndex = indexOfButtonsArrayInstruction(this)
                     val arrayRegister =
                         getInstruction<OneRegisterInstruction>(arrayIndex + 1).registerA
@@ -62,7 +62,7 @@ val navigationButtonsPatch = bytecodePatch(
             }
         } else {
             if (bottomNavScreenFingerprint.resolvable()) {
-                val bottomNavScreenMutableClass = with(bottomNavScreenFingerprint.methodOrThrow()) {
+                val bottomNavScreenMutableClass = with(bottomNavScreenFingerprint.mutableMethodOrThrow()) {
                     val startIndex = indexOfGetDimensionPixelSizeInstruction(this)
                     val targetIndex =
                         indexOfFirstInstructionOrThrow(startIndex, Opcode.NEW_INSTANCE)
@@ -91,7 +91,7 @@ val navigationButtonsPatch = bytecodePatch(
                     }
             } else {
                 // Legacy method.
-                bottomNavScreenHandlerFingerprint.methodOrThrow().apply {
+                bottomNavScreenHandlerFingerprint.mutableMethodOrThrow().apply {
                     val targetIndex = indexOfGetItemsInstruction(this) + 1
                     val targetRegister =
                         getInstruction<OneRegisterInstruction>(targetIndex).registerA

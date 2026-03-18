@@ -24,7 +24,7 @@ import com.extenre.patches.music.utils.settings.ResourceUtils.updatePatchStatus
 import com.extenre.patches.music.utils.settings.addPreferenceWithIntent
 import com.extenre.patches.music.utils.settings.addSwitchPreference
 import com.extenre.patches.music.utils.settings.settingsPatch
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstLiteralInstructionOrThrow
@@ -51,7 +51,7 @@ val accountComponentsPatch = bytecodePatch(
 
         // region patch for hide account menu
 
-        menuEntryFingerprint.methodOrThrow().apply {
+        menuEntryFingerprint.mutableMethodOrThrow().apply {
             val textIndex = indexOfFirstInstructionOrThrow {
                 opcode == Opcode.INVOKE_VIRTUAL &&
                         getReference<MethodReference>()?.name == "setText"
@@ -76,7 +76,7 @@ val accountComponentsPatch = bytecodePatch(
         // region patch for hide handle
 
         // account menu
-        accountSwitcherAccessibilityLabelFingerprint.methodOrThrow().apply {
+        accountSwitcherAccessibilityLabelFingerprint.mutableMethodOrThrow().apply {
             val textColorIndex = indexOfFirstInstructionOrThrow {
                 opcode == Opcode.INVOKE_VIRTUAL &&
                         getReference<MethodReference>()?.name == "setTextColor"
@@ -98,7 +98,7 @@ val accountComponentsPatch = bytecodePatch(
         // account switcher
         val textViewField = with(
             channelHandleFingerprint
-                .methodOrThrow(namesInactiveAccountThumbnailSizeFingerprint)
+                .mutableMethodOrThrow(namesInactiveAccountThumbnailSizeFingerprint)
         ) {
             val literalIndex = indexOfFirstLiteralInstructionOrThrow(channelHandle)
             getInstruction(
@@ -109,7 +109,7 @@ val accountComponentsPatch = bytecodePatch(
             ).getReference<FieldReference>()
         }
 
-        namesInactiveAccountThumbnailSizeFingerprint.methodOrThrow().apply {
+        namesInactiveAccountThumbnailSizeFingerprint.mutableMethodOrThrow().apply {
             var hook = false
 
             implementation!!.instructions
@@ -147,7 +147,7 @@ val accountComponentsPatch = bytecodePatch(
 
         // region patch for hide terms container
 
-        termsOfServiceFingerprint.methodOrThrow().apply {
+        termsOfServiceFingerprint.mutableMethodOrThrow().apply {
             val insertIndex = indexOfFirstInstructionOrThrow {
                 val reference = getReference<MethodReference>()
                 opcode == Opcode.INVOKE_VIRTUAL &&

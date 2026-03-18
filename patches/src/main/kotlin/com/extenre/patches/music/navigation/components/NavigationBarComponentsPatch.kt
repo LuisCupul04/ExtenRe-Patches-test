@@ -36,7 +36,7 @@ import com.extenre.patches.music.utils.settings.settingsPatch
 import com.extenre.util.REGISTER_TEMPLATE_REPLACEMENT
 import com.extenre.util.Utils.printWarn
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
@@ -89,7 +89,7 @@ val navigationBarComponentsPatch = bytecodePatch(
         /**
          * Enable custom navigation bar color
          */
-        tabLayoutFingerprint.methodOrThrow().apply {
+        tabLayoutFingerprint.mutableMethodOrThrow().apply {
             val constIndex = indexOfFirstLiteralInstructionOrThrow(colorGrey)
             val insertIndex = indexOfFirstInstructionOrThrow(constIndex) {
                 opcode == Opcode.INVOKE_VIRTUAL
@@ -108,7 +108,7 @@ val navigationBarComponentsPatch = bytecodePatch(
         /**
          * Hide navigation labels
          */
-        tabLayoutTextFingerprint.methodOrThrow().apply {
+        tabLayoutTextFingerprint.mutableMethodOrThrow().apply {
             val constIndex =
                 indexOfFirstLiteralInstructionOrThrow(text1)
             val targetIndex = indexOfFirstInstructionOrThrow(constIndex, Opcode.CHECK_CAST)

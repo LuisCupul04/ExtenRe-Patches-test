@@ -34,7 +34,7 @@ import com.extenre.patches.youtube.utils.settings.ResourceUtils.addPreference
 import com.extenre.patches.youtube.utils.settings.settingsPatch
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstLiteralInstructionOrThrow
@@ -67,7 +67,7 @@ val playerButtonsPatch = bytecodePatch(
 
         // region patch for hide autoplay button
 
-        layoutConstructorFingerprint.methodOrThrow().apply {
+        layoutConstructorFingerprint.mutableMethodOrThrow().apply {
             val constIndex = indexOfFirstLiteralInstructionOrThrow(autoNavToggle)
             val constRegister = getInstruction<OneRegisterInstruction>(constIndex).registerA
             val jumpIndex =
@@ -94,7 +94,7 @@ val playerButtonsPatch = bytecodePatch(
         }
 
 
-        youtubeControlsOverlaySubtitleButtonFingerprint.methodOrThrow().apply {
+        youtubeControlsOverlaySubtitleButtonFingerprint.mutableMethodOrThrow().apply {
             val insertIndex = implementation!!.instructions.lastIndex
             val insertRegister = getInstruction<OneRegisterInstruction>(insertIndex).registerA
 
@@ -114,7 +114,7 @@ val playerButtonsPatch = bytecodePatch(
 
         // region patch for hide collapse button
 
-        titleAnchorFingerprint.methodOrThrow().apply {
+        titleAnchorFingerprint.mutableMethodOrThrow().apply {
             val titleAnchorConstIndex = indexOfFirstLiteralInstructionOrThrow(titleAnchor)
             val titleAnchorIndex =
                 indexOfFirstInstructionOrThrow(titleAnchorConstIndex, Opcode.MOVE_RESULT_OBJECT)
@@ -170,7 +170,7 @@ val playerButtonsPatch = bytecodePatch(
         // region patch for hide previous and next button
 
         if (is_19_34_or_greater) {
-            layoutConstructorFingerprint.methodOrThrow().apply {
+            layoutConstructorFingerprint.mutableMethodOrThrow().apply {
                 val resourceIndex =
                     indexOfFirstLiteralInstructionOrThrow(playerControlPreviousButtonTouchArea)
 
@@ -188,7 +188,7 @@ val playerButtonsPatch = bytecodePatch(
                 )
             }
         } else {
-            playerControlsVisibilityModelFingerprint.methodOrThrow().apply {
+            playerControlsVisibilityModelFingerprint.mutableMethodOrThrow().apply {
                 val callIndex = indexOfFirstInstructionOrThrow(Opcode.INVOKE_DIRECT_RANGE)
                 val callInstruction = getInstruction<RegisterRangeInstruction>(callIndex)
 
@@ -210,7 +210,7 @@ val playerButtonsPatch = bytecodePatch(
 
         // region patch for hide youtube music button
 
-        musicAppDeeplinkButtonFingerprint.methodOrThrow(musicAppDeeplinkButtonParentFingerprint)
+        musicAppDeeplinkButtonFingerprint.mutableMethodOrThrow(musicAppDeeplinkButtonParentFingerprint)
             .apply {
                 addInstructionsWithLabels(
                     0, """

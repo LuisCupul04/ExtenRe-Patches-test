@@ -22,7 +22,7 @@ import com.extenre.patches.youtube.utils.resourceid.sharedResourceIdPatch
 import com.extenre.patches.youtube.utils.settings.ResourceUtils.addPreference
 import com.extenre.patches.youtube.utils.settings.settingsPatch
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.formats.Instruction35c
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
@@ -42,7 +42,7 @@ val feedFlyoutMenuPatch = bytecodePatch(
 
         // region patch for phone
 
-        bottomSheetMenuItemBuilderFingerprint.methodOrThrow().apply {
+        bottomSheetMenuItemBuilderFingerprint.mutableMethodOrThrow().apply {
             val insertIndex = indexOfSpannedCharSequenceInstruction(this) + 2
             val insertRegister = getInstruction<OneRegisterInstruction>(insertIndex - 1).registerA
 

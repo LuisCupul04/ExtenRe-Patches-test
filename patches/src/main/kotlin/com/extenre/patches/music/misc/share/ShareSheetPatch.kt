@@ -23,7 +23,7 @@ import com.extenre.patches.music.utils.settings.addSwitchPreference
 import com.extenre.patches.music.utils.settings.settingsPatch
 import com.extenre.patches.shared.litho.addLithoFilter
 import com.extenre.patches.shared.litho.lithoFilterPatch
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstLiteralInstructionOrThrow
 import com.android.tools.smali.dexlib2.Opcode
@@ -49,7 +49,7 @@ val shareSheetPatch = bytecodePatch(
     )
 
     execute {
-        bottomSheetRecyclerViewFingerprint.methodOrThrow().apply {
+        bottomSheetRecyclerViewFingerprint.mutableMethodOrThrow().apply {
             val constIndex = indexOfFirstLiteralInstructionOrThrow(bottomSheetRecyclerView)
             val targetIndex = indexOfFirstInstructionOrThrow(constIndex, Opcode.CHECK_CAST)
             val targetRegister = getInstruction<OneRegisterInstruction>(targetIndex).registerA

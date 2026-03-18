@@ -17,7 +17,7 @@ import com.extenre.patches.music.utils.patch.PatchList.REMOVE_BACKGROUND_PLAYBAC
 import com.extenre.patches.music.utils.settings.ResourceUtils.updatePatchStatus
 import com.extenre.patches.music.utils.settings.settingsPatch
 import com.extenre.util.fingerprint.matchOrThrow
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.resolvable
 import com.extenre.util.getReference
 import com.extenre.util.getWalkerMethod
@@ -40,7 +40,7 @@ val backgroundPlaybackPatch = bytecodePatch(
     execute {
         // region patch for background play
 
-        backgroundPlaybackManagerFingerprint.methodOrThrow().addInstructions(
+        backgroundPlaybackManagerFingerprint.mutableMethodOrThrow().addInstructions(
             0, """
                 const/4 v0, 0x1
                 return v0
@@ -77,7 +77,7 @@ val backgroundPlaybackPatch = bytecodePatch(
         if (podCastConfigFingerprint.resolvable() &&
             dataSavingSettingsFragmentFingerprint.resolvable()
         ) {
-            podCastConfigFingerprint.methodOrThrow().apply {
+            podCastConfigFingerprint.mutableMethodOrThrow().apply {
                 val insertIndex = implementation!!.instructions.size - 1
                 val targetRegister = getInstruction<OneRegisterInstruction>(insertIndex).registerA
 
@@ -87,7 +87,7 @@ val backgroundPlaybackPatch = bytecodePatch(
                 )
             }
 
-            dataSavingSettingsFragmentFingerprint.methodOrThrow().apply {
+            dataSavingSettingsFragmentFingerprint.mutableMethodOrThrow().apply {
                 val insertIndex =
                     indexOfFirstStringInstructionOrThrow("pref_key_dont_play_nma_video") + 4
                 val targetRegister = getInstruction<FiveRegisterInstruction>(insertIndex).registerD
@@ -103,7 +103,7 @@ val backgroundPlaybackPatch = bytecodePatch(
 
         // region patch for minimized playback
 
-        kidsBackgroundPlaybackPolicyControllerFingerprint.methodOrThrow().addInstruction(
+        kidsBackgroundPlaybackPolicyControllerFingerprint.mutableMethodOrThrow().addInstruction(
             0, "return-void"
         )
 
