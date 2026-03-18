@@ -44,8 +44,8 @@ private const val OFFLINE_PLAYLIST_ENDPOINT_OUTER_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val downloadActionsPatch = bytecodePatch(
-    HOOK_DOWNLOAD_ACTIONS.title,
-    HOOK_DOWNLOAD_ACTIONS.summary,
+    name = HOOK_DOWNLOAD_ACTIONS.key,
+    description = "${HOOK_DOWNLOAD_ACTIONS.title}: ${HOOK_DOWNLOAD_ACTIONS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

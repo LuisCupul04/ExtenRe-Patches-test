@@ -34,6 +34,7 @@ private const val EXTENSION_VIDEO_UTILS_CLASS_DESCRIPTOR =
 private lateinit var dismissMethod: MutableMethod
 
 val dismissPlayerHookPatch = bytecodePatch(
+    name = "dismiss-Player-Hook-Patch",
     description = "dismissPlayerHookPatch"
 ) {
     dependsOn(sharedExtensionPatch)

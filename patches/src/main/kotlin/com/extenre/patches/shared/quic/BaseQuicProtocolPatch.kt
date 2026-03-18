@@ -19,6 +19,7 @@ private const val EXTENSION_CLASS_DESCRIPTOR =
     "$PATCHES_PATH/QUICProtocolPatch;"
 
 fun baseQuicProtocolPatch() = bytecodePatch(
+    name = "base-Quic-Protocol-Patch",
     description = "baseQuicProtocolPatch"
 ) {
     execute {
@@ -35,4 +36,3 @@ fun baseQuicProtocolPatch() = bytecodePatch(
         }
     }
 }
-

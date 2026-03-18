@@ -20,6 +20,7 @@ private const val SPLASH_SCREEN_COLOR_NAME = "splashScreenColor"
 private const val SPLASH_SCREEN_COLOR_ATTRIBUTE = "?attr/$SPLASH_SCREEN_COLOR_NAME"
 
 val sharedThemePatch = resourcePatch(
+    name = "shared-Theme-Patch",
     description = "sharedThemePatch"
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)

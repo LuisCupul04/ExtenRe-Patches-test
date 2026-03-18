@@ -18,6 +18,7 @@ private const val EXTENSION_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val playerTypeHookPatch = bytecodePatch(
+    name = "player-TypeHook-Patch",
     description = "playerTypeHookPatch"
 ) {
 

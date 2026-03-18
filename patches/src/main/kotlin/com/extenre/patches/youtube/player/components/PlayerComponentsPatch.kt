@@ -358,8 +358,8 @@ private const val RELATED_VIDEO_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val playerComponentsPatch = bytecodePatch(
-    PLAYER_COMPONENTS.title,
-    PLAYER_COMPONENTS.summary,
+    name = PLAYER_COMPONENTS.key,
+    description = "${PLAYER_COMPONENTS.title}: ${PLAYER_COMPONENTS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

@@ -20,8 +20,8 @@ import org.w3c.dom.Element
 
 @Suppress("unused")
 val themePatch = resourcePatch(
-    THEME.title,
-    THEME.summary,
+    name = THEME.key,
+    description = "${THEME.title}: ${THEME.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

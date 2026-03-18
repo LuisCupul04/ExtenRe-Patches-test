@@ -58,6 +58,7 @@ private const val EXTENSION_INITIALIZATION_CLASS_DESCRIPTOR =
     "$UTILS_PATH/InitializationPatch;"
 
 private val settingsBytecodePatch = bytecodePatch(
+    name = "settings-bytecode-patch",
     description = "settingsBytecodePatch"
 ) {
     dependsOn(
@@ -162,7 +163,7 @@ private val settingsBytecodePatch = bytecodePatch(
 }
 
 private const val DEFAULT_ELEMENT = "pref_key_parent_tools"
-private const val DEFAULT_LABEL = "RVX"
+private const val DEFAULT_LABEL = "ExtenRe"
 private const val FALLBACK_ELEMENT = "settings_header_general"
 private lateinit var settingsLabel: String
 
@@ -180,8 +181,8 @@ private val SETTINGS_ELEMENTS_MAP = mapOf(
 )
 
 val settingsPatch = resourcePatch(
-    SETTINGS_FOR_YOUTUBE_MUSIC.title,
-    SETTINGS_FOR_YOUTUBE_MUSIC.summary,
+    name = SETTINGS_FOR_YOUTUBE_MUSIC.key,
+    description = "${SETTINGS_FOR_YOUTUBE_MUSIC.title}: ${SETTINGS_FOR_YOUTUBE_MUSIC.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 
@@ -195,19 +196,28 @@ val settingsPatch = resourcePatch(
         default = DEFAULT_ELEMENT,
         values = SETTINGS_ELEMENTS_MAP,
         title = "Insert position",
-        description = "The settings menu name that the RVX settings menu should be above.",
+        description = "The settings menu name that the ExtenRe settings menu should be above.",
         required = true,
     )
 
-    val rvxSettingsLabel = stringOption(
-        key = "rvxSettingsLabel",
+    val extenreSettingsLabel = stringOption(
+        key = "extenreSettingsLabel",
         default = DEFAULT_LABEL,
         values = mapOf(
-            "ReVanced Extended" to "ReVanced Extended",
-            "RVX" to DEFAULT_LABEL,
+            "ExtenRe" to DEFAULT_LABEL,
+            "ExtenRe +" to "ExtenRe +",
+            "EXTEN+" to "EXTEN+",
+            "EXRE" to "EXRE",
+            "EXTEN" to "EXTEN",
+            "EXTENRE" to "EXTENRE",
+            "KITSUNE" to "KITSUNE",
+            "NEKO" to "NEKO",
+            "RE+" to "RE+",
+            "RVX" to "RVX",
+            "ReVanced Extended" to "ReVanced Extended",          
         ),
-        title = "RVX settings label",
-        description = "The name of the RVX settings menu.",
+        title = "ExtenRe settings label",
+        description = "The name of the ExtenRe settings menu.",
         required = true,
     )
 
@@ -215,7 +225,7 @@ val settingsPatch = resourcePatch(
         /**
          * check patch options
          */
-        settingsLabel = rvxSettingsLabel
+        settingsLabel = extenreSettingsLabel
             .valueOrThrow()
 
         var insertKey = insertPosition
@@ -284,7 +294,7 @@ val settingsPatch = resourcePatch(
         }
 
         ResourceUtils.setContext(this)
-        ResourceUtils.addRVXSettingsPreference(insertKey)
+        ResourceUtils.addEXTENRESettingsPreference(insertKey)
 
         ResourceUtils.updatePatchStatus(SETTINGS_FOR_YOUTUBE_MUSIC)
 
@@ -299,7 +309,7 @@ val settingsPatch = resourcePatch(
 
     finalize {
         /**
-         * change RVX settings menu name
+         * change EXTENRE settings menu name
          * since it must be invoked after the Translations patch, it must be the last in the order.
          */
         if (settingsLabel != DEFAULT_LABEL) {

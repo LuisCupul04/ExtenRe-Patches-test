@@ -26,8 +26,8 @@ import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
 
 @Suppress("unused")
 val oldStyleLibraryShelfPatch = bytecodePatch(
-    RESTORE_OLD_STYLE_LIBRARY_SHELF.title,
-    RESTORE_OLD_STYLE_LIBRARY_SHELF.summary,
+    name = RESTORE_OLD_STYLE_LIBRARY_SHELF.key,
+    description = "${RESTORE_OLD_STYLE_LIBRARY_SHELF.title}: ${RESTORE_OLD_STYLE_LIBRARY_SHELF.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

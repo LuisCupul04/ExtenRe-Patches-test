@@ -25,8 +25,8 @@ private val SUPPORTED_TRANSLATIONS = setOf(
 
 @Suppress("unused")
 val translationsPatch = resourcePatch(
-    TRANSLATIONS_FOR_YOUTUBE.title,
-    TRANSLATIONS_FOR_YOUTUBE.summary,
+    name = TRANSLATIONS_FOR_YOUTUBE.key,
+    description = "${TRANSLATIONS_FOR_YOUTUBE.title}: ${TRANSLATIONS_FOR_YOUTUBE.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

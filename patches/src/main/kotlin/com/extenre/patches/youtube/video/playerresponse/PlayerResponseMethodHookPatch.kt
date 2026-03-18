@@ -38,6 +38,7 @@ private lateinit var playerResponseMethod: MutableMethod
 private var numberOfInstructionsAdded = 0
 
 val playerResponseMethodHookPatch = bytecodePatch(
+    name = "player-Response-Method-Hook-Patch",
     description = "playerResponseMethodHookPatch"
 ) {
     execute {

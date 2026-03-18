@@ -54,8 +54,8 @@ private const val EXTENSION_SWIPE_CONTROLS_PATCH_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val swipeControlsPatch = bytecodePatch(
-    SWIPE_CONTROLS.title,
-    SWIPE_CONTROLS.summary,
+    name = SWIPE_CONTROLS.key,
+    description = "${SWIPE_CONTROLS.title}: ${SWIPE_CONTROLS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

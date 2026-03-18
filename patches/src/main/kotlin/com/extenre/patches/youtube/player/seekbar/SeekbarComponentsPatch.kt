@@ -113,8 +113,8 @@ private const val EXTENSION_SEEKBAR_COLOR_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val seekbarComponentsPatch = bytecodePatch(
-    SEEKBAR_COMPONENTS.title,
-    SEEKBAR_COMPONENTS.summary,
+    name = SEEKBAR_COMPONENTS.key,
+    description = "${SEEKBAR_COMPONENTS.title}: ${SEEKBAR_COMPONENTS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

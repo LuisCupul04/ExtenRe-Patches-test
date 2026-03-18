@@ -70,9 +70,9 @@ private val headerIconResourceGroups =
 
 @Suppress("unused")
 val changeHeaderPatch = resourcePatch(
-    CUSTOM_HEADER_FOR_YOUTUBE.title,
-    CUSTOM_HEADER_FOR_YOUTUBE.summary,
-    false,
+    name = CUSTOM_HEADER_FOR_YOUTUBE.key,
+    description = "${CUSTOM_HEADER_FOR_YOUTUBE.title}: ${CUSTOM_HEADER_FOR_YOUTUBE.summary}",
+    optimized = false.
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

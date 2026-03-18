@@ -79,6 +79,7 @@ internal var cairoFragmentDisabled = false
 private var targetActivityClassName = ""
 
 private val settingsBytecodePatch = bytecodePatch(
+    name = "settings-BytecodeP-atch",
     description = "settingsBytecodePatch"
 ) {
     dependsOn(
@@ -229,7 +230,7 @@ private const val DEFAULT_LABEL = "ExtenRe"
 
 private val SETTINGS_ELEMENTS_MAP = mapOf(
     "About" to DEFAULT_ELEMENT,
-    "Parent settings" to "@string/parent_tools_key"
+    "Parent settings" to "@string/parent_tools_key",
     "General" to "@string/general_key",
     "Account" to "@string/account_switcher_key",
     "Data saving" to "@string/data_saving_settings_key",
@@ -256,8 +257,8 @@ private val SETTINGS_ELEMENTS_MAP = mapOf(
 private lateinit var settingsLabel: String
 
 val settingsPatch = resourcePatch(
-    SETTINGS_FOR_YOUTUBE.title,
-    SETTINGS_FOR_YOUTUBE.summary,
+    name = SETTINGS_FOR_YOUTUBE.key,
+    description = "${SETTINGS_FOR_YOUTUBE.title}: ${SETTINGS_FOR_YOUTUBE.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 
@@ -277,18 +278,21 @@ val settingsPatch = resourcePatch(
         required = true,
     )
 
-    val rvxSettingsLabel = stringOption(
-        key = "rvxSettingsLabel",
+    val extenreSettingsLabel = stringOption(
+        key = "extenreSettingsLabel",
         default = DEFAULT_LABEL,
         values = mapOf(
-            "KITSUNE" to "KITSUNE",
-            "NEKO" to "NEKO",
-            "RE+" to "RE+",
+            "ExtenRe" to DEFAULT_LABEL,
+            "ExtenRe +" to "ExtenRe +",
             "EXTEN+" to "EXTEN+",
             "EXRE" to "EXRE",
             "EXTEN" to "EXTEN",
             "EXTENRE" to "EXTENRE",
-            "ExtenRe" to DEFAULT_LABEL,
+            "KITSUNE" to "KITSUNE",
+            "NEKO" to "NEKO",
+            "RE+" to "RE+",
+            "RVX" to "RVX",
+            "ReVanced Extended" to "ReVanced Extended"
         ),
         title = "ExtenRe settings label",
         description = "The name of the ExtenRe settings menu.",
@@ -299,7 +303,7 @@ val settingsPatch = resourcePatch(
         /**
          * check patch options
          */
-        settingsLabel = rvxSettingsLabel
+        settingsLabel = extenreSettingsLabel
             .valueOrThrow()
 
         val insertKey = insertPosition
@@ -387,7 +391,7 @@ val settingsPatch = resourcePatch(
         }
 
         /**
-         * initialize ReVanced Extended Settings
+         * initialize ExtenRe Settings
          */
         ResourceUtils.addPreferenceFragment(
             "extenre_settings",
@@ -421,7 +425,7 @@ val settingsPatch = resourcePatch(
 
     finalize {
         /**
-         * change RVX settings menu name
+         * change ExtenRe settings menu name
          * since it must be invoked after the Translations patch, it must be the last in the order.
          */
         if (settingsLabel != DEFAULT_LABEL) {

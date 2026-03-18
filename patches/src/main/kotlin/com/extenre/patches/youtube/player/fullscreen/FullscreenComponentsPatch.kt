@@ -74,8 +74,8 @@ private const val EXTENSION_EXIT_FULLSCREEN_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val fullscreenComponentsPatch = bytecodePatch(
-    FULLSCREEN_COMPONENTS.title,
-    FULLSCREEN_COMPONENTS.summary,
+    name = FULLSCREEN_COMPONENTS.key,
+    description = "${FULLSCREEN_COMPONENTS.title}: ${FULLSCREEN_COMPONENTS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

@@ -23,6 +23,7 @@ private lateinit var recyclerViewTreeObserverMutableMethod: MutableMethod
 private var recyclerViewTreeObserverInsertIndex = 0
 
 val recyclerViewTreeObserverPatch = bytecodePatch(
+    name = "recycler-View-Tree-Observer-Patch",
     description = "recyclerViewTreeObserverPatch"
 ) {
     execute {

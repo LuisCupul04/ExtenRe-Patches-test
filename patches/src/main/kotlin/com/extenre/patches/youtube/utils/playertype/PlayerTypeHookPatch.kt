@@ -55,6 +55,7 @@ private const val FILTER_CLASS_DESCRIPTOR =
     "$COMPONENTS_PATH/LayoutReloadObserverFilter;"
 
 val playerTypeHookPatch = bytecodePatch(
+    name = "player-Type-Hook-Patch",
     description = "playerTypeHookPatch"
 ) {
     dependsOn(

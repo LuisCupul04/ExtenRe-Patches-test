@@ -26,9 +26,9 @@ private var redditPackageName = PACKAGE_NAME_REDDIT
 
 @Suppress("unused")
 val changePackageNamePatch = resourcePatch(
-    CHANGE_PACKAGE_NAME.title,
-    CHANGE_PACKAGE_NAME.summary,
-    false,
+    name = CHANGE_PACKAGE_NAME.key,
+    description = "${CHANGE_PACKAGE_NAME.title}: ${CHANGE_PACKAGE_NAME.summary}",
+    optimized = false,
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

@@ -20,8 +20,8 @@ import com.extenre.util.fingerprint.methodOrThrow
 
 @Suppress("unused")
 val signInToTvPopupPatch = bytecodePatch(
-    DISABLE_SIGN_IN_TO_TV_POPUP.title,
-    DISABLE_SIGN_IN_TO_TV_POPUP.summary,
+    name = DISABLE_SIGN_IN_TO_TV_POPUP.key,
+    description = "${DISABLE_SIGN_IN_TO_TV_POPUP.title}: ${DISABLE_SIGN_IN_TO_TV_POPUP.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

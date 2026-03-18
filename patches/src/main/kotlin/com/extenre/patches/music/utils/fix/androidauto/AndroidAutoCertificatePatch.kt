@@ -17,8 +17,8 @@ import com.extenre.util.fingerprint.methodOrThrow
 
 @Suppress("unused")
 val androidAutoCertificatePatch = bytecodePatch(
-    CERTIFICATE_SPOOF.title,
-    CERTIFICATE_SPOOF.summary,
+    name = CERTIFICATE_SPOOF.key,
+    description = "${CERTIFICATE_SPOOF.title}: ${CERTIFICATE_SPOOF.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

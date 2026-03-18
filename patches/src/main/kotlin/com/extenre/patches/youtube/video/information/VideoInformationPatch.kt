@@ -131,7 +131,8 @@ internal lateinit var speedSelectionInsertMethod: MutableMethod
 internal lateinit var videoEndMethod: MutableMethod
 
 val videoInformationPatch = bytecodePatch(
-    description = "videoInformationPatch",
+    name = "video-Information-Patch",
+    description = "videoInformationPatch"
 ) {
     dependsOn(
         playerResponseMethodHookPatch,

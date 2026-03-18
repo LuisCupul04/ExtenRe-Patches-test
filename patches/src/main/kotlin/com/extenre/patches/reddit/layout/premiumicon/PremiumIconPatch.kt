@@ -18,8 +18,8 @@ import com.extenre.util.fingerprint.methodOrThrow
 
 @Suppress("unused")
 val premiumIconPatch = bytecodePatch(
-    PREMIUM_ICON.title,
-    PREMIUM_ICON.summary,
+    name = PREMIUM_ICON.key,
+    description = "${PREMIUM_ICON.title}: ${PREMIUM_ICON.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

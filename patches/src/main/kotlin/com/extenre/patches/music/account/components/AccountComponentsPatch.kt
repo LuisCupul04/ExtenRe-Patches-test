@@ -37,8 +37,8 @@ import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 
 @Suppress("unused")
 val accountComponentsPatch = bytecodePatch(
-    HIDE_ACCOUNT_COMPONENTS.title,
-    HIDE_ACCOUNT_COMPONENTS.summary,
+    name = HIDE_ACCOUNT_COMPONENTS.key,
+    description = "${HIDE_ACCOUNT_COMPONENTS.title}: ${HIDE_ACCOUNT_COMPONENTS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

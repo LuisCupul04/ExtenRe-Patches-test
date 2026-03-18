@@ -37,8 +37,8 @@ private const val FILTER_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val shareSheetPatch = bytecodePatch(
-    CHANGE_SHARE_SHEET.title,
-    CHANGE_SHARE_SHEET.summary,
+    name = CHANGE_SHARE_SHEET.key,
+    description = "${CHANGE_SHARE_SHEET.title}: ${CHANGE_SHARE_SHEET.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

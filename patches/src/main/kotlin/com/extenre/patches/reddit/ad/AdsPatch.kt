@@ -37,8 +37,8 @@ private const val EXTENSION_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val adsPatch = bytecodePatch(
-    HIDE_ADS.title,
-    HIDE_ADS.summary,
+    name = HIDE_ADS.key,
+    description = "${HIDE_ADS.title}: ${HIDE_ADS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

@@ -22,8 +22,8 @@ import com.extenre.patches.shared.returnyoutubeusername.baseReturnYouTubeUsernam
 
 @Suppress("unused")
 val returnYouTubeUsernamePatch = resourcePatch(
-    RETURN_YOUTUBE_USERNAME.title,
-    RETURN_YOUTUBE_USERNAME.summary,
+    name = RETURN_YOUTUBE_USERNAME.key,
+    description = "${RETURN_YOUTUBE_USERNAME.title}: ${RETURN_YOUTUBE_USERNAME.summary}",
     use = false,
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)

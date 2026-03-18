@@ -27,6 +27,7 @@ private const val EXTENSION_CLASS_DESCRIPTOR =
     "$UTILS_PATH/PlaybackSpeedWhilePlayingPatch;"
 
 val playbackSpeedWhilePlayingPatch = bytecodePatch(
+    name = "playback-Speed-While-Playing-Patch",
     description = "playbackSpeedWhilePlayingPatch"
 ) {
     dependsOn(

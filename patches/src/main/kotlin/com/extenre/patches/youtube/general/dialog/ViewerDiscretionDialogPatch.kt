@@ -18,8 +18,8 @@ import com.extenre.patches.youtube.utils.settings.settingsPatch
 
 @Suppress("unused")
 val viewerDiscretionDialogPatch = bytecodePatch(
-    REMOVE_VIEWER_DISCRETION_DIALOG.title,
-    REMOVE_VIEWER_DISCRETION_DIALOG.summary,
+    name = REMOVE_VIEWER_DISCRETION_DIALOG.key,
+    description = "${REMOVE_VIEWER_DISCRETION_DIALOG.title}: ${REMOVE_VIEWER_DISCRETION_DIALOG.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

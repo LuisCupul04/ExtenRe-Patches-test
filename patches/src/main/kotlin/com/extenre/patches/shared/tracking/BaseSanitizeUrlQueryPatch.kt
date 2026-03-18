@@ -35,6 +35,7 @@ internal fun MutableMethod.hookQueryParameters(index: Int) {
 }
 
 val baseSanitizeUrlQueryPatch = bytecodePatch(
+    name = "base-Sanitize-Url-Query-Patch",
     description = "baseSanitizeUrlQueryPatch"
 ) {
     execute {

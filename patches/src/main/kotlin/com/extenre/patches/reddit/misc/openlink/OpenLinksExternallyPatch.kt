@@ -26,8 +26,8 @@ private const val EXTENSION_METHOD_DESCRIPTOR =
 
 @Suppress("unused")
 val openLinksExternallyPatch = bytecodePatch(
-    OPEN_LINKS_EXTERNALLY.title,
-    OPEN_LINKS_EXTERNALLY.summary,
+    name = OPEN_LINKS_EXTERNALLY.key,
+    description = "${OPEN_LINKS_EXTERNALLY.title}: ${OPEN_LINKS_EXTERNALLY.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

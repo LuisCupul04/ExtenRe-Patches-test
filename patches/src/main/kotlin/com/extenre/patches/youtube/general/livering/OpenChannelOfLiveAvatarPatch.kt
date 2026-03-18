@@ -67,8 +67,8 @@ private const val EXTENSION_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val openChannelOfLiveAvatarPatch = bytecodePatch(
-    CHANGE_LIVE_RING_CLICK_ACTION.title,
-    CHANGE_LIVE_RING_CLICK_ACTION.summary,
+    name = CHANGE_LIVE_RING_CLICK_ACTION.key,
+    description = "${CHANGE_LIVE_RING_CLICK_ACTION.title}: ${CHANGE_LIVE_RING_CLICK_ACTION.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

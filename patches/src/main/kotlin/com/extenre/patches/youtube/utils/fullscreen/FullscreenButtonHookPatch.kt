@@ -37,6 +37,7 @@ private const val EXTENSION_VIDEO_UTILS_CLASS_DESCRIPTOR =
 internal var enterFullscreenMethods = mutableListOf<MutableMethod>()
 
 val fullscreenButtonHookPatch = bytecodePatch(
+    name = "fullscreen-Button-Hook-Patch",
     description = "fullscreenButtonHookPatch"
 ) {
 

@@ -57,6 +57,8 @@ private const val PREMIUM_PROMOTION_BANNER_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val adsPatch = adsPatch(
+    name = HIDE_ADS.key,
+    description = "${HIDE_ADS.title}: ${HIDE_ADS.summary}",
     block = {
         compatibleWith(COMPATIBLE_PACKAGE)
 

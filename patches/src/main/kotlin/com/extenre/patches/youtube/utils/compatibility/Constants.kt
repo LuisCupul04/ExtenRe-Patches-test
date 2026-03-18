@@ -1,7 +1,15 @@
-package app.revanced.patches.youtube.utils.compatibility
+/*
+ * Copyright (C) 2022 ReVanced LLC
+ * Copyright (C) 2022 inotia00
+ * Copyright (C) 2026 LuisCupul04
+ *
+ * SPDX-License-Identifier: GPL-3.0-only
+ */
 
-import app.revanced.patcher.patch.PackageName
-import app.revanced.patcher.patch.VersionName
+package com.extenre.patches.youtube.utils.compatibility
+
+import com.extenre.patcher.patch.PackageName
+import com.extenre.patcher.patch.VersionName
 
 internal object Constants {
     internal const val YOUTUBE_PACKAGE_NAME = "com.google.android.youtube"

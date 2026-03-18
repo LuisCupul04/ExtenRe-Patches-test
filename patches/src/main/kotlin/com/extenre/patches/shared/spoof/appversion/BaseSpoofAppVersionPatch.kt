@@ -21,6 +21,7 @@ import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
 fun baseSpoofAppVersionPatch(
     descriptor: String,
 ) = bytecodePatch(
+    name = "base-Spoof-App-Version-Patch",
     description = "baseSpoofAppVersionPatch"
 ) {
     execute {

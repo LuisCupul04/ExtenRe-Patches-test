@@ -34,6 +34,7 @@ private const val EXTENSION_CLASS_DESCRIPTOR =
 private lateinit var toolbarMethod: MutableMethod
 
 val toolBarHookPatch = bytecodePatch(
+    name = "tool-Bar-Hook-Patch",
     description = "toolBarHookPatch"
 ) {
     dependsOn(sharedResourceIdPatch)

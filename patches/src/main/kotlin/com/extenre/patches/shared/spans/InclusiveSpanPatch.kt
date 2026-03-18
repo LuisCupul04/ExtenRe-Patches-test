@@ -53,6 +53,7 @@ internal lateinit var addSpanFilter: (String) -> Unit
     private set
 
 val inclusiveSpanPatch = bytecodePatch(
+    name = "inclusive-Span-Patch",
     description = "inclusiveSpanPatch"
 ) {
     dependsOn(textComponentPatch)

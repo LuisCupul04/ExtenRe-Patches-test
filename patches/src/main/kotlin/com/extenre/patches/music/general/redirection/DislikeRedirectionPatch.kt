@@ -35,8 +35,8 @@ var onClickReference = ""
 
 @Suppress("unused")
 val dislikeRedirectionPatch = bytecodePatch(
-    DISABLE_DISLIKE_REDIRECTION.title,
-    DISABLE_DISLIKE_REDIRECTION.summary,
+    name = DISABLE_DISLIKE_REDIRECTION.key,
+    description = "${DISABLE_DISLIKE_REDIRECTION.title}: ${DISABLE_DISLIKE_REDIRECTION.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

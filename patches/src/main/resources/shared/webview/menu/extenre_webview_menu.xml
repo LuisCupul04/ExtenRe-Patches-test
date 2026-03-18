@@ -3,19 +3,19 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/revanced_webview_get_cookies"
-        android:title="@string/revanced_webview_contextual_menu_get_cookies" />
+        android:id="@+id/extenre_webview_get_cookies"
+        android:title="@string/extenre_webview_contextual_menu_get_cookies" />
 
     <item
-        android:id="@+id/revanced_webview_get_data_sync_id"
-        android:title="@string/revanced_webview_contextual_menu_get_data_sync_id" />
+        android:id="@+id/extenre_webview_get_data_sync_id"
+        android:title="@string/extenre_webview_contextual_menu_get_data_sync_id" />
 
     <item
-        android:id="@+id/revanced_webview_get_visitor_data"
-        android:title="@string/revanced_webview_contextual_menu_get_visitor_data" />
+        android:id="@+id/extenre_webview_get_visitor_data"
+        android:title="@string/extenre_webview_contextual_menu_get_visitor_data" />
 
     <item
-        android:id="@+id/revanced_webview_refresh"
-        android:title="@string/revanced_webview_contextual_menu_refresh" />
+        android:id="@+id/extenre_webview_refresh"
+        android:title="@string/extenre_webview_contextual_menu_refresh" />
 
 </menu>

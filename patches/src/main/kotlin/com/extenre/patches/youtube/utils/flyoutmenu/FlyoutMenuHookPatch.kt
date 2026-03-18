@@ -20,7 +20,8 @@ private const val EXTENSION_VIDEO_UTILS_CLASS_DESCRIPTOR =
     "$EXTENSION_PATH/utils/VideoUtils;"
 
 val flyoutMenuHookPatch = bytecodePatch(
-    description = "flyoutMenuHookPatch",
+    name = "flyout-Menu-Hook-Patch",
+    description = "flyoutMenuHookPatch"
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

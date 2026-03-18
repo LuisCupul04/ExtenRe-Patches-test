@@ -50,7 +50,8 @@ fun spoofAppVersionWatchNextPatch(
     appVersionDescriptor: String,
     executeBlock: BytecodePatchContext.() -> Unit = {},
 ) = bytecodePatch(
-    description = "spoofAppVersionWatchNextPatch",
+    name = "spoof-App-Version-Watch-Next-Patch",
+    description = "spoofAppVersionWatchNextPatch"
 ) {
     block()
 

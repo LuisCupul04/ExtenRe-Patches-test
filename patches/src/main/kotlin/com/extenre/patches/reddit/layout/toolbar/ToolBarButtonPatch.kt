@@ -25,7 +25,10 @@ private const val EXTENSION_METHOD_DESCRIPTOR =
 
 @Suppress("unused")
 @Deprecated("This patch is deprecated until Reddit adds a button like r/place or Reddit recap button to the toolbar.")
-val toolBarButtonPatch = bytecodePatch {
+val toolBarButtonPatch = bytecodePatch(
+    name = HIDE_TOOLBAR_BUTTON.key,
+    description = "${HIDE_TOOLBAR_BUTTON.title}: ${HIDE_TOOLBAR_BUTTON.summary}",
+) {
     // compatibleWith(COMPATIBLE_PACKAGE)
 
     dependsOn(settingsPatch)

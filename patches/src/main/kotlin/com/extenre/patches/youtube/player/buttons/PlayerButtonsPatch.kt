@@ -50,8 +50,8 @@ private const val HAS_PREVIOUS = 6
 
 @Suppress("unused")
 val playerButtonsPatch = bytecodePatch(
-    HIDE_PLAYER_BUTTONS.title,
-    HIDE_PLAYER_BUTTONS.summary,
+    name = HIDE_PLAYER_BUTTONS.key,
+    description = "${HIDE_PLAYER_BUTTONS.title}: ${HIDE_PLAYER_BUTTONS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

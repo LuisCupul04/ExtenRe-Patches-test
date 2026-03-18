@@ -43,8 +43,8 @@ private const val SEARCH_LINKS_FILTER_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val commentsComponentPatch = bytecodePatch(
-    HIDE_COMMENTS_COMPONENTS.title,
-    HIDE_COMMENTS_COMPONENTS.summary,
+    name = HIDE_COMMENTS_COMPONENTS.key,
+    description = "${HIDE_COMMENTS_COMPONENTS.title}: ${HIDE_COMMENTS_COMPONENTS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

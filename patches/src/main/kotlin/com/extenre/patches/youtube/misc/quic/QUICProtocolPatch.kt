@@ -17,8 +17,8 @@ import com.extenre.patches.youtube.utils.settings.settingsPatch
 
 @Suppress("unused", "SpellCheckingInspection")
 val quicProtocolPatch = bytecodePatch(
-    DISABLE_QUIC_PROTOCOL.title,
-    DISABLE_QUIC_PROTOCOL.summary,
+    name = DISABLE_QUIC_PROTOCOL.key,
+    description = "${DISABLE_QUIC_PROTOCOL.title}: ${DISABLE_QUIC_PROTOCOL.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

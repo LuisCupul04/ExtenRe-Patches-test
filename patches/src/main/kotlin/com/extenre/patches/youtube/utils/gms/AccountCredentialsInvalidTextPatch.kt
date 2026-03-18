@@ -26,6 +26,7 @@ private const val EXTENSION_CLASS_DESCRIPTOR =
     "$UTILS_PATH/AccountCredentialsInvalidTextPatch;"
 
 val accountCredentialsInvalidTextPatch = bytecodePatch(
+    name = "account-CredentialsInvalid-Text-Patch",
     description = "accountCredentialsInvalidTextPatch"
 ) {
     dependsOn(

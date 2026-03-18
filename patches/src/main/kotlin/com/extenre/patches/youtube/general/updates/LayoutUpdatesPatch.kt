@@ -19,8 +19,8 @@ import com.extenre.util.fingerprint.matchOrThrow
 
 @Suppress("unused")
 val layoutUpdatesPatch = bytecodePatch(
-    DISABLE_LAYOUT_UPDATES.title,
-    DISABLE_LAYOUT_UPDATES.summary,
+    name = DISABLE_LAYOUT_UPDATES.key,
+    description = "${DISABLE_LAYOUT_UPDATES.title}: ${DISABLE_LAYOUT_UPDATES.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

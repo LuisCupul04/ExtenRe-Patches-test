@@ -42,8 +42,8 @@ private const val PANELS_FILTER_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val playerFlyoutMenuPatch = bytecodePatch(
-    HIDE_PLAYER_FLYOUT_MENU.title,
-    HIDE_PLAYER_FLYOUT_MENU.summary,
+    name = HIDE_PLAYER_FLYOUT_MENU.key,
+    description = "${HIDE_PLAYER_FLYOUT_MENU.title}: ${HIDE_PLAYER_FLYOUT_MENU.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

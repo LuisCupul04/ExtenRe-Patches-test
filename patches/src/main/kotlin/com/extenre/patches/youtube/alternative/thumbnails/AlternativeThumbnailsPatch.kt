@@ -23,8 +23,8 @@ import com.extenre.patches.youtube.utils.settings.settingsPatch
 
 @Suppress("unused")
 val alternativeThumbnailsPatch = bytecodePatch(
-    ALTERNATIVE_THUMBNAILS.title,
-    ALTERNATIVE_THUMBNAILS.summary,
+    name = ALTERNATIVE_THUMBNAILS.key,
+    description = "${ALTERNATIVE_THUMBNAILS.title}: ${ALTERNATIVE_THUMBNAILS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

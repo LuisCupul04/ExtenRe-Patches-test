@@ -21,6 +21,7 @@ private const val EXTENSION_AUTH_UTILS_CLASS_DESCRIPTOR =
     "$EXTENSION_PATH/innertube/utils/AuthUtils;"
 
 val authHookPatch = bytecodePatch(
+    name = "auth-Hook-Patch",
     description = "authHookPatch"
 ) {
     dependsOn(

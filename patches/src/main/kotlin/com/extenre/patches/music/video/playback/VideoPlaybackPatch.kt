@@ -64,8 +64,8 @@ private const val EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val videoPlaybackPatch = bytecodePatch(
-    VIDEO_PLAYBACK.title,
-    VIDEO_PLAYBACK.summary,
+    name = DISABLE_CAIRO_SPLASH_ANIMATION.key,
+    description = "${VIDEO_PLAYBACK.title}: ${DISABLE_CAIRO_SPLASH_ANIMATION.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

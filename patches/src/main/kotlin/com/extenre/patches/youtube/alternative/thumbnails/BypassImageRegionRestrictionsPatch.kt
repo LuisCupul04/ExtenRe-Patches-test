@@ -18,8 +18,8 @@ import com.extenre.patches.youtube.utils.settings.settingsPatch
 
 @Suppress("unused")
 val bypassImageRegionRestrictionsPatch = bytecodePatch(
-    BYPASS_IMAGE_REGION_RESTRICTIONS.title,
-    BYPASS_IMAGE_REGION_RESTRICTIONS.summary,
+    name = BYPASS_IMAGE_REGION_RESTRICTIONS.key,
+    description = "${BYPASS_IMAGE_REGION_RESTRICTIONS.title}: ${BYPASS_IMAGE_REGION_RESTRICTIONS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

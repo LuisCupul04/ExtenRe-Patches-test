@@ -32,8 +32,8 @@ import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 
 @Suppress("unused")
 val resumingShortsOnStartupPatch = bytecodePatch(
-    DISABLE_RESUMING_SHORTS_ON_STARTUP.title,
-    DISABLE_RESUMING_SHORTS_ON_STARTUP.summary,
+    name = DISABLE_RESUMING_SHORTS_ON_STARTUP.key,
+    description = "${DISABLE_RESUMING_SHORTS_ON_STARTUP.title}: ${DISABLE_RESUMING_SHORTS_ON_STARTUP.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

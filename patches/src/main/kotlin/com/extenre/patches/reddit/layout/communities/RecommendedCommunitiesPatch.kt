@@ -24,8 +24,8 @@ private const val EXTENSION_METHOD_DESCRIPTOR =
 
 @Suppress("unused")
 val recommendedCommunitiesPatch = bytecodePatch(
-    HIDE_RECOMMENDED_COMMUNITIES_SHELF.title,
-    HIDE_RECOMMENDED_COMMUNITIES_SHELF.summary,
+    name = HIDE_RECOMMENDED_COMMUNITIES_SHELF.key,
+    description = "${HIDE_RECOMMENDED_COMMUNITIES_SHELF.title}: ${HIDE_RECOMMENDED_COMMUNITIES_SHELF.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

@@ -70,8 +70,8 @@ private const val EXTENSION_CLASS_DESCRIPTOR =
 // YT uses "Miniplayer" without a space between 'mini' and 'player: https://support.google.com/youtube/answer/9162927.
 @Suppress("unused", "SpellCheckingInspection")
 val miniplayerPatch = bytecodePatch(
-    MINIPLAYER.title,
-    MINIPLAYER.summary,
+    name = MINIPLAYER.key,
+    description = "${MINIPLAYER.title}: ${MINIPLAYER.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

@@ -71,8 +71,8 @@ import org.w3c.dom.Element
 
 @Suppress("unused")
 val toolBarComponentsPatch = bytecodePatch(
-    TOOLBAR_COMPONENTS.title,
-    TOOLBAR_COMPONENTS.summary,
+    name = TOOLBAR_COMPONENTS.key,
+    description = "${TOOLBAR_COMPONENTS.title}: ${TOOLBAR_COMPONENTS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

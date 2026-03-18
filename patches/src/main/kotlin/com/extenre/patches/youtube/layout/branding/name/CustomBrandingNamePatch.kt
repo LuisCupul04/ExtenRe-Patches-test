@@ -20,8 +20,8 @@ private const val APP_NAME = "YT ExtenRe"
 
 @Suppress("unused")
 val customBrandingNamePatch = resourcePatch(
-    CUSTOM_BRANDING_NAME_FOR_YOUTUBE.title,
-    CUSTOM_BRANDING_NAME_FOR_YOUTUBE.summary,
+    name = CUSTOM_BRANDING_NAME_FOR_YOUTUBE.key,
+    description = "${CUSTOM_BRANDING_NAME_FOR_YOUTUBE.title}: ${CUSTOM_BRANDING_NAME_FOR_YOUTUBE.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

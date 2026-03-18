@@ -36,6 +36,7 @@ internal var engagementPanelIdIndex = 0
 internal var engagementPanelIdRegister = 0
 
 val engagementPanelHookPatch = bytecodePatch(
+    name = "engagement-Panel-Hook-Patch",
     description = "engagementPanelHookPatch"
 ) {
     dependsOn(

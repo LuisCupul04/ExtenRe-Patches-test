@@ -51,7 +51,8 @@ internal lateinit var addLithoFilter: (String) -> Unit
 internal var emptyComponentLabel = ""
 
 val lithoFilterPatch = bytecodePatch(
-    description = "lithoFilterPatch",
+    name = "litho-Filter-Patch",
+    description = "lithoFilterPatch"
 ) {
     execute {
 

@@ -17,8 +17,8 @@ import com.extenre.patches.youtube.utils.settings.settingsPatch
 
 @Suppress("unused")
 val autoCaptionsPatch = bytecodePatch(
-    DISABLE_FORCED_AUTO_CAPTIONS.title,
-    DISABLE_FORCED_AUTO_CAPTIONS.summary,
+    name = DISABLE_FORCED_AUTO_CAPTIONS.key,
+    description = "${DISABLE_FORCED_AUTO_CAPTIONS.title}: ${DISABLE_FORCED_AUTO_CAPTIONS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

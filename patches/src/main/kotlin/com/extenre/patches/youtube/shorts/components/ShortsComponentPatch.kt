@@ -731,8 +731,8 @@ private const val RETURN_YOUTUBE_CHANNEL_NAME_FILTER_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val shortsComponentPatch = bytecodePatch(
-    SHORTS_COMPONENTS.title,
-    SHORTS_COMPONENTS.summary,
+    name = SHORTS_COMPONENTS.key,
+    description = "${SHORTS_COMPONENTS.title}: ${SHORTS_COMPONENTS.summaryummary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

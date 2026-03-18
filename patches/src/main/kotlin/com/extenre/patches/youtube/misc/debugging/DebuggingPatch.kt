@@ -37,8 +37,8 @@ private const val EXTENSION_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val debuggingPatch = bytecodePatch(
-    ENABLE_DEBUG_LOGGING.title,
-    ENABLE_DEBUG_LOGGING.summary,
+    name = ENABLE_DEBUG_LOGGING.key,
+    description = "${ENABLE_DEBUG_LOGGING.title}: ${ENABLE_DEBUG_LOGGING.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

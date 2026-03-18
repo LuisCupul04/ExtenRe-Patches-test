@@ -40,6 +40,7 @@ var slidingDialogAnimation = -1L
     private set
 
 private val adsResourcePatch = resourcePatch(
+    name = "ads-Resource-Patch",
     description = "adsResourcePatch"
 ) {
     dependsOn(resourceMappingPatch)

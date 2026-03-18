@@ -169,7 +169,8 @@ private lateinit var visibilityNegatedImmediateMethod: MutableMethod
 private var visibilityNegatedImmediateInsertIndex: Int = 0
 
 val playerControlsPatch = bytecodePatch(
-    description = "playerControlsPatch",
+    name = "player-Controls-Patch",
+    description = "playerControlsPatch"
 ) {
     dependsOn(
         playerControlsResourcePatch,

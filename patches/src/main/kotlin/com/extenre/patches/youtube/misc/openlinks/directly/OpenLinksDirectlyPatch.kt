@@ -25,8 +25,8 @@ import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 
 @Suppress("unused")
 val openLinksDirectlyPatch = bytecodePatch(
-    BYPASS_URL_REDIRECTS.title,
-    BYPASS_URL_REDIRECTS.summary,
+    name = BYPASS_URL_REDIRECTS.key,
+    description = "${BYPASS_URL_REDIRECTS.title}: ${BYPASS_URL_REDIRECTS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

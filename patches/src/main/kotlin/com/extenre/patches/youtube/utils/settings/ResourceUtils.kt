@@ -18,17 +18,17 @@ import org.w3c.dom.Element
 import java.io.File
 
 internal object ResourceUtils {
-    internal const val RVX_PREFERENCE_PATH = "res/xml/extenre_prefs.xml"
+    internal const val EXTENRE_PREFERENCE_PATH = "res/xml/extenre_prefs.xml"
     internal const val YOUTUBE_SETTINGS_PATH = "res/xml/settings_fragment.xml"
 
     private lateinit var context: ResourcePatchContext
     private lateinit var youtubeSettingFile: File
-    private lateinit var rvxSettingFile: File
+    private lateinit var extenreSettingFileFile: File
 
     fun setContext(context: ResourcePatchContext) {
         this.context = context
         this.youtubeSettingFile = context[YOUTUBE_SETTINGS_PATH]
-        this.rvxSettingFile = context[RVX_PREFERENCE_PATH]
+        this.extenreSettingFileFile = context[EXTENRE_PREFERENCE_PATH]
     }
 
     fun getContext() = context
@@ -52,8 +52,8 @@ internal object ResourceUtils {
         fromPackageName: String,
         toPackageName: String
     ) {
-        rvxSettingFile.writeText(
-            rvxSettingFile.readText()
+        extenreSettingFileFile.writeText(
+            extenreSettingFileFile.readText()
                 .replace(
                     "android:targetPackage=\"$fromPackageName",
                     "android:targetPackage=\"$toPackageName"
@@ -63,8 +63,8 @@ internal object ResourceUtils {
 
     fun addPreference(settingArray: Array<String>) {
         settingArray.forEach preferenceLoop@{ preference ->
-            rvxSettingFile.writeText(
-                this.rvxSettingFile.readText()
+            extenreSettingFileFile.writeText(
+                this.extenreSettingFileFile.readText()
                     .replace("<!-- $preference", "")
                     .replace("$preference -->", "")
             )
@@ -97,7 +97,7 @@ internal object ResourceUtils {
         patchTitle: String,
         updateText: String
     ) = context.apply {
-        document(RVX_PREFERENCE_PATH).use { document ->
+        document(EXTENRE_PREFERENCE_PATH).use { document ->
             document.doRecursively loop@{
                 if (it !is Element) return@loop
 

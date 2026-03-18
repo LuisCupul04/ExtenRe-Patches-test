@@ -59,6 +59,7 @@ private const val EXTENSION_CLASS_DESCRIPTOR =
     "$PATCHES_PATH/CommentsPanelPatch;"
 
 val commentsPanelPatch = bytecodePatch(
+    name = "comments-Panel-Patch",
     description = "commentsPanelPatch"
 ) {
     dependsOn(commentsPanelResourcePatch)

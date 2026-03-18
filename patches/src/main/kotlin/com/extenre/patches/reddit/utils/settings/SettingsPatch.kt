@@ -1,29 +1,37 @@
-package app.revanced.patches.reddit.utils.settings
+/*
+ * Copyright (C) 2022 ReVanced LLC
+ * Copyright (C) 2022 inotia00
+ * Copyright (C) 2026 LuisCupul04
+ *
+ * SPDX-License-Identifier: GPL-3.0-only
+ */
 
-import app.revanced.patcher.extensions.InstructionExtensions.addInstruction
-import app.revanced.patcher.extensions.InstructionExtensions.addInstructions
-import app.revanced.patcher.extensions.InstructionExtensions.getInstruction
-import app.revanced.patcher.extensions.InstructionExtensions.replaceInstruction
-import app.revanced.patcher.patch.bytecodePatch
-import app.revanced.patcher.patch.resourcePatch
-import app.revanced.patcher.patch.stringOption
-import app.revanced.patcher.util.proxy.mutableTypes.MutableMethod
-import app.revanced.patches.reddit.utils.compatibility.Constants.COMPATIBLE_PACKAGE
-import app.revanced.patches.reddit.utils.extension.Constants.EXTENSION_PATH
-import app.revanced.patches.reddit.utils.extension.sharedExtensionPatch
-import app.revanced.patches.reddit.utils.fix.signature.spoofSignaturePatch
-import app.revanced.patches.reddit.utils.patch.PatchList
-import app.revanced.patches.reddit.utils.patch.PatchList.SETTINGS_FOR_REDDIT
-import app.revanced.patches.shared.extension.Constants.EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR
-import app.revanced.patches.shared.sharedSettingFingerprint
-import app.revanced.util.findMethodOrThrow
-import app.revanced.util.fingerprint.matchOrThrow
-import app.revanced.util.fingerprint.methodOrThrow
-import app.revanced.util.getReference
-import app.revanced.util.indexOfFirstInstructionOrThrow
-import app.revanced.util.indexOfFirstInstructionReversedOrThrow
-import app.revanced.util.indexOfFirstStringInstructionOrThrow
-import app.revanced.util.valueOrThrow
+package com.extenre.patches.reddit.utils.settings
+
+import com.extenre.patcher.extensions.InstructionExtensions.addInstruction
+import com.extenre.patcher.extensions.InstructionExtensions.addInstructions
+import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
+import com.extenre.patcher.extensions.InstructionExtensions.replaceInstruction
+import com.extenre.patcher.patch.bytecodePatch
+import com.extenre.patcher.patch.resourcePatch
+import com.extenre.patcher.patch.stringOption
+import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod
+import com.extenre.patches.reddit.utils.compatibility.Constants.COMPATIBLE_PACKAGE
+import com.extenre.patches.reddit.utils.extension.Constants.EXTENSION_PATH
+import com.extenre.patches.reddit.utils.extension.sharedExtensionPatch
+import com.extenre.patches.reddit.utils.fix.signature.spoofSignaturePatch
+import com.extenre.patches.reddit.utils.patch.PatchList
+import com.extenre.patches.reddit.utils.patch.PatchList.SETTINGS_FOR_REDDIT
+import com.extenre.patches.shared.extension.Constants.EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR
+import com.extenre.patches.shared.sharedSettingFingerprint
+import com.extenre.util.findMethodOrThrow
+import com.extenre.util.fingerprint.matchOrThrow
+import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.getReference
+import com.extenre.util.indexOfFirstInstructionOrThrow
+import com.extenre.util.indexOfFirstInstructionReversedOrThrow
+import com.extenre.util.indexOfFirstStringInstructionOrThrow
+import com.extenre.util.valueOrThrow
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.builder.instruction.BuilderInstruction21c
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
@@ -48,6 +56,7 @@ var is_2025_06_or_greater = false
     private set
 
 private val settingsBytecodePatch = bytecodePatch(
+    name = "settings-Bytecode-Patch",
     description = "settingsBytecodePatch"
 ) {
 
@@ -153,11 +162,11 @@ internal fun updatePatchStatus(
     updatePatchStatus(patch)
 }
 
-private const val DEFAULT_LABEL = "RVX"
+private const val DEFAULT_LABEL = "ExtenRe"
 
 val settingsPatch = resourcePatch(
-    SETTINGS_FOR_REDDIT.title,
-    SETTINGS_FOR_REDDIT.summary,
+    name = SETTINGS_FOR_REDDIT.key,
+    description = "${SETTINGS_FOR_REDDIT.title}: ${SETTINGS_FOR_REDDIT.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 
@@ -167,15 +176,24 @@ val settingsPatch = resourcePatch(
         spoofSignaturePatch,
     )
 
-    val rvxSettingsLabel = stringOption(
-        key = "rvxSettingsLabel",
+    val extenreSettingsLabel = stringOption(
+        key = "extenreSettingsLabel",
         default = DEFAULT_LABEL,
         values = mapOf(
-            "ReVanced Extended" to "ReVanced Extended",
-            "RVX" to DEFAULT_LABEL,
+            "ExtenRe" to DEFAULT_LABEL,
+            "ExtenRe +" to "ExtenRe +",
+            "EXTEN+" to "EXTEN+",
+            "EXRE" to "EXRE",
+            "EXTEN" to "EXTEN",
+            "EXTENRE" to "EXTENRE",
+            "KITSUNE" to "KITSUNE",
+            "NEKO" to "NEKO",
+            "RE+" to "RE+",
+            "RVX" to "RVX",
+            "ReVanced Extended" to "ReVanced Extended",          
         ),
-        title = "RVX settings menu name",
-        description = "The name of the RVX settings menu.",
+        title = "ExtenRe settings menu name",
+        description = "The name of the ExtenRe settings menu.",
         required = true
     )
 
@@ -183,7 +201,7 @@ val settingsPatch = resourcePatch(
         /**
          * Replace settings icon and label
          */
-        val settingsLabel = rvxSettingsLabel
+        val settingsLabel = extenreSettingsLabel
             .valueOrThrow()
 
         arrayOf(

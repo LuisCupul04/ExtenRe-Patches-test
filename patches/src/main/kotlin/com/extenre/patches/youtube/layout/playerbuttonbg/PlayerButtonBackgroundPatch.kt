@@ -18,9 +18,9 @@ import org.w3c.dom.Element
 
 @Suppress("unused")
 val playerButtonBackgroundPatch = resourcePatch(
-    FORCE_HIDE_PLAYER_BUTTONS_BACKGROUND.title,
-    FORCE_HIDE_PLAYER_BUTTONS_BACKGROUND.summary,
-    false,
+    name = FORCE_HIDE_PLAYER_BUTTONS_BACKGROUND.key,
+    description = "${FORCE_HIDE_PLAYER_BUTTONS_BACKGROUND.title}: ${FORCE_HIDE_PLAYER_BUTTONS_BACKGROUND.summary}",
+    optimized = false.
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

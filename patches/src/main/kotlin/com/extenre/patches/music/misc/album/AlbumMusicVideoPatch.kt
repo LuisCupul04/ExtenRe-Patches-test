@@ -40,9 +40,9 @@ private const val EXTENSION_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val albumMusicVideoPatch = bytecodePatch(
-    DISABLE_MUSIC_VIDEO_IN_ALBUM.title,
-    DISABLE_MUSIC_VIDEO_IN_ALBUM.summary,
-    false,
+    name = DISABLE_MUSIC_VIDEO_IN_ALBUM.key,
+    description = "${DISABLE_MUSIC_VIDEO_IN_ALBUM.title}: ${DISABLE_MUSIC_VIDEO_IN_ALBUM.summary}",
+    optimized = false,
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

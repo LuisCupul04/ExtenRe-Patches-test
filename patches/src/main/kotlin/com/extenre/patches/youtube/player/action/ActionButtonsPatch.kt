@@ -34,8 +34,8 @@ private const val ACTION_BUTTONS_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val actionButtonsPatch = bytecodePatch(
-    HIDE_ACTION_BUTTONS.title,
-    HIDE_ACTION_BUTTONS.summary,
+    name = HIDE_ACTION_BUTTONS.key,
+    description = "${HIDE_ACTION_BUTTONS.title}: ${HIDE_ACTION_BUTTONS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

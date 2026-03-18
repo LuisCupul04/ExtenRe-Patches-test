@@ -40,7 +40,8 @@ private var onBackPressedMethodIndex by Delegates.notNull<Int>()
 fun baseMainActivityResolvePatch(
     mainActivityOnCreateFingerprint: Pair<String, Fingerprint>,
 ) = bytecodePatch(
-    description = "baseMainActivityResolvePatch"
+    name = "base-main-activity-resolve-patch",
+    description = "Resolves the main activity for other patches.",
 ) {
     execute {
         onCreateMethod = mainActivityOnCreateFingerprint.methodOrThrow()

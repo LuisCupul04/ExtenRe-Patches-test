@@ -188,8 +188,8 @@ private val snackBarComponentsBytecodePatch = bytecodePatch(
 
 @Suppress("unused")
 val snackBarComponentsPatch = resourcePatch(
-    SNACK_BAR_COMPONENTS.title,
-    SNACK_BAR_COMPONENTS.summary,
+    name = SNACK_BAR_COMPONENTS.key,
+    description = "${SNACK_BAR_COMPONENTS.title}: ${SNACK_BAR_COMPONENTS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

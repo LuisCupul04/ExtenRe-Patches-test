@@ -39,8 +39,8 @@ private val drawableDirectories = sizeArray.map { "drawable-$it" }
 
 @Suppress("unused")
 val shortsActionButtonsPatch = resourcePatch(
-    CUSTOM_SHORTS_ACTION_BUTTONS.title,
-    CUSTOM_SHORTS_ACTION_BUTTONS.summary,
+    name = CUSTOM_SHORTS_ACTION_BUTTONS.key,
+    description = "${CUSTOM_SHORTS_ACTION_BUTTONS.title}: ${CUSTOM_SHORTS_ACTION_BUTTONS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

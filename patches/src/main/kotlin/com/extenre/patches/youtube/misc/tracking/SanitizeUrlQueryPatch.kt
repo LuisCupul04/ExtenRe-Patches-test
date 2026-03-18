@@ -17,8 +17,8 @@ import com.extenre.patches.youtube.utils.settings.settingsPatch
 
 @Suppress("unused")
 val sanitizeUrlQueryPatch = bytecodePatch(
-    SANITIZE_SHARING_LINKS.title,
-    SANITIZE_SHARING_LINKS.summary,
+    name = SANITIZE_SHARING_LINKS.key,
+    description = "${SANITIZE_SHARING_LINKS.title}: ${SANITIZE_SHARING_LINKS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

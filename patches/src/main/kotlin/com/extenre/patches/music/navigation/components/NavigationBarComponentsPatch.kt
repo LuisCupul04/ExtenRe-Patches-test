@@ -72,8 +72,8 @@ private val navigationBarComponentsResourcePatch = resourcePatch(
 
 @Suppress("unused")
 val navigationBarComponentsPatch = bytecodePatch(
-    NAVIGATION_BAR_COMPONENTS.title,
-    NAVIGATION_BAR_COMPONENTS.summary,
+    name = NAVIGATION_BAR_COMPONENTS.key,
+    description = "${NAVIGATION_BAR_COMPONENTS.title}: ${NAVIGATION_BAR_COMPONENTS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

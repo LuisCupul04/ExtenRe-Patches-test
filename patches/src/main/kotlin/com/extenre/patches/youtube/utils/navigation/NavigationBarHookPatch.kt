@@ -47,7 +47,8 @@ lateinit var navigationButtonsMethod: MutableMethod
 lateinit var hookNavigationButtonCreated: (String) -> Unit
 
 val navigationBarHookPatch = bytecodePatch(
-    description = "navigationBarHookPatch",
+    name = "navigation-Bar-Hook-Patch",
+    description = "navigationBarHookPatch"
 ) {
     dependsOn(
         sharedExtensionPatch,

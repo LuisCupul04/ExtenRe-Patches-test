@@ -36,6 +36,7 @@ private const val EXTENSION_CLASS_DESCRIPTOR =
 private lateinit var lazilyConvertedElementMethod: MutableMethod
 
 val lazilyConvertedElementHookPatch = bytecodePatch(
+    name = "lazily-Converted-Element-Hook-Patch",
     description = "lazilyConvertedElementHookPatch"
 ) {
     dependsOn(sharedExtensionPatch)

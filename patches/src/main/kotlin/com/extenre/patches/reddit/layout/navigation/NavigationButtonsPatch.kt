@@ -32,8 +32,8 @@ private const val EXTENSION_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val navigationButtonsPatch = bytecodePatch(
-    HIDE_NAVIGATION_BUTTONS.title,
-    HIDE_NAVIGATION_BUTTONS.summary,
+    name = HIDE_NAVIGATION_BUTTONS.key,
+    description = "${HIDE_NAVIGATION_BUTTONS.title}: ${HIDE_NAVIGATION_BUTTONS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

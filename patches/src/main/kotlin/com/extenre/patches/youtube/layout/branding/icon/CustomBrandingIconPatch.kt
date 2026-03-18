@@ -103,8 +103,8 @@ private val oldSplashAnimationResourceGroups =
 
 @Suppress("unused")
 val customBrandingIconPatch = resourcePatch(
-    CUSTOM_BRANDING_ICON_FOR_YOUTUBE.title,
-    CUSTOM_BRANDING_ICON_FOR_YOUTUBE.summary,
+    name = CUSTOM_BRANDING_ICON_FOR_YOUTUBE.key,
+    description = "${CUSTOM_BRANDING_ICON_FOR_YOUTUBE.title}: ${CUSTOM_BRANDING_ICON_FOR_YOUTUBE.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

@@ -31,8 +31,8 @@ import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 
 @Suppress("unused")
 val splashAnimationPatch = bytecodePatch(
-    DISABLE_SPLASH_ANIMATION.title,
-    DISABLE_SPLASH_ANIMATION.summary,
+    name = DISABLE_SPLASH_ANIMATION.key,
+    description = "${DISABLE_SPLASH_ANIMATION.title}: ${DISABLE_SPLASH_ANIMATION.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

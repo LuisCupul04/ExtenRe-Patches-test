@@ -22,8 +22,8 @@ import com.android.tools.smali.dexlib2.iface.reference.StringReference
 
 @Suppress("unused")
 val openLinksExternallyPatch = bytecodePatch(
-    OPEN_LINKS_EXTERNALLY.title,
-    OPEN_LINKS_EXTERNALLY.summary,
+    name = OPEN_LINKS_EXTERNALLY.key,
+    description = "${OPEN_LINKS_EXTERNALLY.title}: ${OPEN_LINKS_EXTERNALLY.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

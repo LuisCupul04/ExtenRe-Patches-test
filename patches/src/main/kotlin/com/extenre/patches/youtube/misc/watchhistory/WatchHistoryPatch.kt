@@ -18,8 +18,8 @@ import com.extenre.patches.youtube.utils.settings.settingsPatch
 
 @Suppress("unused")
 val watchHistoryPatch = bytecodePatch(
-    WATCH_HISTORY.title,
-    WATCH_HISTORY.summary,
+    name = WATCH_HISTORY.key,
+    description = "${WATCH_HISTORY.title}: ${WATCH_HISTORY.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

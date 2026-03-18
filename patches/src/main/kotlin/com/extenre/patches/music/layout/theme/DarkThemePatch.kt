@@ -80,8 +80,8 @@ val DARK_COLOR = arrayOf(
 
 @Suppress("unused")
 val darkThemePatch = resourcePatch(
-    DARK_THEME.title,
-    DARK_THEME.summary,
+    name = DARK_THEME.key,
+    description = "${DARK_THEME.title}: ${DARK_THEME.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

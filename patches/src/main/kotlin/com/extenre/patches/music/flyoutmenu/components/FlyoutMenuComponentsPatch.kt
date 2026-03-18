@@ -79,8 +79,8 @@ private const val FILTER_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val flyoutMenuComponentsPatch = bytecodePatch(
-    FLYOUT_MENU_COMPONENTS.title,
-    FLYOUT_MENU_COMPONENTS.summary,
+    name = FLYOUT_MENU_COMPONENTS.key,
+    description = "${FLYOUT_MENU_COMPONENTS.title}: ${FLYOUT_MENU_COMPONENTS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

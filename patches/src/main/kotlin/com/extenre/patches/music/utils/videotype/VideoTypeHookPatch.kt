@@ -26,6 +26,7 @@ private const val EXTENSION_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val videoTypeHookPatch = bytecodePatch(
+    name = "video-TypeHook-Patch",
     description = "videoTypeHookPatch"
 ) {
 

@@ -30,8 +30,8 @@ private const val EXTENSION_METHOD_DESCRIPTOR =
 
 @Suppress("unused")
 val recentlyVisitedShelfPatch = bytecodePatch(
-    HIDE_RECENTLY_VISITED_SHELF.title,
-    HIDE_RECENTLY_VISITED_SHELF.summary,
+    name = HIDE_RECENTLY_VISITED_SHELF.key,
+    description = "${HIDE_RECENTLY_VISITED_SHELF.title}: ${HIDE_RECENTLY_VISITED_SHELF.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

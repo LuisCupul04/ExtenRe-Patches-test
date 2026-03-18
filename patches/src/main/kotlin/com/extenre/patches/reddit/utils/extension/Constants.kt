@@ -10,6 +10,6 @@ package com.extenre.patches.reddit.utils.extension
 
 @Suppress("MemberVisibilityCanBePrivate")
 internal object Constants {
-    const val EXTENSION_PATH = "Lapp/revanced/extension/reddit"
+    const val EXTENSION_PATH = "Lcom/extenre/extension/reddit"
     const val PATCHES_PATH = "$EXTENSION_PATH/patches"
 }

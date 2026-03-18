@@ -26,8 +26,8 @@ import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 
 @Suppress("unused")
 val accessibilityPatch = bytecodePatch(
-    HIDE_ACCESSIBILITY_CONTROLS_DIALOG.title,
-    HIDE_ACCESSIBILITY_CONTROLS_DIALOG.summary,
+    name = HIDE_ACCESSIBILITY_CONTROLS_DIALOG.key,
+    description = "${HIDE_ACCESSIBILITY_CONTROLS_DIALOG.title}: ${HIDE_ACCESSIBILITY_CONTROLS_DIALOG.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

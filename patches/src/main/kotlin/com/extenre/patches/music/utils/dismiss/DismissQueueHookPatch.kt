@@ -19,6 +19,7 @@ private const val EXTENSION_VIDEO_UTILS_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val dismissQueueHookPatch = bytecodePatch(
+    name = "dismiss-queue-hook",
     description = "dismissQueueHookPatch"
 ) {
 

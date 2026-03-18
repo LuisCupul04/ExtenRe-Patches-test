@@ -28,8 +28,8 @@ private const val EXTENSION_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val youtubeMusicActionsPatch = bytecodePatch(
-    HOOK_YOUTUBE_MUSIC_ACTIONS.title,
-    HOOK_YOUTUBE_MUSIC_ACTIONS.summary,
+    name = HOOK_YOUTUBE_MUSIC_ACTIONS.key,
+    description = "${HOOK_YOUTUBE_MUSIC_ACTIONS.title}: ${HOOK_YOUTUBE_MUSIC_ACTIONS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

@@ -39,8 +39,8 @@ private const val EXTENSION_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val subRedditDialogPatch = bytecodePatch(
-    REMOVE_SUBREDDIT_DIALOG.title,
-    REMOVE_SUBREDDIT_DIALOG.summary,
+    name = REMOVE_SUBREDDIT_DIALOG.key,
+    description = "${REMOVE_SUBREDDIT_DIALOG.title}: ${REMOVE_SUBREDDIT_DIALOG.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

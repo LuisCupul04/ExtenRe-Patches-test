@@ -97,7 +97,8 @@ fun spoofStreamingDataPatch(
     executeBlock: BytecodePatchContext.() -> Unit = {},
     finalizeBlock: BytecodePatchContext.() -> Unit = {},
 ) = bytecodePatch(
-    description = "spoofStreamingDataPatch",
+    name = "spoof-Streaming-Data-Patch",
+    description = "spoofStreamingDataPatch"
 ) {
     block()
 

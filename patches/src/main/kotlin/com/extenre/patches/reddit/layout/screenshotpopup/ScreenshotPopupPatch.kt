@@ -28,8 +28,8 @@ import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 
 @Suppress("unused")
 val screenshotPopupPatch = bytecodePatch(
-    DISABLE_SCREENSHOT_POPUP.title,
-    DISABLE_SCREENSHOT_POPUP.summary,
+    name = DISABLE_SCREENSHOT_POPUP.key,
+    description = "${DISABLE_SCREENSHOT_POPUP.title}: ${DISABLE_SCREENSHOT_POPUP.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

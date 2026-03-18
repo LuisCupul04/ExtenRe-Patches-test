@@ -30,8 +30,8 @@ import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 
 @Suppress("unused")
 val backgroundPlaybackPatch = bytecodePatch(
-    REMOVE_BACKGROUND_PLAYBACK_RESTRICTIONS.title,
-    REMOVE_BACKGROUND_PLAYBACK_RESTRICTIONS.summary,
+    name = REMOVE_BACKGROUND_PLAYBACK_RESTRICTIONS.key,
+    description = "${REMOVE_BACKGROUND_PLAYBACK_RESTRICTIONS.title}: ${REMOVE_BACKGROUND_PLAYBACK_RESTRICTIONS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

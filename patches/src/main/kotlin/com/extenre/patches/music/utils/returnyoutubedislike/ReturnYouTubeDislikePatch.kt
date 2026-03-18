@@ -116,8 +116,8 @@ private const val RYD_ATTRIBUTION_KEY = "extenre_ryd_attribution"
 
 @Suppress("unused")
 val returnYouTubeDislikePatch = resourcePatch(
-    RETURN_YOUTUBE_DISLIKE.title,
-    RETURN_YOUTUBE_DISLIKE.summary,
+    name = RETURN_YOUTUBE_DISLIKE.key,
+    description = "${RETURN_YOUTUBE_DISLIKE.title}: ${RETURN_YOUTUBE_DISLIKE.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 
@@ -183,4 +183,3 @@ val returnYouTubeDislikePatch = resourcePatch(
 
     }
 }
-

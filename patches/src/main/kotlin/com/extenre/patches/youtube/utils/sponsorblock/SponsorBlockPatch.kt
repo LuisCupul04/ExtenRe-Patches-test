@@ -65,6 +65,7 @@ private const val EXTENSION_SPONSOR_BLOCK_VIEW_CONTROLLER_CLASS_DESCRIPTOR =
     "$EXTENSION_SPONSOR_BLOCK_UI_PATH/SponsorBlockViewController;"
 
 val sponsorBlockBytecodePatch = bytecodePatch(
+    name = "sponsor-Block-Bytecode-Patch",
     description = "sponsorBlockBytecodePatch"
 ) {
     dependsOn(
@@ -197,8 +198,8 @@ val sponsorBlockBytecodePatch = bytecodePatch(
 
 @Suppress("unused")
 val sponsorBlockPatch = resourcePatch(
-    SPONSORBLOCK.title,
-    SPONSORBLOCK.summary,
+    name = SPONSORBLOCK.key,
+    description = "${SPONSORBLOCK.title}: ${SPONSORBLOCK.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

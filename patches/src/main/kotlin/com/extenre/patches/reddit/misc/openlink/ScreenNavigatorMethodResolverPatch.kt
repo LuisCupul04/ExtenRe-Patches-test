@@ -16,6 +16,7 @@ import com.extenre.util.getWalkerMethod
 lateinit var screenNavigatorMethod: MutableMethod
 
 val screenNavigatorMethodResolverPatch = bytecodePatch(
+    name = "screen-Navigator-Method-Resolver-Patch",
     description = "screenNavigatorMethodResolverPatch"
 ) {
     execute {

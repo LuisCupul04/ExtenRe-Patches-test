@@ -847,7 +847,10 @@ fun gmsCoreSupportResourcePatch(
     packageNameYouTubeMusicOption: Option<String>,
     executeBlock: ResourcePatchContext.() -> Unit = {},
     block: ResourcePatchBuilder.() -> Unit = {},
-) = resourcePatch {
+) = resourcePatch(
+    name = "GmsCore support (resources)",
+    description = "Patches resources for GmsCore support.",
+) {
     val gmsCoreVendorGroupId by gmsCoreVendorGroupIdOption
 
     execute {

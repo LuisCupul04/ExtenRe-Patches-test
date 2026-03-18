@@ -21,6 +21,7 @@ private const val EXTENSION_CLASS_DESCRIPTOR =
     "$PATCHES_PATH/AutoCaptionsPatch;"
 
 val baseAutoCaptionsPatch = bytecodePatch(
+    name = "base-Auto-Captions-Patch",
     description = "baseAutoCaptionsPatch"
 ) {
     execute {

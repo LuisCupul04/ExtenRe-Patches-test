@@ -29,8 +29,8 @@ import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 
 @Suppress("unused")
 val feedFlyoutMenuPatch = bytecodePatch(
-    HIDE_FEED_FLYOUT_MENU.title,
-    HIDE_FEED_FLYOUT_MENU.summary,
+    name = HIDE_FEED_FLYOUT_MENU.key,
+    description = "${HIDE_FEED_FLYOUT_MENU.title}: ${HIDE_FEED_FLYOUT_MENU.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

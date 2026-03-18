@@ -41,9 +41,9 @@ private const val EXTENSION_METHOD_DESCRIPTOR =
     "$GENERAL_PATH/CairoSplashAnimationPatch;->disableCairoSplashAnimation(Z)Z"
 
 @Suppress("unused")
-val cairoSplashAnimationPatch = bytecodePatch(
-    DISABLE_CAIRO_SPLASH_ANIMATION.title,
-    DISABLE_CAIRO_SPLASH_ANIMATION.summary,
+val actionBarComponentsPatch = bytecodePatch(
+    name = DISABLE_CAIRO_SPLASH_ANIMATION.key,
+    description = "${DISABLE_CAIRO_SPLASH_ANIMATION.title}: ${DISABLE_CAIRO_SPLASH_ANIMATION.summary}",
 ) {
     compatibleWith(
         YOUTUBE_MUSIC_PACKAGE_NAME(

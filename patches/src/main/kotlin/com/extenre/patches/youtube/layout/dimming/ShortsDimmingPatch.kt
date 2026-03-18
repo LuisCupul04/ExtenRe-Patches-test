@@ -17,9 +17,9 @@ import com.extenre.util.removeOverlayBackground
 
 @Suppress("unused")
 val shortsDimmingPatch = resourcePatch(
-    HIDE_SHORTS_DIMMING.title,
-    HIDE_SHORTS_DIMMING.summary,
-    false,
+    name = HIDE_SHORTS_DIMMING.key,
+    description = "${HIDE_SHORTS_DIMMING.title}: ${HIDE_SHORTS_DIMMING.summary}",
+    optimized = false.
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

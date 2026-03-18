@@ -24,6 +24,7 @@ private var insertRegister: Int = 0
 private var offset = 0
 
 val drawableColorHookPatch = bytecodePatch(
+    name = "drawable-Color-Hook-Patch",
     description = "drawableColorHookPatch"
 ) {
     execute {

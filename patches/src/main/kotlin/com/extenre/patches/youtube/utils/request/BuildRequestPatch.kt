@@ -34,7 +34,8 @@ private var mapRegister = 0
 private var offSet = 0
 
 val buildRequestPatch = bytecodePatch(
-    description = "buildRequestPatch",
+    name = "build-Request-Patch",
+    description = "buildRequestPatch"
 ) {
     dependsOn(sharedExtensionPatch)
 

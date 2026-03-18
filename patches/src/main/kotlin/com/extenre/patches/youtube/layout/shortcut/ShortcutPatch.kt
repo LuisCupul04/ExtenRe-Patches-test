@@ -21,9 +21,9 @@ import org.w3c.dom.Element
 
 @Suppress("unused")
 val shortcutPatch = resourcePatch(
-    HIDE_SHORTCUTS.title,
-    HIDE_SHORTCUTS.summary,
-    false,
+    name = HIDE_SHORTCUTS.key,
+    description = "${HIDE_SHORTCUTS.title}: ${HIDE_SHORTCUTS.summary}",
+    optimized = false.
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

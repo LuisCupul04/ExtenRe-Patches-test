@@ -77,7 +77,8 @@ private lateinit var videoTimeConstructorMethod: MutableMethod
 private var videoTimeConstructorInsertIndex = 2
 
 val videoInformationPatch = bytecodePatch(
-    description = "videoInformationPatch",
+    name = "video-Information-Patch",
+    description = "videoInformationPatch"
 ) {
     dependsOn(playerResponseMethodHookPatch)
 

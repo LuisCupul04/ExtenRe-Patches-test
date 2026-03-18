@@ -41,6 +41,7 @@ private var textComponentRegister = 0
 private var textComponentContextRegister = 0
 
 val textComponentPatch = bytecodePatch(
+    name = "text-Component-Patch",
     description = "textComponentPatch"
 ) {
     execute {

@@ -23,8 +23,8 @@ private const val EXTENSION_METHOD_DESCRIPTOR =
 
 @Suppress("unused")
 val openLinksDirectlyPatch = bytecodePatch(
-    OPEN_LINKS_DIRECTLY.title,
-    OPEN_LINKS_DIRECTLY.summary,
+    name = OPEN_LINKS_DIRECTLY.key,
+    description = "${OPEN_LINKS_DIRECTLY.title}: ${OPEN_LINKS_DIRECTLY.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

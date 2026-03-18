@@ -80,8 +80,8 @@ private const val EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val videoPlaybackPatch = bytecodePatch(
-    VIDEO_PLAYBACK.title,
-    VIDEO_PLAYBACK.summary,
+    name = VIDEO_PLAYBACK.key,
+    description = "${VIDEO_PLAYBACK.title}: ${VIDEO_PLAYBACK.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

@@ -47,8 +47,8 @@ private const val FILTER_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val descriptionComponentsPatch = bytecodePatch(
-    DESCRIPTION_COMPONENTS.title,
-    DESCRIPTION_COMPONENTS.summary,
+    name = DESCRIPTION_COMPONENTS.key,
+    description = "${DESCRIPTION_COMPONENTS.title}: ${DESCRIPTION_COMPONENTS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

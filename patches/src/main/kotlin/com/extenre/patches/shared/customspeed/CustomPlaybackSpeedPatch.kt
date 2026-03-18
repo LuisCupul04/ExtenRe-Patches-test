@@ -28,6 +28,7 @@ fun customPlaybackSpeedPatch(
     descriptor: String,
     maxSpeed: Float
 ) = bytecodePatch(
+    name = "custom-Playback-Speed-Patch",
     description = "customPlaybackSpeedPatch"
 ) {
     execute {

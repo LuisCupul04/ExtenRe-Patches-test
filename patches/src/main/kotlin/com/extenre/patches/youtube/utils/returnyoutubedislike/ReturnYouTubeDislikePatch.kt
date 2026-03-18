@@ -58,6 +58,7 @@ private const val EXTENSION_RYD_CLASS_DESCRIPTOR =
     "$UTILS_PATH/ReturnYouTubeDislikePatch;"
 
 private val returnYouTubeDislikeRollingNumberPatch = bytecodePatch(
+    name = "return-YouTube-Dislike-Rolling-Number-Patch",
     description = "returnYouTubeDislikeRollingNumberPatch"
 ) {
     dependsOn(versionCheckPatch)
@@ -179,6 +180,7 @@ private val returnYouTubeDislikeRollingNumberPatch = bytecodePatch(
 }
 
 private val returnYouTubeDislikeShortsPatch = bytecodePatch(
+    name = "return-YouTube-Dislike-Shorts-Patch",
     description = "returnYouTubeDislikeShortsPatch"
 ) {
     dependsOn(
@@ -239,8 +241,8 @@ private const val FILTER_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val returnYouTubeDislikePatch = bytecodePatch(
-    RETURN_YOUTUBE_DISLIKE.title,
-    RETURN_YOUTUBE_DISLIKE.summary,
+    name = RETURN_YOUTUBE_DISLIKE.key,
+    description = "${RETURN_YOUTUBE_DISLIKE.title}: ${RETURN_YOUTUBE_DISLIKE.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

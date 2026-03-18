@@ -51,8 +51,8 @@ val visualPreferencesIconsPatch = resourcePatch(
             "RVX Letters Bold" to "rvx_letters_bold",
             "YT alt" to "yt_alt",
         ),
-        title = "RVX settings menu icon",
-        description = "The icon for the RVX settings menu.",
+        title = "ExtenRe settings menu icon",
+        description = "The icon for the ExtenRe settings menu.",
         required = true,
     )
 
@@ -200,7 +200,7 @@ val visualPreferencesIconsPatch = resourcePatch(
         // region set visual preferences icon.
 
         arrayOf(
-            RVX_PREFERENCE_PATH,
+            EXTENRE_PREFERENCE_PATH,
             YOUTUBE_SETTINGS_PATH
         ).forEach { xmlFile ->
             document(xmlFile).use { document ->
@@ -297,7 +297,7 @@ private var preferenceKey = setOf(
     "extenre_preference_screen_misc",
 )
 
-private var rvxPreferenceKey = setOf(
+private var extenrePreferenceKey = setOf(
     // Internal RVX settings (items without prefix are listed first, others are sorted alphabetically)
     "gms_core_settings",
     "sb_create_new_segment",

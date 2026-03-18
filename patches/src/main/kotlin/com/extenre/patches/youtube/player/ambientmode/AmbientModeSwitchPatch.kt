@@ -34,8 +34,8 @@ import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 
 @Suppress("unused")
 val ambientModeSwitchPatch = bytecodePatch(
-    AMBIENT_MODE_CONTROL.title,
-    AMBIENT_MODE_CONTROL.summary,
+    name = AMBIENT_MODE_CONTROL.key,
+    description = "${AMBIENT_MODE_CONTROL.title}: ${AMBIENT_MODE_CONTROL.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

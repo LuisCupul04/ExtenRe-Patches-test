@@ -61,8 +61,8 @@ private const val FILTER_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val actionBarComponentsPatch = bytecodePatch(
-    HIDE_ACTION_BAR_COMPONENTS.title,
-    HIDE_ACTION_BAR_COMPONENTS.summary,
+    name = HIDE_ACTION_BAR_COMPONENTS.key,
+    description = "${HIDE_ACTION_BAR_COMPONENTS.title}: ${HIDE_ACTION_BAR_COMPONENTS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

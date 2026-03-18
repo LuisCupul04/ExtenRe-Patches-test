@@ -74,8 +74,8 @@ private const val DEFAULT_ICON = "thin"
 
 @Suppress("unused")
 val overlayButtonsPatch = resourcePatch(
-    OVERLAY_BUTTONS.title,
-    OVERLAY_BUTTONS.summary,
+    name = OVERLAY_BUTTONS.key,
+    description = "${OVERLAY_BUTTONS.title}: ${OVERLAY_BUTTONS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

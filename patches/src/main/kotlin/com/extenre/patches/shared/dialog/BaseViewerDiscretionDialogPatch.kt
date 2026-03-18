@@ -24,6 +24,7 @@ fun baseViewerDiscretionDialogPatch(
     classDescriptor: String,
     isAgeVerified: Boolean = false
 ) = bytecodePatch(
+    name = "base-Viewer-Discretion-Dialog-Patch",
     description = "baseViewerDiscretionDialogPatch"
 ) {
     execute {

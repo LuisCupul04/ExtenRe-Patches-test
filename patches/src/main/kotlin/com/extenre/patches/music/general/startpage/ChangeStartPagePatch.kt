@@ -63,8 +63,8 @@ private val changeStartPageResourcePatch = resourcePatch(
 
 @Suppress("unused")
 val changeStartPagePatch = bytecodePatch(
-    CHANGE_START_PAGE.title,
-    CHANGE_START_PAGE.summary,
+    name = CHANGE_START_PAGE.key,
+    description = "${CHANGE_START_PAGE.title}: ${CHANGE_START_PAGE.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

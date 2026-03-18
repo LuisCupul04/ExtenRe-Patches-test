@@ -58,8 +58,8 @@ private const val LAYOUT_COMPONENTS_FILTER_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val layoutComponentsPatch = bytecodePatch(
-    HIDE_LAYOUT_COMPONENTS.title,
-    HIDE_LAYOUT_COMPONENTS.summary,
+    name = HIDE_LAYOUT_COMPONENTS.key,
+    description = "${HIDE_LAYOUT_COMPONENTS.title}: ${HIDE_LAYOUT_COMPONENTS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

@@ -28,8 +28,8 @@ private const val EXTENSION_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val trendingTodayShelfPatch = bytecodePatch(
-    HIDE_TRENDING_TODAY_SHELF.title,
-    HIDE_TRENDING_TODAY_SHELF.summary,
+    name = HIDE_TRENDING_TODAY_SHELF.key,
+    description = "${HIDE_TRENDING_TODAY_SHELF.title}: ${HIDE_TRENDING_TODAY_SHELF.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

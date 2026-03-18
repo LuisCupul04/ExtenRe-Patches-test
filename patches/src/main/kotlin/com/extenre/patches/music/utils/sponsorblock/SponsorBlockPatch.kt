@@ -48,6 +48,7 @@ private const val EXTENSION_CLASS_DESCRIPTOR =
     "$EXTENSION_PATH/sponsorblock/SegmentPlaybackController;"
 
 private val sponsorBlockBytecodePatch = bytecodePatch(
+    name = "sponsor-Block-Bytecode-Patch",
     description = "sponsorBlockBytecodePatch"
 ) {
     dependsOn(
@@ -166,8 +167,8 @@ private val SPONSOR_BLOCK_CATEGORY = CategoryType.SPONSOR_BLOCK.value
 
 @Suppress("unused")
 val sponsorBlockPatch = resourcePatch(
-    SPONSORBLOCK.title,
-    SPONSORBLOCK.summary,
+    name = SPONSORBLOCK.key,
+    description = "${SPONSORBLOCK.title}: ${SPONSORBLOCK.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

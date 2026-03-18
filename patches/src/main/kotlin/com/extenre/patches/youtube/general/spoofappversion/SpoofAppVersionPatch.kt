@@ -115,8 +115,8 @@ private val spoofAppVersionBytecodePatch = bytecodePatch(
 
 @Suppress("unused")
 val spoofAppVersionPatch = resourcePatch(
-    SPOOF_APP_VERSION.title,
-    SPOOF_APP_VERSION.summary,
+    name = SPOOF_APP_VERSION.key,
+    description = "${SPOOF_APP_VERSION.title}: ${SPOOF_APP_VERSION.summary}",
 ) {
     compatibleWith(
         YOUTUBE_PACKAGE_NAME(

@@ -27,8 +27,8 @@ import com.android.tools.smali.dexlib2.iface.reference.FieldReference
 
 @Suppress("unused")
 val hapticFeedbackPatch = bytecodePatch(
-    DISABLE_HAPTIC_FEEDBACK.title,
-    DISABLE_HAPTIC_FEEDBACK.summary,
+    name = DISABLE_HAPTIC_FEEDBACK.key,
+    description = "${DISABLE_HAPTIC_FEEDBACK.title}: ${DISABLE_HAPTIC_FEEDBACK.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

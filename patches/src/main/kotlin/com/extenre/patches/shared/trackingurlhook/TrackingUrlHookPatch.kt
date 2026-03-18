@@ -30,6 +30,7 @@ private lateinit var trackingUrlMethod: MutableMethod
  * In some versions, it can be used to forcibly generate 'Watch history'.
  */
 val trackingUrlHookPatch = bytecodePatch(
+    name = "tracking-Url-Hook-Patch",
     description = "trackingUrlHookPatch"
 ) {
     execute {

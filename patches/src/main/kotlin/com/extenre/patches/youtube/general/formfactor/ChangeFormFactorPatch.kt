@@ -38,8 +38,8 @@ private const val EXTENSION_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val changeFormFactorPatch = bytecodePatch(
-    CHANGE_FORM_FACTOR.title,
-    CHANGE_FORM_FACTOR.summary,
+    name = CHANGE_FORM_FACTOR.key,
+    description = "${CHANGE_FORM_FACTOR.title}: ${CHANGE_FORM_FACTOR.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

@@ -65,8 +65,8 @@ private const val KEYWORD_FILTER_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val feedComponentsPatch = bytecodePatch(
-    HIDE_FEED_COMPONENTS.title,
-    HIDE_FEED_COMPONENTS.summary,
+    name = HIDE_FEED_COMPONENTS.key,
+    description = "${HIDE_FEED_COMPONENTS.title}: ${HIDE_FEED_COMPONENTS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 
