@@ -139,16 +139,15 @@ val adsPatch = adsPatch(
         // region patch for hide get premium
 
         // get premium button at the top of the account switching menu
-        getPremiumTextViewFingerprint.matchOrThrow().let {
-            it.method.apply {
-                val insertIndex = it.patternMatch!!.startIndex
-                val register = getInstruction<TwoRegisterInstruction>(insertIndex).registerA
+        val premiumMatch = getPremiumTextViewFingerprint.matchOrThrow()
+        premiumMatch.mutableMethod.apply {
+            val insertIndex = premiumMatch.patternMatch!!.startIndex
+            val register = getInstruction<TwoRegisterInstruction>(insertIndex).registerA
 
-                addInstruction(
-                    insertIndex + 1,
-                    "const/4 v$register, 0x0"
-                )
-            }
+            addInstruction(
+                insertIndex + 1,
+                "const/4 v$register, 0x0"
+            )
         }
 
         // get premium button at the bottom of the account switching menu

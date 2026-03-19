@@ -26,7 +26,6 @@ private const val APP_NAME = "RVX Reddit"
 val customBrandingNamePatch = resourcePatch(
     name = CUSTOM_BRANDING_NAME_FOR_REDDIT.key,
     description = "${CUSTOM_BRANDING_NAME_FOR_REDDIT.title}: ${CUSTOM_BRANDING_NAME_FOR_REDDIT.summary}"
-    optimized = false,
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

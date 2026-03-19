@@ -23,7 +23,6 @@ import org.w3c.dom.Element
 val shortcutPatch = resourcePatch(
     name = HIDE_SHORTCUTS.key,
     description = "${HIDE_SHORTCUTS.title}: ${HIDE_SHORTCUTS.summary}",
-    optimized = false.
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

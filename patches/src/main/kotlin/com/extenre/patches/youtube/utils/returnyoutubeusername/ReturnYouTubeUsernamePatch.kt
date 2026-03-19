@@ -19,7 +19,6 @@ import com.extenre.patches.youtube.utils.settings.settingsPatch
 val returnYouTubeUsernamePatch = bytecodePatch(
     name = RETURN_YOUTUBE_USERNAME.key,
     description = "${RETURN_YOUTUBE_USERNAME.title}: ${RETURN_YOUTUBE_USERNAME.summary}",
-    optimized = false.
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

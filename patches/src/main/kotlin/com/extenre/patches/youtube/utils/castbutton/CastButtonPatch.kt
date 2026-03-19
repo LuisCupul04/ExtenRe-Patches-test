@@ -42,8 +42,6 @@ val castButtonPatch = bytecodePatch(
     name = "cast-Button-Patch",
     description = "castButtonPatch"
 ) {
-    description = "castButtonPatch"
-) {
     dependsOn(sharedResourceIdPatch)
 
     execute {

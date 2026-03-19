@@ -21,7 +21,6 @@ import com.extenre.util.copyXmlNode
 val materialYouPatch = resourcePatch(
     name = MATERIALYOU.key,
     description = "${MATERIALYOU.title}: ${MATERIALYOU.summary}",
-    optimized = false.
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

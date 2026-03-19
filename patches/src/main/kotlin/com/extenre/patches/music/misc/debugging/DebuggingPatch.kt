@@ -18,11 +18,8 @@ import com.extenre.patches.music.utils.settings.settingsPatch
 
 @Suppress("unused")
 val debuggingPatch = resourcePatch(
-    ENABLE_DEBUG_LOGGING.title,
-    ENABLE_DEBUG_LOGGING.summary,
-    // Unlike YouTube, YouTube Music's Litho components do not change very often.
-    // That's why it seems better to selectively include patches for only those users who need them.
-    false,
+    name = ENABLE_DEBUG_LOGGING.key,
+    description = "${ENABLE_DEBUG_LOGGING.title}: ${ENABLE_DEBUG_LOGGING.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 
