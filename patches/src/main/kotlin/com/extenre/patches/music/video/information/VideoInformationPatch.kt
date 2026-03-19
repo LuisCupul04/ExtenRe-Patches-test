@@ -26,7 +26,7 @@ import com.extenre.patches.music.video.playerresponse.playerResponseMethodHookPa
 import com.extenre.patches.shared.mdxPlayerDirectorSetVideoStageFingerprint
 import com.extenre.patches.shared.videoLengthFingerprint
 import com.extenre.util.addStaticFieldToExtension
-import com.extenre.util.findmutableMethodOrThrow
+import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
@@ -41,6 +41,7 @@ import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 import com.android.tools.smali.dexlib2.immutable.ImmutableMethod
 import com.android.tools.smali.dexlib2.immutable.ImmutableMethodImplementation
 import com.android.tools.smali.dexlib2.immutable.ImmutableMethodParameter
+import com.android.tools.smali.dexlib2.util.MethodUtil
 
 const val EXTENSION_CLASS_DESCRIPTOR =
     "$SHARED_PATH/VideoInformation;"
@@ -151,9 +152,15 @@ val videoInformationPatch = bytecodePatch(
         }
 
         videoEndFingerprint.mutableMethodOrThrow().apply {
-            findmutableMethodOrThrow(definingClass).let {
-                playerConstructorMethod = it
-                playerConstructorInsertIndex = it.indexOfFirstInstructionOrThrow {
+            // Reemplazar findmutableMethodOrThrow por búsqueda manual
+            run {
+                val method = findMethodOrThrow(definingClass)
+                val classDef = classes.find { it.type == definingClass }
+                    ?: throw PatchException("Class not found: $definingClass")
+                playerConstructorMethod = proxy(classDef).mutableClass.methods.first {
+                    MethodUtil.methodSignaturesMatch(it, method)
+                }
+                playerConstructorInsertIndex = playerConstructorMethod.indexOfFirstInstructionOrThrow {
                     opcode == Opcode.INVOKE_DIRECT && getReference<MethodReference>()?.name == "<init>"
                 } + 1
             }
@@ -175,9 +182,15 @@ val videoInformationPatch = bytecodePatch(
         }
 
         mdxPlayerDirectorSetVideoStageFingerprint.mutableMethodOrThrow().apply {
-            findmutableMethodOrThrow(definingClass).let {
-                mdxConstructorMethod = it
-                mdxConstructorInsertIndex = it.indexOfFirstInstructionOrThrow {
+            // Reemplazar findmutableMethodOrThrow por búsqueda manual
+            run {
+                val method = findMethodOrThrow(definingClass)
+                val classDef = classes.find { it.type == definingClass }
+                    ?: throw PatchException("Class not found: $definingClass")
+                mdxConstructorMethod = proxy(classDef).mutableClass.methods.first {
+                    MethodUtil.methodSignaturesMatch(it, method)
+                }
+                mdxConstructorInsertIndex = mdxConstructorMethod.indexOfFirstInstructionOrThrow {
                     opcode == Opcode.INVOKE_DIRECT && getReference<MethodReference>()?.name == "<init>"
                 } + 1
             }

@@ -105,16 +105,15 @@ val layoutComponentsPatch = bytecodePatch(
 
         // region patch for hide category bar
 
-        chipCloudFingerprint.matchOrThrow().let {
-            it.method.apply {
-                val targetIndex = it.patternMatch!!.endIndex
-                val targetRegister = getInstruction<OneRegisterInstruction>(targetIndex).registerA
+        val chipCloudMatch = chipCloudFingerprint.matchOrThrow()
+        chipCloudMatch.mutableMethod.apply {
+            val targetIndex = chipCloudMatch.patternMatch!!.endIndex
+            val targetRegister = getInstruction<OneRegisterInstruction>(targetIndex).registerA
 
-                addInstruction(
-                    targetIndex + 1,
-                    "invoke-static { v$targetRegister }, $GENERAL_CLASS_DESCRIPTOR->hideCategoryBar(Landroid/view/View;)V"
-                )
-            }
+            addInstruction(
+                targetIndex + 1,
+                "invoke-static { v$targetRegister }, $GENERAL_CLASS_DESCRIPTOR->hideCategoryBar(Landroid/view/View;)V"
+            )
         }
 
         // endregion
@@ -140,19 +139,18 @@ val layoutComponentsPatch = bytecodePatch(
             historyMenuItemFingerprint,
             historyMenuItemOfflineTabFingerprint
         ).forEach { fingerprint ->
-            fingerprint.matchOrThrow().let {
-                it.method.apply {
-                    val insertIndex = it.patternMatch!!.startIndex
-                    val insertRegister =
-                        getInstruction<FiveRegisterInstruction>(insertIndex).registerD
+            val historyMatch = fingerprint.matchOrThrow()
+            historyMatch.mutableMethod.apply {
+                val insertIndex = historyMatch.patternMatch!!.startIndex
+                val insertRegister =
+                    getInstruction<FiveRegisterInstruction>(insertIndex).registerD
 
-                    addInstructions(
-                        insertIndex, """
-                            invoke-static {v$insertRegister}, $GENERAL_CLASS_DESCRIPTOR->hideHistoryButton(Z)Z
-                            move-result v$insertRegister
-                            """
-                    )
-                }
+                addInstructions(
+                    insertIndex, """
+                        invoke-static {v$insertRegister}, $GENERAL_CLASS_DESCRIPTOR->hideHistoryButton(Z)Z
+                        move-result v$insertRegister
+                        """
+                )
             }
         }
 
@@ -191,18 +189,17 @@ val layoutComponentsPatch = bytecodePatch(
 
         // The lowest version supported by the patch does not have parent tool settings
         if (is_6_39_or_greater) {
-            parentToolMenuFingerprint.matchOrThrow().let {
-                it.method.apply {
-                    val index = it.patternMatch!!.startIndex + 1
-                    val register = getInstruction<FiveRegisterInstruction>(index).registerD
+            val parentToolMatch = parentToolMenuFingerprint.matchOrThrow()
+            parentToolMatch.mutableMethod.apply {
+                val index = parentToolMatch.patternMatch!!.startIndex + 1
+                val register = getInstruction<FiveRegisterInstruction>(index).registerD
 
-                    addInstructions(
-                        index, """
-                            invoke-static {v$register}, $EXTENSION_SETTINGS_MENU_DESCRIPTOR->hideParentToolsMenu(Z)Z
-                            move-result v$register
-                            """
-                    )
-                }
+                addInstructions(
+                    index, """
+                        invoke-static {v$register}, $EXTENSION_SETTINGS_MENU_DESCRIPTOR->hideParentToolsMenu(Z)Z
+                        move-result v$register
+                        """
+                )
             }
         }
 
@@ -284,16 +281,15 @@ val layoutComponentsPatch = bytecodePatch(
             )
         }
 
-        tasteBuilderSyntheticFingerprint.matchOrThrow(tasteBuilderConstructorFingerprint).let {
-            it.method.apply {
-                val insertIndex = it.patternMatch!!.startIndex
-                val insertRegister = getInstruction<OneRegisterInstruction>(insertIndex).registerA
+        val tasteBuilderMatch = tasteBuilderSyntheticFingerprint.matchOrThrow(tasteBuilderConstructorFingerprint)
+        tasteBuilderMatch.mutableMethod.apply {
+            val insertIndex = tasteBuilderMatch.patternMatch!!.startIndex
+            val insertRegister = getInstruction<OneRegisterInstruction>(insertIndex).registerA
 
-                addInstruction(
-                    insertIndex,
-                    "const/4 v$insertRegister, 0x0"
-                )
-            }
+            addInstruction(
+                insertIndex,
+                "const/4 v$insertRegister, 0x0"
+            )
         }
 
         // endregion

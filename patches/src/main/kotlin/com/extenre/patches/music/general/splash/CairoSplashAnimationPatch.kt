@@ -41,7 +41,7 @@ private const val EXTENSION_METHOD_DESCRIPTOR =
     "$GENERAL_PATH/CairoSplashAnimationPatch;->disableCairoSplashAnimation(Z)Z"
 
 @Suppress("unused")
-val actionBarComponentsPatch = bytecodePatch(
+val cairoSplashAnimationPatch = bytecodePatch(
     name = DISABLE_CAIRO_SPLASH_ANIMATION.key,
     description = "${DISABLE_CAIRO_SPLASH_ANIMATION.title}: ${DISABLE_CAIRO_SPLASH_ANIMATION.summary}",
 ) {

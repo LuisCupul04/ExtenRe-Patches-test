@@ -10,6 +10,7 @@ package com.extenre.patches.youtube.player.ambientmode
 
 import com.extenre.patcher.extensions.InstructionExtensions.addInstructions
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
+import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patches.youtube.utils.compatibility.Constants.COMPATIBLE_PACKAGE
 import com.extenre.patches.youtube.utils.extension.Constants.PLAYER_CLASS_DESCRIPTOR
@@ -19,7 +20,7 @@ import com.extenre.patches.youtube.utils.playservice.is_19_41_or_greater
 import com.extenre.patches.youtube.utils.playservice.versionCheckPatch
 import com.extenre.patches.youtube.utils.settings.ResourceUtils.addPreference
 import com.extenre.patches.youtube.utils.settings.settingsPatch
-import com.extenre.util.findmutableMethodOrThrow
+import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
@@ -31,6 +32,7 @@ import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
+import com.android.tools.smali.dexlib2.util.MethodUtil
 
 @Suppress("unused")
 val ambientModeSwitchPatch = bytecodePatch(
@@ -69,9 +71,16 @@ val ambientModeSwitchPatch = bytecodePatch(
         }
 
         syntheticClassList.distinct().forEach { className ->
-            findmutableMethodOrThrow(className) {
+            // Reemplazar findmutableMethodOrThrow por búsqueda manual
+            val method = findMethodOrThrow(className) {
                 name == "accept"
-            }.apply {
+            }
+            val classDef = classes.find { it.type == className }
+                ?: throw PatchException("Class not found: $className")
+            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
                 implementation!!.instructions
                     .withIndex()
                     .filter { (_, instruction) ->

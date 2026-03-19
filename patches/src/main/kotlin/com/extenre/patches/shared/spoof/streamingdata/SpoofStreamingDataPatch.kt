@@ -32,7 +32,7 @@ import com.extenre.util.addInstructionsAtControlFlowLabel
 import com.extenre.util.cloneMutable
 import com.extenre.util.copyResources
 import com.extenre.util.findInstructionIndicesReversedOrThrow
-import com.extenre.util.findmutableMethodOrThrow
+import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.definingClassOrThrow
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.legacyFingerprint
@@ -447,13 +447,22 @@ fun spoofStreamingDataPatch(
             )
         }
 
-        findmutableMethodOrThrow(EXTENSION_UTILS_CLASS_DESCRIPTOR) {
-            name == "setContext"
-        }.apply {
-            addInstruction(
-                implementation!!.instructions.lastIndex,
-                "invoke-static {}, $EXTENSION_CLASS_DESCRIPTOR->initializeJavascript()V"
-            )
+        // Reemplazar findmutableMethodOrThrow por búsqueda manual
+        run {
+            val method = findMethodOrThrow(EXTENSION_UTILS_CLASS_DESCRIPTOR) {
+                name == "setContext"
+            }
+            val classDef = classes.find { it.type == EXTENSION_UTILS_CLASS_DESCRIPTOR }
+                ?: throw PatchException("Class not found: $EXTENSION_UTILS_CLASS_DESCRIPTOR")
+            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
+                addInstruction(
+                    implementation!!.instructions.lastIndex,
+                    "invoke-static {}, $EXTENSION_CLASS_DESCRIPTOR->initializeJavascript()V"
+                )
+            }
         }
 
         // Copy the j2v8 library.
@@ -637,9 +646,18 @@ fun spoofStreamingDataPatch(
 
         // endregion
 
-        findmutableMethodOrThrow("$PATCHES_PATH/PatchStatus;") {
-            name == "SpoofStreamingData"
-        }.returnEarly(true)
+        // Reemplazar findmutableMethodOrThrow por búsqueda manual
+        run {
+            val method = findMethodOrThrow("$PATCHES_PATH/PatchStatus;") {
+                name == "SpoofStreamingData"
+            }
+            val classDef = classes.find { it.type == "$PATCHES_PATH/PatchStatus;" }
+                ?: throw PatchException("Class not found: $PATCHES_PATH/PatchStatus;")
+            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.returnEarly(true)
+        }
 
         executeBlock()
     }

@@ -11,6 +11,7 @@ package com.extenre.patches.shared.comments
 import com.extenre.patcher.extensions.InstructionExtensions.addInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
+import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patcher.patch.resourcePatch
 import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod.Companion.toMutable
@@ -21,7 +22,7 @@ import com.extenre.patches.shared.mapping.resourceMappingPatch
 import com.extenre.util.REGISTER_TEMPLATE_REPLACEMENT
 import com.extenre.util.addInstructionsAtControlFlowLabel
 import com.extenre.util.findFreeRegister
-import com.extenre.util.findmutableMethodOrThrow
+import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.methodCall
 import com.extenre.util.fingerprint.mutableMethodOrThrow
@@ -35,6 +36,7 @@ import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 import com.android.tools.smali.dexlib2.immutable.ImmutableMethod
 import com.android.tools.smali.dexlib2.immutable.ImmutableMethodParameter
+import com.android.tools.smali.dexlib2.util.MethodUtil
 
 var informationButton = -1L
     private set
@@ -44,7 +46,8 @@ var title = -1L
     private set
 
 private val commentsPanelResourcePatch = resourcePatch(
-    description = "commentsPanelResourcePatch"
+    name = "comments-panel-resource-patch",
+    description = "Resource patch for comments panel"
 ) {
     dependsOn(resourceMappingPatch)
 
@@ -173,12 +176,20 @@ val commentsPanelPatch = bytecodePatch(
                 )
         }
 
-        findmutableMethodOrThrow(EXTENSION_CLASS_DESCRIPTOR) {
-            name == "smoothScrollToPosition"
-        }.addInstruction(
-            0,
-            "invoke-virtual {p0, p1}, ${recyclerViewSmoothScrollToPositionFingerprint.methodCall()}"
-        )
+        // Reemplazar findmutableMethodOrThrow por búsqueda manual
+        run {
+            val method = findMethodOrThrow(EXTENSION_CLASS_DESCRIPTOR) {
+                name == "smoothScrollToPosition"
+            }
+            val classDef = classes.find { it.type == EXTENSION_CLASS_DESCRIPTOR }
+                ?: throw PatchException("Class not found: $EXTENSION_CLASS_DESCRIPTOR")
+            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.addInstruction(
+                0,
+                "invoke-virtual {p0, p1}, ${recyclerViewSmoothScrollToPositionFingerprint.methodCall()}"
+            )
+        }
     }
 }
-

@@ -12,6 +12,7 @@ import com.extenre.patcher.extensions.InstructionExtensions.addInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.addInstructions
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.replaceInstruction
+import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod
 import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod.Companion.toMutable
@@ -20,7 +21,7 @@ import com.extenre.patches.shared.indexOfSpannableStringInstruction
 import com.extenre.patches.shared.spannableStringBuilderFingerprint
 import com.extenre.patches.shared.textcomponent.hookSpannableString
 import com.extenre.patches.shared.textcomponent.textComponentPatch
-import com.extenre.util.findmutableMethodOrThrow
+import com.extenre.util.findMethodOrThrow
 import com.extenre.util.findMethodsOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
@@ -39,6 +40,7 @@ import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.reference.FieldReference
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 import com.android.tools.smali.dexlib2.immutable.ImmutableMethod
+import com.android.tools.smali.dexlib2.util.MethodUtil
 
 private const val EXTENSION_SPANS_CLASS_DESCRIPTOR =
     "$SPANS_PATH/InclusiveSpanPatch;"
@@ -92,21 +94,28 @@ val inclusiveSpanPatch = bytecodePatch(
             val customCharacterStyle =
                 customCharacterStyleFingerprint.mutableClassOrThrow().type
 
-            findmutableMethodOrThrow(EXTENSION_SPANS_CLASS_DESCRIPTOR) {
-                name == "getSpanType" &&
-                        returnType != "Ljava/lang/String;"
-            }.apply {
-                val index = indexOfFirstInstructionOrThrow {
-                    opcode == Opcode.INSTANCE_OF &&
-                            (this as? ReferenceInstruction)?.reference?.toString() == "Landroid/text/style/CharacterStyle;"
+            // Reemplazar findmutableMethodOrThrow por búsqueda manual
+            run {
+                val method = findMethodOrThrow(EXTENSION_SPANS_CLASS_DESCRIPTOR) {
+                    name == "getSpanType" && returnType != "Ljava/lang/String;"
                 }
-                val instruction = getInstruction<TwoRegisterInstruction>(index)
-                replaceInstruction(
-                    index,
-                    "instance-of v${instruction.registerA}, v${instruction.registerB}, $customCharacterStyle"
-                )
+                val classDef = classes.find { it.type == EXTENSION_SPANS_CLASS_DESCRIPTOR }
+                    ?: throw PatchException("Class not found: $EXTENSION_SPANS_CLASS_DESCRIPTOR")
+                val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                    MethodUtil.methodSignaturesMatch(it, method)
+                }
+                mutableMethod.apply {
+                    val index = indexOfFirstInstructionOrThrow {
+                        opcode == Opcode.INSTANCE_OF &&
+                                (this as? ReferenceInstruction)?.reference?.toString() == "Landroid/text/style/CharacterStyle;"
+                    }
+                    val instruction = getInstruction<TwoRegisterInstruction>(index)
+                    replaceInstruction(
+                        index,
+                        "instance-of v${instruction.registerA}, v${instruction.registerB}, $customCharacterStyle"
+                    )
+                }
             }
-
 
             // Create a new method to get the filter array to avoid register conflicts.
             // This fixes an issue with extension compiled with Android Gradle Plugin 8.3.0+.
@@ -173,5 +182,3 @@ val inclusiveSpanPatch = bytecodePatch(
         )
     }
 }
-
-

@@ -78,7 +78,7 @@ val navigationButtonsPatch = bytecodePatch(
                     bottomNavScreenMutableClass
                 )
                     ?.let {
-                        it.method.apply {
+                        it.mutableMethod.apply {   // Corregido: it.method -> it.mutableMethod
                             val startIndex = it.patternMatch!!.startIndex
                             val targetRegister =
                                 getInstruction<FiveRegisterInstruction>(startIndex).registerC

@@ -47,13 +47,11 @@ import com.extenre.util.addStaticFieldToExtension
 import com.extenre.util.cloneMutable
 import com.extenre.util.findFieldFromToString
 import com.extenre.util.findMethodFromToString
-import com.extenre.util.findmutableMethodOrThrow
-import com.extenre.util.findMutableClassOrThrow
+import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.methodCall
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
-import com.extenre.util.fingerprint.originalmutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.getWalkerMethod
 import com.extenre.util.indexOfFirstInstructionOrThrow
@@ -72,6 +70,7 @@ import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 import com.android.tools.smali.dexlib2.immutable.ImmutableMethod
 import com.android.tools.smali.dexlib2.immutable.ImmutableMethodImplementation
 import com.android.tools.smali.dexlib2.immutable.ImmutableMethodParameter
+import com.android.tools.smali.dexlib2.util.MethodUtil
 
 private const val EXTENSION_CLASS_DESCRIPTOR =
     "$SHARED_PATH/VideoInformation;"
@@ -244,9 +243,15 @@ val videoInformationPatch = bytecodePatch(
         }
 
         videoEndFingerprint.mutableMethodOrThrow().apply {
-            findmutableMethodOrThrow(definingClass).let {
-                playerConstructorMethod = it
-                playerConstructorInsertIndex = it.indexOfFirstInstructionOrThrow {
+            // Reemplazar findmutableMethodOrThrow por búsqueda manual
+            run {
+                val method = findMethodOrThrow(definingClass)
+                val classDef = classes.find { it.type == definingClass }
+                    ?: throw PatchException("Class not found: $definingClass")
+                playerConstructorMethod = proxy(classDef).mutableClass.methods.first {
+                    MethodUtil.methodSignaturesMatch(it, method)
+                }
+                playerConstructorInsertIndex = playerConstructorMethod.indexOfFirstInstructionOrThrow {
                     opcode == Opcode.INVOKE_DIRECT && getReference<MethodReference>()?.name == "<init>"
                 } + 1
             }
@@ -295,9 +300,15 @@ val videoInformationPatch = bytecodePatch(
         }
 
         mdxPlayerDirectorSetVideoStageFingerprint.mutableMethodOrThrow().apply {
-            findmutableMethodOrThrow(definingClass).let {
-                mdxConstructorMethod = it
-                mdxConstructorInsertIndex = it.indexOfFirstInstructionOrThrow {
+            // Reemplazar findmutableMethodOrThrow por búsqueda manual
+            run {
+                val method = findMethodOrThrow(definingClass)
+                val classDef = classes.find { it.type == definingClass }
+                    ?: throw PatchException("Class not found: $definingClass")
+                mdxConstructorMethod = proxy(classDef).mutableClass.methods.first {
+                    MethodUtil.methodSignaturesMatch(it, method)
+                }
+                mdxConstructorInsertIndex = mdxConstructorMethod.indexOfFirstInstructionOrThrow {
                     opcode == Opcode.INVOKE_DIRECT && getReference<MethodReference>()?.name == "<init>"
                 } + 1
             }
@@ -679,10 +690,16 @@ val videoInformationPatch = bytecodePatch(
             .mutableMethodOrThrow()
             .methodCall()
 
-        val formatStreamITagReference =
-            formatStreamModelToStringFingerprint.originalmutableMethodOrThrow()
-                .findMethodFromToString("FormatStream(itag=")
+        // Reemplazar originalmutableMethodOrThrow por búsqueda manual
+        val formatStreamITagReference = run {
+            val method = formatStreamModelToStringFingerprint.methodOrThrow()
+            val classDef = formatStreamModelToStringFingerprint.classDefOrThrow()
+            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.findMethodFromToString("FormatStream(itag=")
                 .methodCall()
+        }
 
         val formatStreamResolutionReference =
             availableVideoFormatsFingerprint.matchOrThrow(
@@ -722,24 +739,27 @@ val videoInformationPatch = bytecodePatch(
                     move-result-object v0
                     return-object v0
                 """
-            findMutableClassOrThrow(YOUTUBE_FORMAT_STREAM_MODEL_CLASS_TYPE)
-                .methods.add(
-                    ImmutableMethod(
-                        YOUTUBE_FORMAT_STREAM_MODEL_CLASS_TYPE,
-                        methodName,
-                        listOf(),
-                        returnType,
-                        AccessFlags.PUBLIC.value or AccessFlags.FINAL.value,
-                        null,
-                        null,
-                        MutableMethodImplementation(2),
-                    ).toMutable().apply {
-                        addInstructions(
-                            0,
-                            smaliInstructions
-                        )
-                    }
-                )
+            // Reemplazar findMutableClassOrThrow por búsqueda manual
+            val mutableClass = classes.find { it.type == YOUTUBE_FORMAT_STREAM_MODEL_CLASS_TYPE }
+                ?.let { proxy(it).mutableClass }
+                ?: throw PatchException("Class not found: $YOUTUBE_FORMAT_STREAM_MODEL_CLASS_TYPE")
+            mutableClass.methods.add(
+                ImmutableMethod(
+                    YOUTUBE_FORMAT_STREAM_MODEL_CLASS_TYPE,
+                    methodName,
+                    listOf(),
+                    returnType,
+                    AccessFlags.PUBLIC.value or AccessFlags.FINAL.value,
+                    null,
+                    null,
+                    MutableMethodImplementation(2),
+                ).toMutable().apply {
+                    addInstructions(
+                        0,
+                        smaliInstructions
+                    )
+                }
+            )
         }
 
         initFormatStreamFingerprint.mutableMethodOrThrow(initFormatStreamParentFingerprint)
@@ -764,9 +784,15 @@ val videoInformationPatch = bytecodePatch(
                 )
             }
 
-        val initialResolutionField =
-            playbackStartParametersToStringFingerprint.originalmutableMethodOrThrow()
-                .findFieldFromToString(FIXED_RESOLUTION_STRING)
+        // Reemplazar originalmutableMethodOrThrow por búsqueda manual
+        val initialResolutionField = run {
+            val method = playbackStartParametersToStringFingerprint.methodOrThrow()
+            val classDef = playbackStartParametersToStringFingerprint.classDefOrThrow()
+            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.findFieldFromToString(FIXED_RESOLUTION_STRING)
+        }
 
         playbackStartParametersConstructorFingerprint
             .mutableMethodOrThrow(playbackStartParametersToStringFingerprint)

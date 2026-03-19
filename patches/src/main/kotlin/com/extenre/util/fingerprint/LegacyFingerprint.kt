@@ -35,43 +35,40 @@ private val String.exception
 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.resolvable(): Boolean =
-    second.methodOrNull(this@BytecodePatchContext) != null
+    second.methodOrNull != null
 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.definingClassOrThrow(): String =
-    second.classDefOrNull(this@BytecodePatchContext)?.type ?: throw first.exception
+    second.classDefOrNull?.type ?: throw first.exception
 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.matchOrThrow(): Match =
-    second.match(this@BytecodePatchContext)
+    second.match
 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.matchOrThrow(parentFingerprint: Pair<String, Fingerprint>): Match {
-    val parentClassDef = parentFingerprint.second.classDefOrNull(this@BytecodePatchContext)
+    val parentClassDef = parentFingerprint.second.classDefOrNull
         ?: throw parentFingerprint.first.exception
-    return second.matchOrNull(parentClassDef, this@BytecodePatchContext)
-        ?: throw first.exception
+    return second.matchOrNull(parentClassDef) ?: throw first.exception
 }
 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.matchOrNull(): Match? =
-    second.classDefOrNull(this@BytecodePatchContext)?.let {
-        second.matchOrNull(it, this@BytecodePatchContext)
-    }
+    second.classDefOrNull?.let { second.matchOrNull(it) }
 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.matchOrNull(parentFingerprint: Pair<String, Fingerprint>): Match? =
-    parentFingerprint.second.classDefOrNull(this@BytecodePatchContext)?.let { parentClassDef ->
-        second.matchOrNull(parentClassDef, this@BytecodePatchContext)
+    parentFingerprint.second.classDefOrNull?.let { parentClassDef ->
+        second.matchOrNull(parentClassDef)
     }
 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.methodOrNull(): Method? =
-    second.methodOrNull(this@BytecodePatchContext)
+    second.methodOrNull
 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.methodOrThrow(): Method =
-    second.method(this@BytecodePatchContext)
+    second.method
 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.methodOrThrow(parentFingerprint: Pair<String, Fingerprint>): Method =
@@ -79,7 +76,7 @@ internal fun Pair<String, Fingerprint>.methodOrThrow(parentFingerprint: Pair<Str
 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.originalMethodOrThrow(): Method =
-    second.originalMethod(this@BytecodePatchContext)
+    second.originalMethod
 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.originalMethodOrThrow(parentFingerprint: Pair<String, Fingerprint>): Method =
@@ -87,13 +84,13 @@ internal fun Pair<String, Fingerprint>.originalMethodOrThrow(parentFingerprint: 
 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.mutableClassOrThrow(): MutableClass {
-    val classDef = second.classDefOrNull(this@BytecodePatchContext) ?: throw first.exception
+    val classDef = second.classDefOrNull ?: throw first.exception
     return proxy(classDef).mutableClass
 }
 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.mutableMethodOrThrow(): MutableMethod {
-    val method = second.method(this@BytecodePatchContext)
+    val method = second.method
     val mutableClass = mutableClassOrThrow()
     return mutableClass.methods.first { MethodUtil.methodSignaturesMatch(it, method) }
 }

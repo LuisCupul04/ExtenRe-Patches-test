@@ -15,6 +15,7 @@ import com.extenre.patcher.extensions.InstructionExtensions.addInstructions
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.removeInstruction
 import com.extenre.patcher.patch.BytecodePatchContext
+import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod
 import com.extenre.patches.youtube.utils.extension.Constants.GENERAL_CLASS_DESCRIPTOR
@@ -22,7 +23,7 @@ import com.extenre.patches.youtube.utils.extension.Constants.PATCH_STATUS_CLASS_
 import com.extenre.patches.youtube.utils.extension.Constants.PLAYER_CLASS_DESCRIPTOR
 import com.extenre.patches.youtube.utils.extension.Constants.UTILS_PATH
 import com.extenre.patches.youtube.utils.resourceid.sharedResourceIdPatch
-import com.extenre.util.findmutableMethodOrThrow
+import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
@@ -30,6 +31,7 @@ import com.extenre.util.updatePatchStatus
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
+import com.android.tools.smali.dexlib2.util.MethodUtil
 
 private const val EXTENSION_CLASS_DESCRIPTOR =
     "$UTILS_PATH/CastButtonPatch;"
@@ -51,14 +53,23 @@ val castButtonPatch = bytecodePatch(
 
         playerButtonMethod = playerButtonFingerprint.mutableMethodOrThrow()
 
-        findmutableMethodOrThrow("Landroidx/mediarouter/app/MediaRouteButton;") {
-            name == "setVisibility"
-        }.addInstructions(
-            0, """
-                invoke-static {p1}, $EXTENSION_CLASS_DESCRIPTOR->hideCastButton(I)I
-                move-result p1
-                """
-        )
+        // Reemplazar findmutableMethodOrThrow por búsqueda manual
+        run {
+            val method = findMethodOrThrow("Landroidx/mediarouter/app/MediaRouteButton;") {
+                name == "setVisibility"
+            }
+            val classDef = classes.find { it.type == "Landroidx/mediarouter/app/MediaRouteButton;" }
+                ?: throw PatchException("Class not found: Landroidx/mediarouter/app/MediaRouteButton;")
+            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.addInstructions(
+                0, """
+                    invoke-static {p1}, $EXTENSION_CLASS_DESCRIPTOR->hideCastButton(I)I
+                    move-result p1
+                    """
+            )
+        }
     }
 }
 

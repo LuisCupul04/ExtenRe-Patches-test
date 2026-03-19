@@ -37,7 +37,7 @@ fun customPlaybackSpeedPatch(
         }
 
         arrayGeneratorFingerprint.matchOrThrow().let {
-            it.method.apply {
+            it.mutableMethod.apply {   // Corregido: it.method -> it.mutableMethod
                 val targetIndex = it.patternMatch!!.startIndex
                 val targetRegister = getInstruction<OneRegisterInstruction>(targetIndex).registerA
 
@@ -104,4 +104,3 @@ fun customPlaybackSpeedPatch(
 
     }
 }
-

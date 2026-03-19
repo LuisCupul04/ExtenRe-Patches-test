@@ -12,6 +12,7 @@ import com.extenre.patcher.extensions.InstructionExtensions.addInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.patch.BytecodePatchContext
+import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patcher.patch.resourcePatch
 import com.extenre.patcher.patch.stringOption
@@ -46,7 +47,7 @@ import com.extenre.util.copyResources
 import com.extenre.util.copyXmlNode
 import com.extenre.util.findFreeRegister
 import com.extenre.util.findInstructionIndicesReversedOrThrow
-import com.extenre.util.findmutableMethodOrThrow
+import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.definingClassOrThrow
 import com.extenre.util.fingerprint.methodCall
 import com.extenre.util.fingerprint.mutableMethodOrThrow
@@ -177,9 +178,18 @@ private val settingsBytecodePatch = bytecodePatch(
         }
 
         targetActivityClassName = targetActivityClass.type.className
-        findmutableMethodOrThrow(PATCH_STATUS_CLASS_DESCRIPTOR) {
-            name == "TargetActivityClass"
-        }.returnEarly(targetActivityClassName)
+        // Reemplazar findmutableMethodOrThrow por búsqueda manual
+        run {
+            val method = findMethodOrThrow(PATCH_STATUS_CLASS_DESCRIPTOR) {
+                name == "TargetActivityClass"
+            }
+            val classDef = classes.find { it.type == PATCH_STATUS_CLASS_DESCRIPTOR }
+                ?: throw PatchException("Class not found: $PATCH_STATUS_CLASS_DESCRIPTOR")
+            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.returnEarly(targetActivityClassName)
+        }
 
         // apply the current theme of the settings page
         themeSetterSystemFingerprint.mutableMethodOrThrow().apply {

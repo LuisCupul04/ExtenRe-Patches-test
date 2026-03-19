@@ -24,10 +24,8 @@ internal class JsonPatchesFileGenerator : PatchesFileGenerator {
                 description = patch.description,
                 use = patch.use,
                 dependencies = patch.dependencies.map { it.name ?: it.toString() },
-                compatiblePackages = patch.compatiblePackages?.let { packages ->
-                    packages.mapValues { entry ->
-                        entry.value // Se infiere como Set<VersionName>? correctamente
-                    }
+                compatiblePackages = patch.compatiblePackages?.mapValues { entry ->
+                    entry.value
                 },
                 options = patch.options.values.map { option ->
                     JsonPatch.Option(

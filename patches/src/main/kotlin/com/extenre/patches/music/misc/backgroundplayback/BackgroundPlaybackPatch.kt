@@ -53,7 +53,7 @@ val backgroundPlaybackPatch = bytecodePatch(
 
         // don't play music video
         musicBrowserServiceFingerprint.matchOrThrow().let {
-            it.method.apply {
+            it.mutableMethod.apply {
                 val stringIndex = it.stringMatches!!.first().index
                 val targetIndex = indexOfFirstInstructionOrThrow(stringIndex) {
                     val reference = getReference<MethodReference>()

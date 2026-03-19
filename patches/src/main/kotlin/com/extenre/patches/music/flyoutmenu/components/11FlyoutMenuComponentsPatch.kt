@@ -35,7 +35,7 @@ import com.extenre.patches.shared.litho.addLithoFilter
 import com.extenre.patches.shared.litho.lithoFilterPatch
 import com.extenre.util.ResourceGroup
 import com.extenre.util.copyResources
-import com.extenre.util.findMethodOrThrow
+import com.extenre.util.findmutableMethodOrThrow
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
@@ -50,7 +50,6 @@ import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
-import com.android.tools.smali.dexlib2.util.MethodUtil
 
 private val resourceFileArray = arrayOf(
     "yt_outline_play_arrow_half_circle_black_24"
@@ -117,17 +116,9 @@ val flyoutMenuComponentsPatch = bytecodePatch(
                 val onCheckedChangedListenerDefiningClass =
                     (onCheckedChangedListenerReference as MethodReference).definingClass
 
-                // Buscar el método onCheckedChanged y convertirlo a mutable
-                val method = findMethodOrThrow(onCheckedChangedListenerDefiningClass) {
+                findmutableMethodOrThrow(onCheckedChangedListenerDefiningClass) {
                     name == "onCheckedChanged"
-                }
-                val classDef = classes.find { it.type == onCheckedChangedListenerDefiningClass }
-                    ?: throw PatchException("Class not found: $onCheckedChangedListenerDefiningClass")
-                val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                    MethodUtil.methodSignaturesMatch(it, method)
-                }
-
-                mutableMethod.apply {
+                }.apply {
                     val onCheckedChangedWalkerIndex =
                         indexOfFirstInstructionOrThrow {
                             val reference = getReference<MethodReference>()

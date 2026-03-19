@@ -27,7 +27,6 @@ import com.extenre.patches.shared.drawable.drawableColorHookPatch
 import com.extenre.patches.shared.materialyou.baseMaterialYou
 import com.extenre.util.ResourceGroup
 import com.extenre.util.copyResources
-import com.extenre.util.findmutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
 import com.extenre.util.valueOrThrow
@@ -39,6 +38,7 @@ private const val EXTENSION_CLASS_DESCRIPTOR =
     "$UTILS_PATH/DrawableColorPatch;"
 
 private val darkThemeBytecodePatch = bytecodePatch(
+    name = "dark-theme-bytecode-patch",
     description = "darkThemeBytecodePatch"
 ) {
     dependsOn(
@@ -62,7 +62,7 @@ private val darkThemeBytecodePatch = bytecodePatch(
             )
         }
 
-        findmutableMethodOrThrow(PATCH_STATUS_CLASS_DESCRIPTOR) {
+        mutableMethodOrThrow(PATCH_STATUS_CLASS_DESCRIPTOR) {
             name == "DarkTheme"
         }.replaceInstruction(
             0,

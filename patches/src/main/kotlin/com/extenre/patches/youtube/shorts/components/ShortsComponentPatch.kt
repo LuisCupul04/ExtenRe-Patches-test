@@ -88,7 +88,7 @@ import com.extenre.util.containsLiteralInstruction
 import com.extenre.util.containsStringInstruction
 import com.extenre.util.copyResources
 import com.extenre.util.doRecursively
-import com.extenre.util.findmutableMethodOrThrow
+import com.extenre.util.findMethodOrThrow
 import com.extenre.util.findMutableMethodOf
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.matchOrThrow
@@ -299,11 +299,18 @@ private val shortsCustomActionsPatch = bytecodePatch(
                             "$EXTENSION_CUSTOM_ACTIONS_CLASS_DESCRIPTOR->setFlyoutMenuObject(Ljava/lang/Object;)V"
                 )
 
-                val addFlyoutMenuMethod =
-                    findmutableMethodOrThrow(EXTENSION_CUSTOM_ACTIONS_CLASS_DESCRIPTOR) {
+                // Reemplazar findmutableMethodOrThrow por búsqueda manual
+                val addFlyoutMenuMethod = run {
+                    val method = findMethodOrThrow(EXTENSION_CUSTOM_ACTIONS_CLASS_DESCRIPTOR) {
                         name == "addFlyoutMenu" &&
                                 accessFlags == AccessFlags.PRIVATE or AccessFlags.STATIC
                     }
+                    val classDef = classes.find { it.type == EXTENSION_CUSTOM_ACTIONS_CLASS_DESCRIPTOR }
+                        ?: throw PatchException("Class not found: $EXTENSION_CUSTOM_ACTIONS_CLASS_DESCRIPTOR")
+                    proxy(classDef).mutableClass.methods.first {
+                        MethodUtil.methodSignaturesMatch(it, method)
+                    }
+                }
 
                 val customActionClass = with(addFlyoutMenuMethod) {
                     val thirdParameter = parameters[2]
@@ -510,15 +517,24 @@ private val shortsRepeatPatch = bytecodePatch(
         val enumMethod =
             reelEnumStaticFingerprint.mutableMethodOrThrow(reelEnumConstructorFingerprint)
 
-        findmutableMethodOrThrow(EXTENSION_REPEAT_STATE_CLASS_DESCRIPTOR) {
-            name == "getShortsLoopBehaviorEnum"
-        }.addInstructions(
-            0, """
-                invoke-static/range { p0 .. p0 }, $enumMethod
-                move-result-object p0
-                return-object p0
-                """
-        )
+        // Reemplazar findmutableMethodOrThrow por búsqueda manual
+        run {
+            val method = findMethodOrThrow(EXTENSION_REPEAT_STATE_CLASS_DESCRIPTOR) {
+                name == "getShortsLoopBehaviorEnum"
+            }
+            val classDef = classes.find { it.type == EXTENSION_REPEAT_STATE_CLASS_DESCRIPTOR }
+                ?: throw PatchException("Class not found: $EXTENSION_REPEAT_STATE_CLASS_DESCRIPTOR")
+            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.addInstructions(
+                0, """
+                    invoke-static/range { p0 .. p0 }, $enumMethod
+                    move-result-object p0
+                    return-object p0
+                    """
+            )
+        }
 
         insertMethod.apply {
             implementation!!.instructions
@@ -704,7 +720,7 @@ private val shortsToolBarPatch = bytecodePatch(
 ) {
     execute {
         shortsToolBarFingerprint.matchOrThrow().let {
-            it.method.apply {
+            it.mutableMethod.apply {
                 val insertIndex = it.patternMatch!!.startIndex
                 val insertRegister = getInstruction<TwoRegisterInstruction>(insertIndex).registerA
 
@@ -732,7 +748,7 @@ private const val RETURN_YOUTUBE_CHANNEL_NAME_FILTER_CLASS_DESCRIPTOR =
 @Suppress("unused")
 val shortsComponentPatch = bytecodePatch(
     name = SHORTS_COMPONENTS.key,
-    description = "${SHORTS_COMPONENTS.title}: ${SHORTS_COMPONENTS.summaryummary}",
+    description = "${SHORTS_COMPONENTS.title}: ${SHORTS_COMPONENTS.summary}",  // Corregido: summaryummary -> summary
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 
@@ -956,7 +972,7 @@ val shortsComponentPatch = bytecodePatch(
         // region patch for hide paused header
 
         shortsPausedHeaderFingerprint.matchOrThrow().let {
-            it.method.apply {
+            it.mutableMethod.apply {
                 val targetIndex = it.patternMatch!!.endIndex + 1
                 val targetInstruction = getInstruction(targetIndex)
                 val targetReference =

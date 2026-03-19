@@ -10,12 +10,13 @@ package com.extenre.patches.youtube.utils.dismiss
 
 import com.extenre.patcher.extensions.InstructionExtensions.addInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
+import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod
 import com.extenre.patches.youtube.utils.extension.Constants.EXTENSION_PATH
 import com.extenre.patches.youtube.utils.extension.sharedExtensionPatch
 import com.extenre.util.addStaticFieldToExtension
-import com.extenre.util.findmutableMethodOrThrow
+import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.getWalkerMethod
@@ -27,6 +28,7 @@ import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.reference.FieldReference
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
+import com.android.tools.smali.dexlib2.util.MethodUtil
 
 private const val EXTENSION_VIDEO_UTILS_CLASS_DESCRIPTOR =
     "$EXTENSION_PATH/utils/VideoUtils;"
@@ -78,35 +80,44 @@ val dismissPlayerHookPatch = bytecodePatch(
             val fieldReference =
                 getInstruction<ReferenceInstruction>(fieldIndex).reference as FieldReference
 
-            findmutableMethodOrThrow(fieldReference.definingClass).apply {
-                val insertIndex = indexOfFirstInstructionOrThrow {
-                    opcode == Opcode.IPUT_OBJECT &&
-                            getReference<FieldReference>() == fieldReference
+            // Reemplazar findmutableMethodOrThrow por búsqueda manual
+            run {
+                val method = findMethodOrThrow(fieldReference.definingClass)
+                val classDef = classes.find { it.type == fieldReference.definingClass }
+                    ?: throw PatchException("Class not found: ${fieldReference.definingClass}")
+                val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                    MethodUtil.methodSignaturesMatch(it, method)
                 }
-                val insertRegister =
-                    getInstruction<TwoRegisterInstruction>(insertIndex).registerA
+                mutableMethod.apply {
+                    val insertIndex = indexOfFirstInstructionOrThrow {
+                        opcode == Opcode.IPUT_OBJECT &&
+                                getReference<FieldReference>() == fieldReference
+                    }
+                    val insertRegister =
+                        getInstruction<TwoRegisterInstruction>(insertIndex).registerA
 
-                addInstruction(
-                    insertIndex,
-                    "sput-object v$insertRegister, $EXTENSION_VIDEO_UTILS_CLASS_DESCRIPTOR->dismissPlayerClass:$dismissPlayerClass"
-                )
+                    addInstruction(
+                        insertIndex,
+                        "sput-object v$insertRegister, $EXTENSION_VIDEO_UTILS_CLASS_DESCRIPTOR->dismissPlayerClass:$dismissPlayerClass"
+                    )
 
-                val smaliInstructions =
-                    """
+                    val smaliInstructions =
+                        """
                         if-eqz v0, :ignore
                         invoke-virtual {v0}, $dismissPlayerReference
                         :ignore
                         return-void
                         """
 
-                addStaticFieldToExtension(
-                    EXTENSION_VIDEO_UTILS_CLASS_DESCRIPTOR,
-                    "dismissPlayer",
-                    "dismissPlayerClass",
-                    dismissPlayerClass,
-                    smaliInstructions,
-                    false
-                )
+                    addStaticFieldToExtension(
+                        EXTENSION_VIDEO_UTILS_CLASS_DESCRIPTOR,
+                        "dismissPlayer",
+                        "dismissPlayerClass",
+                        dismissPlayerClass,
+                        smaliInstructions,
+                        false
+                    )
+                }
             }
         }
     }

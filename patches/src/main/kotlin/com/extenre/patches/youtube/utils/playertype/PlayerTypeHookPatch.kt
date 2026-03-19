@@ -25,7 +25,7 @@ import com.extenre.patches.youtube.utils.resourceid.reelWatchPlayer
 import com.extenre.patches.youtube.utils.resourceid.sharedResourceIdPatch
 import com.extenre.util.addInstructionsAtControlFlowLabel
 import com.extenre.util.addStaticFieldToExtension
-import com.extenre.util.findmutableMethodOrThrow
+import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
@@ -41,6 +41,7 @@ import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.reference.FieldReference
 import com.android.tools.smali.dexlib2.immutable.ImmutableMethod
+import com.android.tools.smali.dexlib2.util.MethodUtil
 
 private const val EXTENSION_PLAYER_TYPE_HOOK_CLASS_DESCRIPTOR =
     "$UTILS_PATH/PlayerTypeHookPatch;"
@@ -133,7 +134,7 @@ val playerTypeHookPatch = bytecodePatch(
         // region patch for set video state
 
         videoStateFingerprint.matchOrThrow().let {
-            it.method.apply {
+            it.mutableMethod.apply {  // Cambio: it.method -> it.mutableMethod
                 val endIndex = it.patternMatch!!.startIndex + 1
                 val videoStateFieldName =
                     getInstruction<ReferenceInstruction>(endIndex).reference
@@ -159,14 +160,22 @@ val playerTypeHookPatch = bytecodePatch(
                     ?.definingClass
                     ?: throw PatchException("Could not find browseId class")
 
-                findmutableMethodOrThrow(targetClass).apply {
-                    val browseIdFieldReference = getInstruction<ReferenceInstruction>(
-                        indexOfFirstInstructionOrThrow(Opcode.IPUT_OBJECT)
-                    ).reference
-                    val browseIdFieldName = (browseIdFieldReference as FieldReference).name
+                // Reemplazar findmutableMethodOrThrow por búsqueda manual
+                run {
+                    val method = findMethodOrThrow(targetClass)
+                    val classDef = classes.find { it.type == targetClass }
+                        ?: throw PatchException("Class not found: $targetClass")
+                    val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                        MethodUtil.methodSignaturesMatch(it, method)
+                    }
+                    mutableMethod.apply {
+                        val browseIdFieldReference = getInstruction<ReferenceInstruction>(
+                            indexOfFirstInstructionOrThrow(Opcode.IPUT_OBJECT)
+                        ).reference
+                        val browseIdFieldName = (browseIdFieldReference as FieldReference).name
 
-                    val smaliInstructions =
-                        """
+                        val smaliInstructions =
+                            """
                             if-eqz v0, :ignore
                             iget-object v0, v0, $definingClass->$browseIdFieldName:Ljava/lang/String;
                             if-eqz v0, :ignore
@@ -176,13 +185,14 @@ val playerTypeHookPatch = bytecodePatch(
                             return-object v0
                             """
 
-                    addStaticFieldToExtension(
-                        EXTENSION_ROOT_VIEW_HOOK_CLASS_DESCRIPTOR,
-                        "getBrowseId",
-                        "browseIdClass",
-                        definingClass,
-                        smaliInstructions
-                    )
+                        addStaticFieldToExtension(
+                            EXTENSION_ROOT_VIEW_HOOK_CLASS_DESCRIPTOR,
+                            "getBrowseId",
+                            "browseIdClass",
+                            definingClass,
+                            smaliInstructions
+                        )
+                    }
                 }
             }
         }
@@ -197,9 +207,17 @@ val playerTypeHookPatch = bytecodePatch(
                 getInstruction<ReferenceInstruction>(searchQueryIndex).reference
             val searchQueryClass = (searchQueryFieldReference as FieldReference).definingClass
 
-            findmutableMethodOrThrow(searchQueryClass).apply {
-                val smaliInstructions =
-                    """
+            // Reemplazar findmutableMethodOrThrow por búsqueda manual
+            run {
+                val method = findMethodOrThrow(searchQueryClass)
+                val classDef = classes.find { it.type == searchQueryClass }
+                    ?: throw PatchException("Class not found: $searchQueryClass")
+                val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                    MethodUtil.methodSignaturesMatch(it, method)
+                }
+                mutableMethod.apply {
+                    val smaliInstructions =
+                        """
                         if-eqz v0, :ignore
                         iget-object v0, v0, $searchQueryFieldReference
                         if-eqz v0, :ignore
@@ -209,13 +227,14 @@ val playerTypeHookPatch = bytecodePatch(
                         return-object v0
                         """
 
-                addStaticFieldToExtension(
-                    EXTENSION_ROOT_VIEW_HOOK_CLASS_DESCRIPTOR,
-                    "getSearchQuery",
-                    "searchQueryClass",
-                    definingClass,
-                    smaliInstructions
-                )
+                    addStaticFieldToExtension(
+                        EXTENSION_ROOT_VIEW_HOOK_CLASS_DESCRIPTOR,
+                        "getSearchQuery",
+                        "searchQueryClass",
+                        definingClass,
+                        smaliInstructions
+                    )
+                }
             }
         }
 

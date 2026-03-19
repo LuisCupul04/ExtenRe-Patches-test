@@ -40,7 +40,7 @@ val trendingTodayShelfPatch = bytecodePatch(
         // region patch for hide trending today title.
 
         trendingTodayTitleFingerprint.matchOrThrow().let {
-            it.method.apply {
+            it.mutableMethod.apply {   // Corregido: it.method -> it.mutableMethod
                 val stringIndex = it.stringMatches!!.first().index
                 val relativeIndex =
                     indexOfFirstInstructionReversedOrThrow(stringIndex, Opcode.AND_INT_LIT8)

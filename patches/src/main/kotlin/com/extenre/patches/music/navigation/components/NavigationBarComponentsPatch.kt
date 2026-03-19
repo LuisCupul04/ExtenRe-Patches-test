@@ -128,7 +128,7 @@ val navigationBarComponentsPatch = bytecodePatch(
          * Hide navigation bar & buttons
          */
         tabLayoutTextFingerprint.matchOrThrow().let {
-            it.method.apply {
+            it.mutableMethod.apply {
                 val mapIndex = indexOfMapInstruction(this)
                 val browseIdRegister =
                     getInstruction<FiveRegisterInstruction>(mapIndex).registerD

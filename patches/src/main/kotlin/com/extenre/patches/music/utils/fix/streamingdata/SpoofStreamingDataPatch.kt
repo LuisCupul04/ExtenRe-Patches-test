@@ -28,7 +28,7 @@ import com.extenre.patches.shared.buildRequestParentFingerprint
 import com.extenre.patches.shared.indexOfNewUrlRequestBuilderInstruction
 import com.extenre.patches.shared.spoof.streamingdata.EXTENSION_CLASS_DESCRIPTOR
 import com.extenre.patches.shared.spoof.streamingdata.spoofStreamingDataPatch
-import com.extenre.util.fingerprint.methodOrThrow
+import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 
 val spoofStreamingDataPatch = spoofStreamingDataPatch(
@@ -60,7 +60,7 @@ val spoofStreamingDataPatch = spoofStreamingDataPatch(
 
         // region Get replacement streams at player requests.
 
-        buildRequestFingerprint.methodOrThrow(buildRequestParentFingerprint).apply {
+        buildRequestFingerprint.mutableMethodOrThrow(buildRequestParentFingerprint).apply {
             val newRequestBuilderIndex = indexOfNewUrlRequestBuilderInstruction(this)
             val urlRegister =
                 getInstruction<FiveRegisterInstruction>(newRequestBuilderIndex).registerD

@@ -18,7 +18,7 @@ import com.extenre.patches.youtube.utils.extension.sharedExtensionPatch
 import com.extenre.patches.youtube.utils.playservice.is_20_02_or_greater
 import com.extenre.patches.youtube.utils.playservice.versionCheckPatch
 import com.extenre.util.addStaticFieldToExtension
-import com.extenre.util.findmutableMethodOrThrow
+import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.getWalkerMethod
@@ -30,6 +30,7 @@ import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.reference.FieldReference
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 import com.android.tools.smali.dexlib2.iface.reference.TypeReference
+import com.android.tools.smali.dexlib2.util.MethodUtil
 
 private const val EXTENSION_VIDEO_UTILS_CLASS_DESCRIPTOR =
     "$EXTENSION_PATH/utils/VideoUtils;"
@@ -72,18 +73,26 @@ val fullscreenButtonHookPatch = bytecodePatch(
                                 Opcode.NEW_INSTANCE
                             )
                         ).reference.toString()
-                        return Pair(
-                            findmutableMethodOrThrow(animatorListenerAdapterClass) { parameters.isEmpty() },
-                            fullscreenActionClass
-                        )
+                        // Reemplazar findmutableMethodOrThrow por búsqueda manual
+                        val method = findMethodOrThrow(animatorListenerAdapterClass) { parameters.isEmpty() }
+                        val classDef = classes.find { it.type == animatorListenerAdapterClass }
+                            ?: throw PatchException("Class not found: $animatorListenerAdapterClass")
+                        val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                            MethodUtil.methodSignaturesMatch(it, method)
+                        }
+                        return Pair(mutableMethod, fullscreenActionClass)
                     }
                 } else {
                     val animatorListenerClass =
                         (getInstruction<ReferenceInstruction>(methodIndex).reference as MethodReference).definingClass
-                    return Pair(
-                        findmutableMethodOrThrow(animatorListenerClass) { parameters == listOf("I") },
-                        fullscreenActionClass
-                    )
+                    // Reemplazar findmutableMethodOrThrow por búsqueda manual
+                    val method = findMethodOrThrow(animatorListenerClass) { parameters == listOf("I") }
+                    val classDef = classes.find { it.type == animatorListenerClass }
+                        ?: throw PatchException("Class not found: $animatorListenerClass")
+                    val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                        MethodUtil.methodSignaturesMatch(it, method)
+                    }
+                    return Pair(mutableMethod, fullscreenActionClass)
                 }
             }
         }
@@ -131,11 +140,16 @@ val fullscreenButtonHookPatch = bytecodePatch(
                         enterFullscreenMethods.add(enterFullscreenMethod)
                     }
                 } else {
-                    val enterFullscreenMethod =
-                        findmutableMethodOrThrow(enterFullscreenClass) {
-                            name == enterFullscreenReference.name
-                        }
-                    enterFullscreenMethods.add(enterFullscreenMethod)
+                    // Reemplazar findmutableMethodOrThrow por búsqueda manual
+                    val method = findMethodOrThrow(enterFullscreenClass) {
+                        name == enterFullscreenReference.name
+                    }
+                    val classDef = classes.find { it.type == enterFullscreenClass }
+                        ?: throw PatchException("Class not found: $enterFullscreenClass")
+                    val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                        MethodUtil.methodSignaturesMatch(it, method)
+                    }
+                    enterFullscreenMethods.add(mutableMethod)
                 }
 
                 Triple(

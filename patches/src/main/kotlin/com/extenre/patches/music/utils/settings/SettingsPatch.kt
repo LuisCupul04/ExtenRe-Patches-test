@@ -12,6 +12,7 @@ import com.extenre.patcher.extensions.InstructionExtensions.addInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.replaceInstruction
+import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patcher.patch.resourcePatch
 import com.extenre.patcher.patch.stringOption
@@ -39,7 +40,7 @@ import com.extenre.util.ResourceGroup
 import com.extenre.util.Utils.printInfo
 import com.extenre.util.copyResources
 import com.extenre.util.copyXmlNode
-import com.extenre.util.findmutableMethodOrThrow
+import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.indexOfFirstInstructionOrThrow
@@ -48,6 +49,7 @@ import com.extenre.util.valueOrThrow
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
+import com.android.tools.smali.dexlib2.util.MethodUtil
 import org.w3c.dom.Element
 
 private const val EXTENSION_ACTIVITY_CLASS_DESCRIPTOR =
@@ -136,12 +138,21 @@ private val settingsBytecodePatch = bytecodePatch(
         // endregion
 
         // apply the current theme of the settings page
-        findmutableMethodOrThrow(EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR) {
-            name == "setThemeColor"
-        }.addInstruction(
-            0,
-            "invoke-static {}, $EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR->updateDarkModeStatus()V"
-        )
+        // Reemplazar findmutableMethodOrThrow por búsqueda manual
+        run {
+            val method = findMethodOrThrow(EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR) {
+                name == "setThemeColor"
+            }
+            val classDef = classes.find { it.type == EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR }
+                ?: throw PatchException("Class not found: $EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR")
+            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.addInstruction(
+                0,
+                "invoke-static {}, $EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR->updateDarkModeStatus()V"
+            )
+        }
 
         injectOnCreateMethodCall(
             EXTENSION_INITIALIZATION_CLASS_DESCRIPTOR,

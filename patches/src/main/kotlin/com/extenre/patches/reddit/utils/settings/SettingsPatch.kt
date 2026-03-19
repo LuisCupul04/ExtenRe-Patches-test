@@ -12,6 +12,7 @@ import com.extenre.patcher.extensions.InstructionExtensions.addInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.addInstructions
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.replaceInstruction
+import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patcher.patch.resourcePatch
 import com.extenre.patcher.patch.stringOption
@@ -24,7 +25,7 @@ import com.extenre.patches.reddit.utils.patch.PatchList
 import com.extenre.patches.reddit.utils.patch.PatchList.SETTINGS_FOR_REDDIT
 import com.extenre.patches.shared.extension.Constants.EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR
 import com.extenre.patches.shared.sharedSettingFingerprint
-import com.extenre.util.findmutableMethodOrThrow
+import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
@@ -36,6 +37,7 @@ import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.builder.instruction.BuilderInstruction21c
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
+import com.android.tools.smali.dexlib2.util.MethodUtil
 import kotlin.io.path.exists
 
 private const val EXTENSION_METHOD_DESCRIPTOR =
@@ -119,12 +121,21 @@ private val settingsBytecodePatch = bytecodePatch(
 
         settingsStatusLoadMethod = settingsStatusLoadFingerprint.mutableMethodOrThrow()
 
-        findmutableMethodOrThrow(EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR) {
-            name == "setThemeColor"
-        }.addInstruction(
-            0,
-            "invoke-static {}, $EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR->updateDarkModeStatus()V"
-        )
+        // Reemplazar findmutableMethodOrThrow por búsqueda manual
+        run {
+            val method = findMethodOrThrow(EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR) {
+                name == "setThemeColor"
+            }
+            val classDef = classes.find { it.type == EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR }
+                ?: throw PatchException("Class not found: $EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR")
+            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.addInstruction(
+                0,
+                "invoke-static {}, $EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR->updateDarkModeStatus()V"
+            )
+        }
     }
 }
 

@@ -11,6 +11,7 @@ package com.extenre.patches.music.misc.album
 import com.extenre.patcher.extensions.InstructionExtensions.addInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
+import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patches.music.utils.compatibility.Constants.COMPATIBLE_PACKAGE
 import com.extenre.patches.music.utils.extension.Constants.MISC_PATH
@@ -26,7 +27,7 @@ import com.extenre.patches.music.video.information.videoInformationPatch
 import com.extenre.patches.music.video.playerresponse.Hook
 import com.extenre.patches.music.video.playerresponse.addPlayerResponseMethodHook
 import com.extenre.patches.music.video.playerresponse.playerResponseMethodHookPatch
-import com.extenre.util.findmutableMethodOrThrow
+import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
@@ -34,6 +35,7 @@ import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
+import com.android.tools.smali.dexlib2.util.MethodUtil
 
 private const val EXTENSION_CLASS_DESCRIPTOR =
     "$MISC_PATH/AlbumMusicVideoPatch;"
@@ -108,9 +110,17 @@ val albumMusicVideoPatch = bytecodePatch(
             val onClickListenerSyntheticClass =
                 (getInstruction<ReferenceInstruction>(onClickListenerSyntheticIndex).reference as MethodReference).definingClass
 
-            findmutableMethodOrThrow(onClickListenerSyntheticClass) {
+            // Buscar el método onClick y convertirlo a mutable
+            val method = findMethodOrThrow(onClickListenerSyntheticClass) {
                 name == "onClick"
-            }.addInstructionsWithLabels(
+            }
+            val classDef = classes.find { it.type == onClickListenerSyntheticClass }
+                ?: throw PatchException("Class not found: $onClickListenerSyntheticClass")
+            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+
+            mutableMethod.addInstructionsWithLabels(
                 0, """
                     invoke-static {}, $EXTENSION_CLASS_DESCRIPTOR->openMusic()Z
                     move-result v0

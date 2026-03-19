@@ -37,12 +37,10 @@ import com.extenre.patches.shared.opus.baseOpusCodecsPatch
 import com.extenre.patches.shared.playbackStartParametersConstructorFingerprint
 import com.extenre.patches.shared.playbackStartParametersToStringFingerprint
 import com.extenre.util.findFieldFromToString
-import com.extenre.util.findmutableMethodOrThrow
-import com.extenre.util.findMutableClassOrThrow
+import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
-import com.extenre.util.fingerprint.originalmutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstruction
 import com.extenre.util.indexOfFirstInstructionOrThrow
@@ -155,32 +153,44 @@ val videoPlaybackPatch = bytecodePatch(
                         reference.definingClass == method.definingClass
             }
 
-        findMutableClassOrThrow(videoQualityClass).let {
-            it.methods.first { method ->
-                MethodUtil.isConstructor(method) &&
-                        method.parameterTypes.size > 3 &&
-                        indexOfVideoQualityNameFieldInstruction(method) >= 0 &&
-                        indexOfVideoQualityResolutionFieldInstruction(method) >= 0
-            }.apply {
-                val qualityNameIndex = indexOfVideoQualityNameFieldInstruction(this)
-                val resolutionIndex = indexOfVideoQualityResolutionFieldInstruction(this)
-                val resolutionField =
-                    getInstruction<ReferenceInstruction>(resolutionIndex).reference
-                val qualityNameRegister =
-                    getInstruction<TwoRegisterInstruction>(qualityNameIndex).registerA
-                val resolutionRegister =
-                    getInstruction<TwoRegisterInstruction>(resolutionIndex).registerA
+        // Reemplazar findMutableClassOrThrow por búsqueda manual
+        val videoQualityMutableClass = classes.find { it.type == videoQualityClass }
+            ?.let { proxy(it).mutableClass }
+            ?: throw PatchException("Class not found: $videoQualityClass")
 
-                addInstructions(
-                    0, """
-                        invoke-static { v$resolutionRegister, v$qualityNameRegister }, $EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR->fixVideoQualityResolution(ILjava/lang/String;)I
-                        move-result v$resolutionRegister
-                        """
-                )
+        videoQualityMutableClass.methods.first { method ->
+            MethodUtil.isConstructor(method) &&
+                    method.parameterTypes.size > 3 &&
+                    indexOfVideoQualityNameFieldInstruction(method) >= 0 &&
+                    indexOfVideoQualityResolutionFieldInstruction(method) >= 0
+        }.apply {
+            val qualityNameIndex = indexOfVideoQualityNameFieldInstruction(this)
+            val resolutionIndex = indexOfVideoQualityResolutionFieldInstruction(this)
+            val resolutionField =
+                getInstruction<ReferenceInstruction>(resolutionIndex).reference
+            val qualityNameRegister =
+                getInstruction<TwoRegisterInstruction>(qualityNameIndex).registerA
+            val resolutionRegister =
+                getInstruction<TwoRegisterInstruction>(resolutionIndex).registerA
 
-                findmutableMethodOrThrow(EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR) {
+            addInstructions(
+                0, """
+                    invoke-static { v$resolutionRegister, v$qualityNameRegister }, $EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR->fixVideoQualityResolution(ILjava/lang/String;)I
+                    move-result v$resolutionRegister
+                    """
+            )
+
+            // Reemplazar findmutableMethodOrThrow por búsqueda manual
+            run {
+                val method = findMethodOrThrow(EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR) {
                     name == "getVideoQualityResolution"
-                }.addInstructions(
+                }
+                val classDef = classes.find { it.type == EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR }
+                    ?: throw PatchException("Class not found: $EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR")
+                val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                    MethodUtil.methodSignaturesMatch(it, method)
+                }
+                mutableMethod.addInstructions(
                     0, """
                         check-cast p0, $videoQualityClass
                         iget p0, p0, $resolutionField
@@ -190,9 +200,15 @@ val videoPlaybackPatch = bytecodePatch(
             }
         }
 
-        val initialResolutionField =
-            playbackStartParametersToStringFingerprint.originalmutableMethodOrThrow()
-                .findFieldFromToString(FIXED_RESOLUTION_STRING)
+        // Reemplazar originalmutableMethodOrThrow por búsqueda manual
+        val initialResolutionField = run {
+            val method = playbackStartParametersToStringFingerprint.methodOrThrow()
+            val classDef = playbackStartParametersToStringFingerprint.classDefOrThrow()
+            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.findFieldFromToString(FIXED_RESOLUTION_STRING)
+        }
 
         playbackStartParametersConstructorFingerprint
             .mutableMethodOrThrow(playbackStartParametersToStringFingerprint)
@@ -219,12 +235,21 @@ val videoPlaybackPatch = bytecodePatch(
                 val qualityChangedClass =
                     getInstruction<ReferenceInstruction>(endIndex).reference.toString()
 
-                findmutableMethodOrThrow(qualityChangedClass) {
-                    name == "onItemClick"
-                }.addInstruction(
-                    0,
-                    "invoke-static { p3 }, $EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR->userSelectedVideoQuality(I)V"
-                )
+                // Reemplazar findmutableMethodOrThrow por búsqueda manual
+                run {
+                    val method = findMethodOrThrow(qualityChangedClass) {
+                        name == "onItemClick"
+                    }
+                    val classDef = classes.find { it.type == qualityChangedClass }
+                        ?: throw PatchException("Class not found: $qualityChangedClass")
+                    val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                        MethodUtil.methodSignaturesMatch(it, method)
+                    }
+                    mutableMethod.addInstruction(
+                        0,
+                        "invoke-static { p3 }, $EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR->userSelectedVideoQuality(I)V"
+                    )
+                }
             }
         }
 

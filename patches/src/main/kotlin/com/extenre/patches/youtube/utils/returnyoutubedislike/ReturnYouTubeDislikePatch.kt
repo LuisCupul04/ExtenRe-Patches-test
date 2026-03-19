@@ -12,6 +12,7 @@ import com.extenre.patcher.extensions.InstructionExtensions.addInstructions
 import com.extenre.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.removeInstruction
+import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patcher.util.smali.ExternalLabel
 import com.extenre.patches.shared.dislikeFingerprint
@@ -40,7 +41,7 @@ import com.extenre.patches.youtube.video.information.videoInformationPatch
 import com.extenre.patches.youtube.video.videoid.hookPlayerResponseVideoId
 import com.extenre.patches.youtube.video.videoid.hookVideoId
 import com.extenre.util.findFreeRegister
-import com.extenre.util.findmutableMethodOrThrow
+import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
@@ -53,6 +54,7 @@ import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
+import com.android.tools.smali.dexlib2.util.MethodUtil
 
 private const val EXTENSION_RYD_CLASS_DESCRIPTOR =
     "$UTILS_PATH/ReturnYouTubeDislikePatch;"
@@ -69,12 +71,19 @@ private val returnYouTubeDislikeRollingNumberPatch = bytecodePatch(
         }
 
         rollingNumberSetterFingerprint.matchOrThrow().let {
-            it.method.apply {
+            it.mutableMethod.apply {  // Cambio: it.method -> it.mutableMethod
                 val rollingNumberClassIndex = it.patternMatch!!.startIndex
                 val rollingNumberClassReference =
                     getInstruction<ReferenceInstruction>(rollingNumberClassIndex).reference.toString()
-                val rollingNumberConstructorMethod =
-                    findmutableMethodOrThrow(rollingNumberClassReference)
+                // Reemplazar findmutableMethodOrThrow por búsqueda manual
+                val rollingNumberConstructorMethod = run {
+                    val method = findMethodOrThrow(rollingNumberClassReference)
+                    val classDef = classes.find { it.type == rollingNumberClassReference }
+                        ?: throw PatchException("Class not found: $rollingNumberClassReference")
+                    proxy(classDef).mutableClass.methods.first {
+                        MethodUtil.methodSignaturesMatch(it, method)
+                    }
+                }
                 val charSequenceFieldReference = with(rollingNumberConstructorMethod) {
                     getInstruction<ReferenceInstruction>(
                         indexOfFirstInstructionOrThrow(Opcode.IPUT_OBJECT)
@@ -106,7 +115,7 @@ private val returnYouTubeDislikeRollingNumberPatch = bytecodePatch(
         // Rolling Number text views use the measured width of the raw string for layout.
         // Modify the measure text calculation to include the left drawable separator if needed.
         rollingNumberMeasureAnimatedTextFingerprint.matchOrThrow().let {
-            it.method.apply {
+            it.mutableMethod.apply {  // Cambio: it.method -> it.mutableMethod
                 val endIndex = it.patternMatch!!.endIndex
                 val measuredTextWidthIndex = endIndex - 2
                 val measuredTextWidthRegister =
@@ -134,7 +143,7 @@ private val returnYouTubeDislikeRollingNumberPatch = bytecodePatch(
         rollingNumberMeasureStaticLabelFingerprint.matchOrThrow(
             rollingNumberMeasureTextParentFingerprint
         ).let {
-            it.method.apply {
+            it.mutableMethod.apply {  // Cambio: it.method -> it.mutableMethod
                 val measureTextIndex = it.patternMatch!!.startIndex + 1
                 val freeRegister = getInstruction<TwoRegisterInstruction>(0).registerA
 
@@ -190,7 +199,7 @@ private val returnYouTubeDislikeShortsPatch = bytecodePatch(
 
     execute {
         shortsTextViewFingerprint.matchOrThrow().let {
-            it.method.apply {
+            it.mutableMethod.apply {  // Cambio: it.method -> it.mutableMethod
                 val startIndex = it.patternMatch!!.startIndex
 
                 val isDisLikesBooleanIndex =

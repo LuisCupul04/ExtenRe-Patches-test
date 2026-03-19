@@ -35,7 +35,7 @@ val toolBarButtonPatch = bytecodePatch(
 
     execute {
         homePagerScreenFingerprint.matchOrThrow().let {
-            it.method.apply {
+            it.mutableMethod.apply {
                 val stringIndex = it.stringMatches!!.first().index
                 val insertIndex = indexOfFirstInstructionOrThrow(stringIndex, Opcode.CHECK_CAST)
                 val insertRegister =

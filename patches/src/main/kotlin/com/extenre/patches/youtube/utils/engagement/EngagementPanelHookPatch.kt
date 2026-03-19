@@ -11,12 +11,13 @@ package com.extenre.patches.youtube.utils.engagement
 import com.extenre.patcher.extensions.InstructionExtensions.addInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.addInstructions
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
+import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod
 import com.extenre.patches.youtube.utils.extension.Constants.SHARED_PATH
 import com.extenre.patches.youtube.utils.extension.sharedExtensionPatch
 import com.extenre.patches.youtube.utils.resourceid.sharedResourceIdPatch
-import com.extenre.util.findmutableMethodOrThrow
+import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstruction
@@ -26,6 +27,7 @@ import com.android.tools.smali.dexlib2.iface.Method
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.reference.FieldReference
+import com.android.tools.smali.dexlib2.util.MethodUtil
 
 private const val EXTENSION_CLASS_DESCRIPTOR =
     "$SHARED_PATH/EngagementPanel;"
@@ -63,21 +65,27 @@ val engagementPanelHookPatch = bytecodePatch(
             .parameters[0]
             .toString()
 
-        val (engagementPanelIdReference, engagementPanelObjectReference) =
-            with(findmutableMethodOrThrow(engagementPanelInfoClass)) {
-                val engagementPanelIdIndex = indexOfFirstInstructionOrThrow {
-                    opcode == Opcode.IPUT_OBJECT &&
-                            getReference<FieldReference>()?.type == "Ljava/lang/String;"
-                }
-                val engagementPanelObjectIndex = indexOfFirstInstructionOrThrow {
-                    opcode == Opcode.IPUT_OBJECT &&
-                            getReference<FieldReference>()?.type != "Ljava/lang/String;"
-                }
-                Pair(
-                    getInstruction<ReferenceInstruction>(engagementPanelIdIndex).reference.toString(),
-                    getInstruction<ReferenceInstruction>(engagementPanelObjectIndex).reference.toString(),
-                )
+        // Reemplazar findmutableMethodOrThrow por búsqueda manual para obtener el método del constructor de la clase de información
+        val (engagementPanelIdReference, engagementPanelObjectReference) = run {
+            val method = findMethodOrThrow(engagementPanelInfoClass)
+            val classDef = classes.find { it.type == engagementPanelInfoClass }
+                ?: throw PatchException("Class not found: $engagementPanelInfoClass")
+            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
             }
+            val engagementPanelIdIndex = mutableMethod.indexOfFirstInstructionOrThrow {
+                opcode == Opcode.IPUT_OBJECT &&
+                        getReference<FieldReference>()?.type == "Ljava/lang/String;"
+            }
+            val engagementPanelObjectIndex = mutableMethod.indexOfFirstInstructionOrThrow {
+                opcode == Opcode.IPUT_OBJECT &&
+                        getReference<FieldReference>()?.type != "Ljava/lang/String;"
+            }
+            Pair(
+                mutableMethod.getInstruction<ReferenceInstruction>(engagementPanelIdIndex).reference.toString(),
+                mutableMethod.getInstruction<ReferenceInstruction>(engagementPanelObjectIndex).reference.toString(),
+            )
+        }
 
         engagementPanelBuilderFingerprint.mutableMethodOrThrow().apply {
             val insertIndex = indexOfFirstInstructionOrThrow {

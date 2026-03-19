@@ -34,7 +34,7 @@ import com.extenre.patches.shared.gms.Constants.PERMISSIONS
 import com.extenre.patches.shared.gms.Constants.PERMISSIONS_LEGACY
 import com.extenre.util.Utils.printWarn
 import com.extenre.util.Utils.trimIndentMultiline
-import com.extenre.util.findmutableMethodOrThrow
+import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.methodOrNull
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
@@ -300,17 +300,22 @@ fun gmsCoreSupportPatch(
 
         fun transformPrimeMethod(packageName: String) {
             if (patchAllManifestEnabled) {
-                primeMethodFingerprint.methodOrNull()?.apply {
-                    var register = 2
-
-                    val index = instructions.indexOfFirst {
-                        if (it.getReference<StringReference>()?.string != fromPackageName) return@indexOfFirst false
-
-                        register = (it as OneRegisterInstruction).registerA
-                        return@indexOfFirst true
+                // Convertir a mutable si existe
+                primeMethodFingerprint.methodOrNull()?.let { method ->
+                    val classDef = primeMethodFingerprint.classDefOrNull()
+                        ?: return@let
+                    val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                        MethodUtil.methodSignaturesMatch(it, method)
                     }
-
-                    replaceInstruction(index, "const-string v$register, \"$packageName\"")
+                    mutableMethod.apply {
+                        var register = 2
+                        val index = instructions.indexOfFirst {
+                            if (it.getReference<StringReference>()?.string != fromPackageName) return@indexOfFirst false
+                            register = (it as OneRegisterInstruction).registerA
+                            return@indexOfFirst true
+                        }
+                        replaceInstruction(index, "const-string v$register, \"$packageName\"")
+                    }
                 }
             } else {
                 setOf(
@@ -434,9 +439,18 @@ fun gmsCoreSupportPatch(
             "PackageNameYouTube" to packageNameYouTubeOption.valueOrThrow(),
             "PackageNameYouTubeMusic" to packageNameYouTubeMusicOption.valueOrThrow()
         ).forEach { (methodName, value) ->
-            findmutableMethodOrThrow("$PATCHES_PATH/PatchStatus;") {
-                name == methodName
-            }.returnEarly(value)
+            // Reemplazar findmutableMethodOrThrow por búsqueda manual
+            run {
+                val method = findMethodOrThrow("$PATCHES_PATH/PatchStatus;") {
+                    name == methodName
+                }
+                val classDef = classes.find { it.type == "$PATCHES_PATH/PatchStatus;" }
+                    ?: throw PatchException("Class not found: $PATCHES_PATH/PatchStatus;")
+                val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                    MethodUtil.methodSignaturesMatch(it, method)
+                }
+                mutableMethod.returnEarly(value)
+            }
         }
 
         executeBlock()

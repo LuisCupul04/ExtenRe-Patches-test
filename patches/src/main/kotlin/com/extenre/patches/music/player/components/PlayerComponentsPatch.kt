@@ -63,7 +63,7 @@ import com.extenre.util.adoptChild
 import com.extenre.util.cloneMutable
 import com.extenre.util.doRecursively
 import com.extenre.util.findInstructionIndicesReversed
-import com.extenre.util.findmutableMethodOrThrow
+import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.injectLiteralInstructionViewCall
 import com.extenre.util.fingerprint.legacyFingerprint
@@ -94,6 +94,7 @@ import com.android.tools.smali.dexlib2.iface.reference.FieldReference
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 import com.android.tools.smali.dexlib2.immutable.ImmutableField
 import com.android.tools.smali.dexlib2.immutable.ImmutableMethodParameter
+import com.android.tools.smali.dexlib2.util.MethodUtil
 import org.w3c.dom.Element
 
 private const val IMAGE_VIEW_TAG_NAME =
@@ -298,13 +299,20 @@ val playerComponentsPatch = bytecodePatch(
             val onClickReference = getInstruction<ReferenceInstruction>(onClickIndex).reference
             val onClickReferenceDefiningClass = (onClickReference as MethodReference).definingClass
 
-            findmutableMethodOrThrow(onClickReferenceDefiningClass)
-                .apply {
-                    addInstruction(
-                        implementation!!.instructions.lastIndex,
-                        "sput-object p0, $PLAYER_CLASS_DESCRIPTOR->$fieldName:$onClickReferenceDefiningClass"
-                    )
-                }
+            // Reemplazar findmutableMethodOrThrow por búsqueda manual
+            val method = findMethodOrThrow(onClickReferenceDefiningClass)
+            val classDef = classes.find { it.type == onClickReferenceDefiningClass }
+                ?: throw PatchException("Class not found: $onClickReferenceDefiningClass")
+            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+
+            mutableMethod.apply {
+                addInstruction(
+                    implementation!!.instructions.lastIndex,
+                    "sput-object p0, $PLAYER_CLASS_DESCRIPTOR->$fieldName:$onClickReferenceDefiningClass"
+                )
+            }
 
             playerPatchConstructorFingerprint.mutableClassOrThrow().let { mutableClass ->
                 mutableClass.methods.find { method -> method.name == methodName }

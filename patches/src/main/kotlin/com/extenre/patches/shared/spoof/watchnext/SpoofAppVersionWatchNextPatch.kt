@@ -106,7 +106,7 @@ fun spoofAppVersionWatchNextPatch(
             // region patch for spoof client body for the '/get_watch' endpoint.
 
             createPlayerRequestBodyFingerprint.matchOrThrow().let {
-                it.method.apply {
+                it.mutableMethod.apply {   // Cambio: it.method -> it.mutableMethod
                     val helperMethodName = "setClientInfo"
                     val checkCastIndex = it.patternMatch!!.startIndex
 
