@@ -55,13 +55,47 @@ import com.android.tools.smali.dexlib2.util.MethodUtil
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 
-// ... (el resto de constantes y código anterior se mantiene igual hasta el execute block)
+private const val EXTENSION_CLASS_DESCRIPTOR =
+    "$PATCHES_PATH/GmsCoreSupport;"
 
-// Solo muestro las partes que he modificado. Para no repetir todo el archivo, 
-// te indico los cambios. Pero para que sea fácil, aquí está el bloque execute completo
-// con las correcciones. Asume que el resto del archivo (constantes, funciones auxiliares)
-// es idéntico al que tenías antes, excepto lo que cambio.
+private const val PACKAGE_NAME_REGEX_PATTERN = "^[a-z]\\w*(\\.[a-z]\\w*)+\$"
 
+private const val GMS_CORE_ORIGINAL_VENDOR_GROUP_ID = "com.google"
+private const val GMS_CORE_REVANCED_VENDOR_GROUP_ID = "app.revanced"
+private const val GMS_CORE_EXTENRE_VENDOR_GROUP_ID = "com.extenre"
+
+private const val CLONE_PACKAGE_NAME_YOUTUBE_5 = "kitsune.extenre.android.youtube"
+private const val CLONE_PACKAGE_NAME_YOUTUBE_4 = "neko.extenre.android.youtube"
+private const val CLONE_PACKAGE_NAME_YOUTUBE_3 = "com.exre.android.youtube"
+private const val CLONE_PACKAGE_NAME_YOUTUBE_2 = "exten.re.android.youtube"
+private const val CLONE_PACKAGE_NAME_YOUTUBE_1 = "com.exten.android.youtube"
+private const val CLONE_PACKAGE_NAME_YOUTUBE = "app.extenre.android.youtube"
+private const val DEFAULT_PACKAGE_NAME_YOUTUBE = "com.extenre.android.youtube"
+internal const val ORIGINAL_PACKAGE_NAME_YOUTUBE = "com.google.android.youtube"
+
+private const val CLONE_PACKAGE_NAME_YOUTUBE_MUSIC_5 = "kitsune.extenre.android.apps.youtube.music"
+private const val CLONE_PACKAGE_NAME_YOUTUBE_MUSIC_4 = "neko.extenre.android.apps.youtube.music"
+private const val CLONE_PACKAGE_NAME_YOUTUBE_MUSIC_3 = "com.exre.android.apps.youtube.music"
+private const val CLONE_PACKAGE_NAME_YOUTUBE_MUSIC_2 = "exten.re.android.apps.youtube.music"
+private const val CLONE_PACKAGE_NAME_YOUTUBE_MUSIC_1 = "com.exten.android.youtube.music"
+private const val CLONE_PACKAGE_NAME_YOUTUBE_MUSIC = "app.extenre.android.apps.youtube.music"
+private const val DEFAULT_PACKAGE_NAME_YOUTUBE_MUSIC = "com.extenre.android.apps.youtube.music"
+internal const val ORIGINAL_PACKAGE_NAME_YOUTUBE_MUSIC = "com.google.android.apps.youtube.music"
+
+private const val GET_GMS_CORE_VENDOR_GROUP_ID_METHOD_NAME = "getGmsCoreVendorGroupId"
+
+/**
+ * A patch that allows patched Google apps to run without root and under a different package name
+ * by using GmsCore instead of Google Play Services.
+ *
+ * @param fromPackageName The package name of the original app.
+ * @param mainActivityOnCreateFingerprint The fingerprint of the main activity onCreate method.
+ * @param extensionPatch The patch responsible for the extension.
+ * @param gmsCoreSupportResourcePatchFactory The factory for the corresponding resource patch
+ * that is used to patch the resources.
+ * @param executeBlock The additional execution block of the patch.
+ * @param block The additional block to build the patch.
+ */
 fun gmsCoreSupportPatch(
     fromPackageName: String,
     mainActivityOnCreateFingerprint: Fingerprint,
@@ -74,13 +108,112 @@ fun gmsCoreSupportPatch(
     description = "Allows the app to work without root by using a different package name when patched " +
             "using a GmsCore instead of Google Play Services.",
 ) {
-    // ... opciones (sin cambios) ...
+    val gmsCoreVendorGroupIdOption = stringOption(
+        key = "gmsCoreVendorGroupId",
+        default = GMS_CORE_REVANCED_VENDOR_GROUP_ID,
+        values =
+            mapOf(
+                "ReVanced MicroG" to GMS_CORE_REVANCED_VENDOR_GROUP_ID,
+                "Original MicroG" to GMS_CORE_ORIGINAL_VENDOR_GROUP_ID,
+                "Extenre MicroG"  to GMS_CORE_EXTENRE_VENDOR_GROUP_ID
+            ),
+        title = "GmsCore vendor group ID",
+        description = "The vendor's group ID for GmsCore. " +
+                "Do not change this option, if you do not know what you are doing.",
+        required = true,
+    ) { it!!.matches(Regex(PACKAGE_NAME_REGEX_PATTERN)) }
+
+    val checkGmsCore by booleanOption(
+        key = "checkGmsCore",
+        default = true,
+        title = "Check GmsCore",
+        description = """
+            Check if GmsCore is installed on the device and has battery optimizations disabled when the app starts. 
+            
+            If GmsCore is not installed the app will not work, so disabling this is not recommended.
+            """.trimIndentMultiline(),
+        required = true,
+    )
+
+    val disableCoreServices by booleanOption(
+        key = "disableCoreServices",
+        default = false,
+        title = "Disable Core Services",
+        description = """
+            To reproduce the playback issue, several core services, including PoToken, are disabled.
+            
+            Do not enable this option unless you are testing at a low level.
+            """.trimIndentMultiline(),
+        required = false,
+    )
+
+    val packageNameYouTubeOption = stringOption(
+        key = "packageNameYouTube",
+        default = DEFAULT_PACKAGE_NAME_YOUTUBE,
+        values = mapOf(
+            "Clone (kitsune)" to CLONE_PACKAGE_NAME_YOUTUBE_5,
+            "Clone (neko)" to CLONE_PACKAGE_NAME_YOUTUBE_4,
+            "Clone (exre)" to CLONE_PACKAGE_NAME_YOUTUBE_3,
+            "Clone (exten.re)" to CLONE_PACKAGE_NAME_YOUTUBE_2,
+            "Clone (exten)" to CLONE_PACKAGE_NAME_YOUTUBE_1,
+            "Clone (app.extenre)" to CLONE_PACKAGE_NAME_YOUTUBE,
+            "Default" to DEFAULT_PACKAGE_NAME_YOUTUBE
+        ),
+        title = "Package name of YouTube",
+        description = "The name of the package to use in GmsCore support.",
+        required = true
+    ) { it!!.matches(Regex(PACKAGE_NAME_REGEX_PATTERN)) }
+
+    val packageNameYouTubeMusicOption = stringOption(
+        key = "packageNameYouTubeMusic",
+        default = DEFAULT_PACKAGE_NAME_YOUTUBE_MUSIC,
+        values = mapOf(
+            "Clone (kitsune)" to CLONE_PACKAGE_NAME_YOUTUBE_MUSIC_5,
+            "Clone (neko)" to CLONE_PACKAGE_NAME_YOUTUBE_MUSIC_4,
+            "Clone (exre)" to CLONE_PACKAGE_NAME_YOUTUBE_MUSIC_3,
+            "Clone (exten.re)" to CLONE_PACKAGE_NAME_YOUTUBE_MUSIC_2,
+            "Clone (exten)" to CLONE_PACKAGE_NAME_YOUTUBE_MUSIC_1,
+            "Clone (app.extenre)" to CLONE_PACKAGE_NAME_YOUTUBE_MUSIC,
+            "Default" to DEFAULT_PACKAGE_NAME_YOUTUBE_MUSIC
+        ),
+        title = "Package name of YouTube Music",
+        description = "The name of the package to use in GmsCore support.",
+        required = true
+    ) { it!!.matches(Regex(PACKAGE_NAME_REGEX_PATTERN)) }
+
+    val patchAllManifest by booleanOption(
+        key = "patchAllManifest",
+        default = false,
+        title = "Patch all manifest components",
+        description = "Patch all permissions, intents and content provider authorities supported by GmsCore.",
+        required = true,
+    )
+
+    dependsOn(
+        gmsCoreSupportResourcePatchFactory(
+            gmsCoreVendorGroupIdOption,
+            packageNameYouTubeOption,
+            packageNameYouTubeMusicOption
+        ),
+        extensionPatch,
+    )
+
+    val gmsCoreVendorGroupId by gmsCoreVendorGroupIdOption
 
     execute {
         val patchAllManifestEnabled = patchAllManifest == true
-        val permissions = if (patchAllManifestEnabled) PERMISSIONS else PERMISSIONS_LEGACY
-        val actions = if (patchAllManifestEnabled) ACTIONS else ACTIONS_LEGACY
-        val authorities = if (patchAllManifestEnabled) AUTHORITIES else AUTHORITIES_LEGACY
+        val permissions = if (patchAllManifestEnabled)
+            PERMISSIONS
+        else
+            PERMISSIONS_LEGACY
+        val actions = if (patchAllManifestEnabled)
+            ACTIONS
+        else
+            ACTIONS_LEGACY
+        val authorities = if (patchAllManifestEnabled)
+            AUTHORITIES
+        else
+            AUTHORITIES_LEGACY
 
         fun transformStringReferences(transform: (str: String) -> String?) {
             classes.forEach { classDef ->
@@ -91,7 +224,9 @@ fun gmsCoreSupportPatch(
                         MethodUtil.methodSignaturesMatch(target, method)
                     }
                     implementation.instructions.forEachIndexed insnLoop@{ index, instruction ->
-                        val string = ((instruction as? Instruction21c)?.reference as? StringReference)?.string ?: return@insnLoop
+                        val string =
+                            ((instruction as? Instruction21c)?.reference as? StringReference)?.string
+                                ?: return@insnLoop
                         val transformedString = transform(string) ?: return@insnLoop
                         mutableMethod.replaceInstruction(
                             index,
@@ -106,7 +241,46 @@ fun gmsCoreSupportPatch(
             }
         }
 
-        // ... funciones transform (commonTransform, contentUrisTransform, packageNameTransform) iguales ...
+        // region Collection of transformations that are applied to all strings.
+
+        fun commonTransform(referencedString: String): String? =
+            when (referencedString) {
+                "com.google",
+                "com.google.android.gms",
+                in permissions,
+                in actions,
+                in authorities,
+                    -> referencedString.replace("com.google", gmsCoreVendorGroupId!!)
+
+                else -> null
+            }
+
+        fun contentUrisTransform(str: String): String? {
+            if (str.startsWith("content://")) {
+                for (authority in authorities) {
+                    val uriPrefix = "content://$authority"
+                    if (str.startsWith(uriPrefix)) {
+                        return str.replace(
+                            uriPrefix,
+                            "content://${authority.replace("com.google", gmsCoreVendorGroupId!!)}",
+                        )
+                    }
+                }
+            }
+            return null
+        }
+
+        fun packageNameTransform(
+            fromPackageName: String,
+            toPackageName: String
+        ): (String) -> String? = { string ->
+            when (string) {
+                "$fromPackageName.SuggestionProvider",
+                "$fromPackageName.fileprovider",
+                    -> string.replace(fromPackageName, toPackageName)
+                else -> null
+            }
+        }
 
         fun transformPrimeMethod(packageName: String) {
             if (patchAllManifestEnabled) {
@@ -155,6 +329,8 @@ fun gmsCoreSupportPatch(
                 }
             }
         }
+
+        // endregion
 
         val packageName = getPackageName(
             fromPackageName,
@@ -220,7 +396,6 @@ fun gmsCoreSupportPatch(
             }
         }
 
-        // Change the vendor of GmsCore in the extension.
         gmsCoreSupportFingerprint.mutableClassOrThrow().methods
             .single { it.name == GET_GMS_CORE_VENDOR_GROUP_ID_METHOD_NAME }
             .replaceInstruction(0, "const-string v0, \"$gmsCoreVendorGroupId\"")
@@ -241,13 +416,11 @@ fun gmsCoreSupportPatch(
     block()
 }
 
-// El resto del archivo (Constants, funciones auxiliares, resource patch) se mantiene exactamente igual que en la versión anterior.
-// Para no duplicar, puedes conservar la parte final del archivo que ya tenías.
-
 /**
  * A collection of permissions, intents and content provider authorities
  * that are present in GmsCore which need to be transformed.
  */
+
 private object Constants {
     /**
      * All permissions.
@@ -653,9 +826,6 @@ fun gmsCoreSupportResourcePatch(
     val gmsCoreVendorGroupId by gmsCoreVendorGroupIdOption
 
     execute {
-        /**
-         * Add metadata to manifest to support spoofing the package name and signature of GmsCore.
-         */
         fun addSpoofingMetadata() {
             fun Node.adoptChild(
                 tagName: String,
@@ -672,7 +842,6 @@ fun gmsCoreSupportResourcePatch(
                         .getElementsByTagName("application")
                         .item(0)
 
-                // Spoof package name and signature.
                 applicationNode.adoptChild("meta-data") {
                     setAttribute(
                         "android:name",
@@ -689,7 +858,6 @@ fun gmsCoreSupportResourcePatch(
                     setAttribute("android:value", spoofedPackageSignature)
                 }
                 
-                // GmsCore presence detection in extension.
                 applicationNode.adoptChild("meta-data") {
                     setAttribute("android:name", "$gmsCoreVendorGroupId.MICROG_PACKAGE_NAME")
                     setAttribute("android:value", "$gmsCoreVendorGroupId.android.gms")
@@ -697,9 +865,6 @@ fun gmsCoreSupportResourcePatch(
             }
         }
 
-        /**
-         * Patch the manifest to support GmsCore.
-         */
         fun patchManifest() {
             val packageName = getPackageName(
                 fromPackageName,
@@ -717,12 +882,8 @@ fun gmsCoreSupportResourcePatch(
                 "com.google.android.gms.permission.AD_ID" to "$gmsCoreVendorGroupId.android.gms.permission.AD_ID",
                 "com.google.android.libraries.photos.api.mars" to "$gmsCoreVendorGroupId.android.apps.photos.api.mars",
                 "com.google.android.providers.gsf.permission.READ_GSERVICES" to "$gmsCoreVendorGroupId.android.providers.gsf.permission.READ_GSERVICES",
-                // TODO: Add this permission when bumping GmsCore
-                // "com.google.android.gms.permission.ACTIVITY_RECOGNITION" to "$gmsCoreVendorGroupId.android.gms.permission.ACTIVITY_RECOGNITION",
             )
 
-            // 'QUERY_ALL_PACKAGES' permission is required,
-            // To check whether apps such as GmsCore, YouTube or YouTube Music are installed on the device.
             document("AndroidManifest.xml").use { document ->
                 document.getElementsByTagName("manifest").item(0).also {
                     it.appendChild(
@@ -738,10 +899,7 @@ fun gmsCoreSupportResourcePatch(
             val manifest = get("AndroidManifest.xml")
             manifest.writeText(
                 transformations.entries.fold(manifest.readText()) { acc, (from, to) ->
-                    acc.replace(
-                        from,
-                        to,
-                    )
+                    acc.replace(from, to)
                 },
             )
         }
