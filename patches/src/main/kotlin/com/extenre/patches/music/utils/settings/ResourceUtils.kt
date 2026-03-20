@@ -25,7 +25,7 @@ internal object ResourceUtils {
         this.context = context
     }
 
-    private const val RVX_SETTINGS_KEY = "extenre_settings"
+    private const val EXTENRE_SETTINGS_KEY = "extenre_settings"
 
     const val SETTINGS_HEADER_PATH = "res/xml/settings_headers.xml"
 
@@ -95,7 +95,7 @@ internal object ResourceUtils {
         context.document(SETTINGS_HEADER_PATH).use { document ->
             val tags = document.getElementsByTagName(PREFERENCE_SCREEN_TAG_NAME)
             List(tags.length) { tags.item(it) as Element }
-                .filter { it.getAttribute("android:key").contains(RVX_SETTINGS_KEY) }
+                .filter { it.getAttribute("android:key").contains(EXTENRE_SETTINGS_KEY) }
                 .forEach {
                     if (!isIncludedCategory(category)) {
                         it.adoptChild(PREFERENCE_SCREEN_TAG_NAME) {
@@ -310,7 +310,7 @@ internal object ResourceUtils {
         }
     }
 
-    fun addRVXSettingsPreference(insertKey: String) {
+    fun addextenreSettingsPreference(insertKey: String) {
         context.document(SETTINGS_HEADER_PATH).use { document ->
             document.doRecursively node@{
                 if (it !is Element) return@node

@@ -24,7 +24,7 @@ import com.extenre.patches.youtube.utils.playlist.playlistPatch
 import com.extenre.patches.youtube.utils.resourceid.sharedResourceIdPatch
 import com.extenre.patches.youtube.utils.settings.ResourceUtils.addPreference
 import com.extenre.patches.youtube.utils.settings.settingsPatch
-import com.extenre.util.findmutableMethodOrThrow
+import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
@@ -35,6 +35,7 @@ import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.reference.FieldReference
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
+import com.android.tools.smali.dexlib2.util.MethodUtil
 
 private const val EXTENSION_CLASS_DESCRIPTOR =
     "$GENERAL_PATH/DownloadActionsPatch;"
@@ -91,21 +92,30 @@ val downloadActionsPatch = bytecodePatch(
                     ?: throw PatchException("Could not find onClickListenerClass")
             }
 
-        findmutableMethodOrThrow(onClickListenerClass) {
-            name == "onClick"
-        }.apply {
-            val insertIndex = indexOfFirstInstructionOrThrow {
-                opcode == Opcode.INVOKE_STATIC &&
-                        getReference<MethodReference>()?.name == "isEmpty"
+        // Reemplazar findmutableMethodOrThrow por búsqueda manual
+        run {
+            val method = findMethodOrThrow(onClickListenerClass) {
+                name == "onClick"
             }
-            val insertRegister = getInstruction<FiveRegisterInstruction>(insertIndex).registerC
+            val classDef = classes.find { it.type == onClickListenerClass }
+                ?: throw PatchException("Class not found: $onClickListenerClass")
+            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
+                val insertIndex = indexOfFirstInstructionOrThrow {
+                    opcode == Opcode.INVOKE_STATIC &&
+                            getReference<MethodReference>()?.name == "isEmpty"
+                }
+                val insertRegister = getInstruction<FiveRegisterInstruction>(insertIndex).registerC
 
-            addInstructions(
-                insertIndex, """
-                    invoke-static {v$insertRegister}, $EXTENSION_CLASS_DESCRIPTOR->inAppPlaylistDownloadButtonOnClick(Ljava/lang/String;)Ljava/lang/String;
-                    move-result-object v$insertRegister
-                    """
-            )
+                addInstructions(
+                    insertIndex, """
+                        invoke-static {v$insertRegister}, $EXTENSION_CLASS_DESCRIPTOR->inAppPlaylistDownloadButtonOnClick(Ljava/lang/String;)Ljava/lang/String;
+                        move-result-object v$insertRegister
+                        """
+                )
+            }
         }
 
         offlinePlaylistEndpointFingerprint.mutableMethodOrThrow().apply {

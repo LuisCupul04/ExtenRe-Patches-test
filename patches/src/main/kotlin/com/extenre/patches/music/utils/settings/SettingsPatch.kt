@@ -60,7 +60,7 @@ private const val EXTENSION_INITIALIZATION_CLASS_DESCRIPTOR =
     "$UTILS_PATH/InitializationPatch;"
 
 private val settingsBytecodePatch = bytecodePatch(
-    name = "settings-Bytecode-Patch",
+    name = "settings-bytecode-patch",
     description = "settingsBytecodePatch"
 ) {
     dependsOn(
@@ -90,7 +90,7 @@ private val settingsBytecodePatch = bytecodePatch(
         // region patch for hook activity
 
         settingsHeadersFragmentFingerprint.matchOrThrow().let {
-            it.method.apply {
+            it.mutableMethod.apply {
                 val targetIndex = it.patternMatch!!.endIndex
                 val targetRegister = getInstruction<OneRegisterInstruction>(targetIndex).registerA
 
@@ -106,7 +106,7 @@ private val settingsBytecodePatch = bytecodePatch(
         // region patch for hook preference change listener
 
         preferenceFingerprint.matchOrThrow().let {
-            it.method.apply {
+            it.mutableMethod.apply {
                 val targetIndex = it.patternMatch!!.endIndex
                 val keyRegister = getInstruction<FiveRegisterInstruction>(targetIndex).registerD
                 val valueRegister = getInstruction<FiveRegisterInstruction>(targetIndex).registerE
@@ -138,7 +138,6 @@ private val settingsBytecodePatch = bytecodePatch(
         // endregion
 
         // apply the current theme of the settings page
-        // Reemplazar findmutableMethodOrThrow por búsqueda manual
         run {
             val method = findMethodOrThrow(EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR) {
                 name == "setThemeColor"

@@ -8,32 +8,30 @@
 
 package com.extenre.patches.youtube.misc.debugging
 
-import com.extenre.patcher.extensions.InstructionExtensions.addInstructions
+import com.extenre.patcher.extensions.InstructionExtensions.addInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
+import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
-import com.extenre.patches.shared.WATCH_NEXT_RESPONSE_PROCESSING_DELAY_STRING
-import com.extenre.patches.shared.playbackStartParametersConstructorFingerprint
-import com.extenre.patches.shared.playbackStartParametersToStringFingerprint
+import com.extenre.patcher.util.smali.ExternalLabel
 import com.extenre.patches.youtube.utils.compatibility.Constants.COMPATIBLE_PACKAGE
-import com.extenre.patches.youtube.utils.extension.Constants.MISC_PATH
+import com.extenre.patches.youtube.utils.extension.Constants.PLAYER_CLASS_DESCRIPTOR
+import com.extenre.patches.youtube.utils.extension.Constants.UTILS_PATH
 import com.extenre.patches.youtube.utils.patch.PatchList.ENABLE_DEBUG_LOGGING
-import com.extenre.patches.youtube.utils.playservice.is_19_16_or_greater
-import com.extenre.patches.youtube.utils.playservice.versionCheckPatch
 import com.extenre.patches.youtube.utils.settings.ResourceUtils.addPreference
 import com.extenre.patches.youtube.utils.settings.settingsPatch
-import com.extenre.patches.youtube.utils.webview.webViewPatch
-import com.extenre.util.findFieldFromToString
+import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
-import com.extenre.util.fingerprint.originalmutableMethodOrThrow
 import com.extenre.util.getReference
-import com.extenre.util.indexOfFirstInstructionReversedOrThrow
+import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.android.tools.smali.dexlib2.Opcode
-import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
+import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
+import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.reference.FieldReference
+import com.android.tools.smali.dexlib2.util.MethodUtil
 
 private const val EXTENSION_CLASS_DESCRIPTOR =
-    "$MISC_PATH/DebuggingPatch;"
+    "$UTILS_PATH/DebuggingPatch;"
 
 @Suppress("unused")
 val debuggingPatch = bytecodePatch(
@@ -42,65 +40,66 @@ val debuggingPatch = bytecodePatch(
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 
-    dependsOn(
-        settingsPatch,
-        webViewPatch,
-        versionCheckPatch,
-    )
+    dependsOn(settingsPatch)
 
     execute {
+        // region patch for debug logging
 
-        var settingArray = arrayOf(
-            "SETTINGS: DEBUGGING"
-        )
+        val (debugString, debugBooleanField) = with(
+            debuggingFingerprint.mutableMethodOrThrow()
+        ) {
+            val stringIndex = indexOfFirstInstructionOrThrow(Opcode.CONST_STRING)
+            val debugString = getInstruction<ReferenceInstruction>(stringIndex).reference.toString()
+            val booleanFieldIndex = indexOfFirstInstructionOrThrow(stringIndex) {
+                opcode == Opcode.SGET_BOOLEAN &&
+                        getReference<FieldReference>()?.type == "Z"
+            }
+            val debugBooleanField =
+                getInstruction<ReferenceInstruction>(booleanFieldIndex).reference
 
-        if (is_19_16_or_greater) {
-            currentWatchNextResponseFingerprint
-                .mutableMethodOrThrow(currentWatchNextResponseParentFingerprint)
-                .addInstructionsWithLabels(
-                    0, """
-                        invoke-static {}, $EXTENSION_CLASS_DESCRIPTOR->enableWatchNextProcessingDelay()Z
-                        move-result v0
-                        if-eqz v0, :ignore
-                        const/4 v0, 0x0
-                        return v0
-                        :ignore
-                        nop
-                        """
-                )
-
-            val watchNextResponseProcessingDelayField =
-                playbackStartParametersToStringFingerprint.originalmutableMethodOrThrow()
-                    .findFieldFromToString(WATCH_NEXT_RESPONSE_PROCESSING_DELAY_STRING)
-
-            playbackStartParametersConstructorFingerprint
-                .mutableMethodOrThrow(playbackStartParametersToStringFingerprint)
-                .apply {
-                    val index = indexOfFirstInstructionReversedOrThrow {
-                        opcode == Opcode.IPUT &&
-                                getReference<FieldReference>() == watchNextResponseProcessingDelayField
-                    }
-                    val register = getInstruction<TwoRegisterInstruction>(index).registerA
-
-                    addInstructions(
-                        index, """
-                            invoke-static {v$register}, $EXTENSION_CLASS_DESCRIPTOR->getWatchNextProcessingDelay(I)I
-                            move-result v$register
-                            """
-                    )
-                }
-
-            settingArray += "SETTINGS: WATCH_NEXT_PROCESSING_DELAY"
+            Pair(debugString, debugBooleanField)
         }
+
+        debuggingFingerprint.mutableClassOrThrow().let { mutableClass ->
+            val staticField = mutableClass.staticFields.find { field ->
+                field.type == "Z"
+            } ?: throw PatchException("Could not find static boolean field")
+
+            val getterMethod = mutableClass.methods.find { method ->
+                method.returnType == "Z" && method.parameters.isEmpty()
+            } ?: throw PatchException("Could not find getter method")
+
+            // Reemplazar originalmutableMethodOrThrow por búsqueda manual
+            val method = findMethodOrThrow(EXTENSION_CLASS_DESCRIPTOR) {
+                name == "getDebugState"
+            }
+            val classDef = classes.find { it.type == EXTENSION_CLASS_DESCRIPTOR }
+                ?: throw PatchException("Class not found: $EXTENSION_CLASS_DESCRIPTOR")
+            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.addInstructions(
+                0, """
+                    sget-object v0, $staticField
+                    return v0
+                    """
+            )
+
+            mutableClass.methods.add(getterMethod)
+        }
+
+        // endregion
 
         // region add settings
 
         addPreference(
-            settingArray,
+            arrayOf(
+                "PREFERENCE_SCREEN: GENERAL",
+                "SETTINGS: ENABLE_DEBUG_LOGGING"
+            ),
             ENABLE_DEBUG_LOGGING
         )
 
         // endregion
-
     }
 }

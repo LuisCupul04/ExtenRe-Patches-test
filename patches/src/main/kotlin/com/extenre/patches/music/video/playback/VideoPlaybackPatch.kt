@@ -101,7 +101,7 @@ val videoPlaybackPatch = bytecodePatch(
         }
 
         playbackSpeedFingerprint.matchOrThrow(playbackSpeedParentFingerprint).let {
-            it.method.apply {
+            it.mutableMethod.apply {
                 val startIndex = it.patternMatch!!.startIndex
                 val speedRegister =
                     getInstruction<OneRegisterInstruction>(startIndex + 1).registerA
@@ -230,7 +230,7 @@ val videoPlaybackPatch = bytecodePatch(
         onCreateHook(EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR, "newVideoStarted")
 
         userQualityChangeFingerprint.matchOrThrow().let {
-            it.method.apply {
+            it.mutableMethod.apply {
                 val endIndex = it.patternMatch!!.endIndex
                 val qualityChangedClass =
                     getInstruction<ReferenceInstruction>(endIndex).reference.toString()

@@ -27,8 +27,8 @@ private const val DEFAULT_ICON = "extension"
 
 @Suppress("unused")
 val visualPreferencesIconsPatch = resourcePatch(
-    VISUAL_PREFERENCES_ICONS_FOR_YOUTUBE_MUSIC.title,
-    VISUAL_PREFERENCES_ICONS_FOR_YOUTUBE_MUSIC.summary,
+    name = VISUAL_PREFERENCES_ICONS_FOR_YOUTUBE_MUSIC.key,
+    description = "${VISUAL_PREFERENCES_ICONS_FOR_YOUTUBE_MUSIC.title}: ${VISUAL_PREFERENCES_ICONS_FOR_YOUTUBE_MUSIC.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 
@@ -126,7 +126,6 @@ val visualPreferencesIconsPatch = resourcePatch(
     }
 }
 
-
 // region preference key and icon.
 
 private val preferenceKey = setOf(
@@ -161,5 +160,3 @@ private val preferenceKey = setOf(
 )
 
 // endregion.
-
-

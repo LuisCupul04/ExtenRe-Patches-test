@@ -41,6 +41,7 @@ import com.extenre.patches.shared.textcomponent.textComponentPatch
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.legacyFingerprint
 import com.extenre.util.fingerprint.matchOrThrow
+import com.extenre.util.fingerprint.methodOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
@@ -112,7 +113,7 @@ val actionBarComponentsPatch = bytecodePatch(
 
         if (!is_7_25_or_greater) {
             actionBarComponentFingerprint.matchOrThrow().let {
-                it.method.apply {
+                it.mutableMethod.apply {
                     // hook download button
                     val addViewIndex = indexOfFirstInstructionOrThrow {
                         opcode == Opcode.INVOKE_VIRTUAL &&

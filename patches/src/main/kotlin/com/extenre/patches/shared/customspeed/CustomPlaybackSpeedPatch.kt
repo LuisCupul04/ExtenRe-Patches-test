@@ -11,6 +11,7 @@ package com.extenre.patches.shared.customspeed
 import com.extenre.patcher.extensions.InstructionExtensions.addInstructions
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.replaceInstruction
+import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
@@ -21,6 +22,7 @@ import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.reference.FieldReference
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
+import com.android.tools.smali.dexlib2.util.MethodUtil
 
 private var patchIncluded = false
 
@@ -36,42 +38,46 @@ fun customPlaybackSpeedPatch(
             return@execute
         }
 
-        arrayGeneratorFingerprint.matchOrThrow().let {
-            it.mutableMethod.apply {   // Corregido: it.method -> it.mutableMethod
-                val targetIndex = it.patternMatch!!.startIndex
-                val targetRegister = getInstruction<OneRegisterInstruction>(targetIndex).registerA
+        val arrayGeneratorMatch = arrayGeneratorFingerprint.matchOrThrow()
+        val method = arrayGeneratorMatch.method
+        val classDef = arrayGeneratorMatch.classDef
+        val mutableMethod = proxy(classDef).mutableClass.methods.first {
+            MethodUtil.methodSignaturesMatch(it, method)
+        }
+        mutableMethod.apply {
+            val targetIndex = arrayGeneratorMatch.patternMatch!!.startIndex
+            val targetRegister = getInstruction<OneRegisterInstruction>(targetIndex).registerA
 
-                addInstructions(
-                    targetIndex + 1, """
+            addInstructions(
+                targetIndex + 1, """
                         invoke-static {v$targetRegister}, $descriptor->getLength(I)I
                         move-result v$targetRegister
                         """
-                )
+            )
 
-                val sizeIndex = indexOfFirstInstructionOrThrow {
-                    getReference<MethodReference>()?.name == "size"
-                } + 1
-                val sizeRegister = getInstruction<OneRegisterInstruction>(sizeIndex).registerA
+            val sizeIndex = indexOfFirstInstructionOrThrow {
+                getReference<MethodReference>()?.name == "size"
+            } + 1
+            val sizeRegister = getInstruction<OneRegisterInstruction>(sizeIndex).registerA
 
-                addInstructions(
-                    sizeIndex + 1, """
+            addInstructions(
+                sizeIndex + 1, """
                         invoke-static {v$sizeRegister}, $descriptor->getSize(I)I
                         move-result v$sizeRegister
                         """
-                )
+            )
 
-                val arrayIndex = indexOfFirstInstructionOrThrow {
-                    getReference<FieldReference>()?.type == "[F"
-                }
-                val arrayRegister = getInstruction<OneRegisterInstruction>(arrayIndex).registerA
+            val arrayIndex = indexOfFirstInstructionOrThrow {
+                getReference<FieldReference>()?.type == "[F"
+            }
+            val arrayRegister = getInstruction<OneRegisterInstruction>(arrayIndex).registerA
 
-                addInstructions(
-                    arrayIndex + 1, """
+            addInstructions(
+                arrayIndex + 1, """
                         invoke-static {v$arrayRegister}, $descriptor->getArray([F)[F
                         move-result-object v$arrayRegister
                         """
-                )
-            }
+            )
         }
 
         setOf(

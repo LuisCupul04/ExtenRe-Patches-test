@@ -22,7 +22,7 @@ internal const val EXTENSION_CLASS_DESCRIPTOR =
     "$SHARED_PATH/NavigationBar;"
 
 val navigationBarHookPatch = bytecodePatch(
-    name = "navigation-Bar-Hook-Patch",
+    name = "navigation-bar-hook-patch",
     description = "navigationBarHookPatch"
 ) {
     dependsOn(sharedExtensionPatch)

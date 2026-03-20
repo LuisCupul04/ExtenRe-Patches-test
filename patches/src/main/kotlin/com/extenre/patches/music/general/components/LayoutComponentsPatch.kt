@@ -49,6 +49,7 @@ import com.extenre.util.indexOfFirstLiteralInstructionOrThrow
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
+import com.android.tools.smali.dexlib2.util.MethodUtil
 
 private const val EXTENSION_SETTINGS_MENU_DESCRIPTOR =
     "$GENERAL_PATH/SettingsMenuPatch;"
@@ -106,7 +107,12 @@ val layoutComponentsPatch = bytecodePatch(
         // region patch for hide category bar
 
         val chipCloudMatch = chipCloudFingerprint.matchOrThrow()
-        chipCloudMatch.mutableMethod.apply {
+        val chipCloudMethod = chipCloudMatch.method
+        val chipCloudClassDef = chipCloudMatch.classDef
+        val chipCloudMutableMethod = proxy(chipCloudClassDef).mutableClass.methods.first {
+            MethodUtil.methodSignaturesMatch(it, chipCloudMethod)
+        }
+        chipCloudMutableMethod.apply {
             val targetIndex = chipCloudMatch.patternMatch!!.endIndex
             val targetRegister = getInstruction<OneRegisterInstruction>(targetIndex).registerA
 
@@ -140,7 +146,12 @@ val layoutComponentsPatch = bytecodePatch(
             historyMenuItemOfflineTabFingerprint
         ).forEach { fingerprint ->
             val historyMatch = fingerprint.matchOrThrow()
-            historyMatch.mutableMethod.apply {
+            val historyMethod = historyMatch.method
+            val historyClassDef = historyMatch.classDef
+            val historyMutableMethod = proxy(historyClassDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, historyMethod)
+            }
+            historyMutableMethod.apply {
                 val insertIndex = historyMatch.patternMatch!!.startIndex
                 val insertRegister =
                     getInstruction<FiveRegisterInstruction>(insertIndex).registerD
@@ -190,7 +201,12 @@ val layoutComponentsPatch = bytecodePatch(
         // The lowest version supported by the patch does not have parent tool settings
         if (is_6_39_or_greater) {
             val parentToolMatch = parentToolMenuFingerprint.matchOrThrow()
-            parentToolMatch.mutableMethod.apply {
+            val parentToolMethod = parentToolMatch.method
+            val parentToolClassDef = parentToolMatch.classDef
+            val parentToolMutableMethod = proxy(parentToolClassDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, parentToolMethod)
+            }
+            parentToolMutableMethod.apply {
                 val index = parentToolMatch.patternMatch!!.startIndex + 1
                 val register = getInstruction<FiveRegisterInstruction>(index).registerD
 
@@ -282,7 +298,12 @@ val layoutComponentsPatch = bytecodePatch(
         }
 
         val tasteBuilderMatch = tasteBuilderSyntheticFingerprint.matchOrThrow(tasteBuilderConstructorFingerprint)
-        tasteBuilderMatch.mutableMethod.apply {
+        val tasteBuilderMethod = tasteBuilderMatch.method
+        val tasteBuilderClassDef = tasteBuilderMatch.classDef
+        val tasteBuilderMutableMethod = proxy(tasteBuilderClassDef).mutableClass.methods.first {
+            MethodUtil.methodSignaturesMatch(it, tasteBuilderMethod)
+        }
+        tasteBuilderMutableMethod.apply {
             val insertIndex = tasteBuilderMatch.patternMatch!!.startIndex
             val insertRegister = getInstruction<OneRegisterInstruction>(insertIndex).registerA
 

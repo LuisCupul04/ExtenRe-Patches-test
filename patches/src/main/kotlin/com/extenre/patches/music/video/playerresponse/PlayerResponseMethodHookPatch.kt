@@ -10,11 +10,13 @@ package com.extenre.patches.music.video.playerresponse
 
 import com.extenre.patcher.extensions.InstructionExtensions.addInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.addInstructions
+import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod
 import com.extenre.patches.music.utils.extension.sharedExtensionPatch
 import com.extenre.patches.music.utils.playservice.is_7_03_or_greater
 import com.extenre.patches.music.utils.playservice.versionCheckPatch
+import com.extenre.util.fingerprint.methodOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 
 private val hooks = mutableSetOf<Hook>()
@@ -32,7 +34,7 @@ private lateinit var playerResponseMethod: MutableMethod
 private var numberOfInstructionsAdded = 0
 
 val playerResponseMethodHookPatch = bytecodePatch(
-    name = "player-Response-Method-Hook-Patch",
+    name = "player-response-method-hook-patch",
     description = "playerResponseMethodHookPatch"
 ) {
     dependsOn(
@@ -45,7 +47,15 @@ val playerResponseMethodHookPatch = bytecodePatch(
             playerParameterBuilderFingerprint
         } else {
             playerParameterBuilderLegacyFingerprint
-        }.mutableMethodOrThrow()
+        }.methodOrThrow().let { method ->
+            val classDef = when (is_7_03_or_greater) {
+                true -> playerParameterBuilderFingerprint.classDefOrThrow()
+                else -> playerParameterBuilderLegacyFingerprint.classDefOrThrow()
+            }
+            proxy(classDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+        }
     }
 
     finalize {

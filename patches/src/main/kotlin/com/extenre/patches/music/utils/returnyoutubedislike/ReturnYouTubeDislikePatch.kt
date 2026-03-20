@@ -47,6 +47,7 @@ private const val EXTENSION_CLASS_DESCRIPTOR =
     "$UTILS_PATH/ReturnYouTubeDislikePatch;"
 
 private val returnYouTubeDislikeBytecodePatch = bytecodePatch(
+    name = "return-youtube-dislike-bytecode-patch",
     description = "returnYouTubeDislikeBytecodePatch"
 ) {
     dependsOn(

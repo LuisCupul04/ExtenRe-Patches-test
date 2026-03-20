@@ -105,6 +105,7 @@ private const val PREVIOUS_BUTTON_VIEW_ID =
     "mini_player_previous_button"
 
 private val playerComponentsResourcePatch = resourcePatch(
+    name = "player-components-resource-patch",
     description = "playerComponentsResourcePatch"
 ) {
     dependsOn(versionCheckPatch)
@@ -378,7 +379,7 @@ val playerComponentsPatch = bytecodePatch(
 
         if (!is_6_42_or_greater) {
             nextButtonVisibilityFingerprint.matchOrThrow(miniPlayerParentFingerprint).let {
-                it.method.apply {
+                it.mutableMethod.apply {
                     val targetIndex = it.patternMatch!!.startIndex + 1
                     val targetRegister =
                         getInstruction<OneRegisterInstruction>(targetIndex).registerA
@@ -623,7 +624,7 @@ val playerComponentsPatch = bytecodePatch(
         // region patch for forced minimized player
 
         minimizedPlayerFingerprint.matchOrThrow().let {
-            it.method.apply {
+            it.mutableMethod.apply {
                 val insertIndex = it.patternMatch!!.endIndex
                 val insertRegister = getInstruction<OneRegisterInstruction>(insertIndex).registerA
 
@@ -800,7 +801,7 @@ val playerComponentsPatch = bytecodePatch(
                 // region hides default text display when the app is cold started
 
                 miniPlayerDefaultTextFingerprint.matchOrThrow().let {
-                    it.method.apply {
+                    it.mutableMethod.apply {
                         val insertIndex = it.patternMatch!!.endIndex
                         val insertRegister =
                             getInstruction<TwoRegisterInstruction>(insertIndex).registerB
@@ -884,7 +885,7 @@ val playerComponentsPatch = bytecodePatch(
 
         // this method is used for old player background (deprecated since YT Music v6.34.51)
         zenModeFingerprint.matchOrNull(miniPlayerConstructorFingerprint)?.let {
-            it.method.apply {
+            it.mutableMethod.apply {
                 val startIndex = it.patternMatch!!.startIndex
                 val targetRegister =
                     getInstruction<OneRegisterInstruction>(startIndex).registerA
@@ -979,7 +980,7 @@ val playerComponentsPatch = bytecodePatch(
         // region patch for hide fullscreen share button
 
         remixGenericButtonFingerprint.matchOrThrow().let {
-            it.method.apply {
+            it.mutableMethod.apply {
                 val targetIndex = it.patternMatch!!.endIndex
                 val targetRegister = getInstruction<TwoRegisterInstruction>(targetIndex).registerA
 
@@ -1239,7 +1240,7 @@ val playerComponentsPatch = bytecodePatch(
 
             engagementPanelHeightFingerprint.matchOrThrow(engagementPanelHeightParentFingerprint)
                 .let {
-                    it.method.apply {
+                    it.mutableMethod.apply {
                         val targetIndex = it.patternMatch!!.endIndex
                         val targetRegister =
                             getInstruction<OneRegisterInstruction>(targetIndex).registerA

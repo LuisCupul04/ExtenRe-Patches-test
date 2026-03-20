@@ -10,6 +10,7 @@ package com.extenre.patches.reddit.layout.trendingtoday
 
 import com.extenre.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
+import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patcher.util.smali.ExternalLabel
 import com.extenre.patches.reddit.utils.compatibility.Constants.COMPATIBLE_PACKAGE
@@ -22,6 +23,7 @@ import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
+import com.android.tools.smali.dexlib2.util.MethodUtil
 
 private const val EXTENSION_CLASS_DESCRIPTOR =
     "$PATCHES_PATH/TrendingTodayShelfPatch;"
@@ -39,27 +41,31 @@ val trendingTodayShelfPatch = bytecodePatch(
 
         // region patch for hide trending today title.
 
-        trendingTodayTitleFingerprint.matchOrThrow().let {
-            it.mutableMethod.apply {   // Corregido: it.method -> it.mutableMethod
-                val stringIndex = it.stringMatches!!.first().index
-                val relativeIndex =
-                    indexOfFirstInstructionReversedOrThrow(stringIndex, Opcode.AND_INT_LIT8)
-                val insertIndex = indexOfFirstInstructionReversedOrThrow(
-                    relativeIndex + 1,
-                    Opcode.MOVE_OBJECT_FROM16
-                )
-                val insertRegister = getInstruction<TwoRegisterInstruction>(insertIndex).registerA
-                val jumpOpcode = if (returnType == "V") Opcode.RETURN_VOID else Opcode.SGET_OBJECT
-                val jumpIndex = indexOfFirstInstructionReversedOrThrow(jumpOpcode)
+        val trendingTodayTitleMatch = trendingTodayTitleFingerprint.matchOrThrow()
+        val titleMethod = trendingTodayTitleMatch.method
+        val titleClassDef = trendingTodayTitleMatch.classDef
+        val titleMutableMethod = proxy(titleClassDef).mutableClass.methods.first {
+            MethodUtil.methodSignaturesMatch(it, titleMethod)
+        }
+        titleMutableMethod.apply {
+            val stringIndex = trendingTodayTitleMatch.stringMatches!!.first().index
+            val relativeIndex =
+                indexOfFirstInstructionReversedOrThrow(stringIndex, Opcode.AND_INT_LIT8)
+            val insertIndex = indexOfFirstInstructionReversedOrThrow(
+                relativeIndex + 1,
+                Opcode.MOVE_OBJECT_FROM16
+            )
+            val insertRegister = getInstruction<TwoRegisterInstruction>(insertIndex).registerA
+            val jumpOpcode = if (returnType == "V") Opcode.RETURN_VOID else Opcode.SGET_OBJECT
+            val jumpIndex = indexOfFirstInstructionReversedOrThrow(jumpOpcode)
 
-                addInstructionsWithLabels(
-                    insertIndex, """
+            addInstructionsWithLabels(
+                insertIndex, """
                         invoke-static {}, $EXTENSION_CLASS_DESCRIPTOR->hideTrendingTodayShelf()Z
                         move-result v$insertRegister
                         if-nez v$insertRegister, :hidden
                         """, ExternalLabel("hidden", getInstruction(jumpIndex))
-                )
-            }
+            )
         }
 
         // endregion

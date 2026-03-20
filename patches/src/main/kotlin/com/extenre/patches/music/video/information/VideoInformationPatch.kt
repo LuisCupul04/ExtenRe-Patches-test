@@ -78,7 +78,7 @@ private lateinit var videoTimeConstructorMethod: MutableMethod
 private var videoTimeConstructorInsertIndex = 2
 
 val videoInformationPatch = bytecodePatch(
-    name = "video-Information-Patch",
+    name = "video-information-patch",
     description = "videoInformationPatch"
 ) {
     dependsOn(playerResponseMethodHookPatch)
@@ -177,6 +177,7 @@ val videoInformationPatch = bytecodePatch(
                 this,
                 seekSourceMethodName,
                 "overrideVideoTime",
+                "seekTo",
                 "videoInformationClass"
             )
         }
@@ -204,6 +205,7 @@ val videoInformationPatch = bytecodePatch(
                 this,
                 seekSourceMethodName,
                 "overrideMDXVideoTime",
+                "seekTo",
                 "videoInformationMDXClass"
             )
         }
@@ -212,7 +214,7 @@ val videoInformationPatch = bytecodePatch(
          * Set current video information
          */
         videoIdFingerprint.matchOrThrow().let {
-            it.method.apply {
+            it.mutableMethod.apply {
                 val playerResponseModelIndex = indexOfFirstInstructionOrThrow {
                     val reference = getReference<MethodReference>()
                     (opcode == Opcode.INVOKE_INTERFACE_RANGE || opcode == Opcode.INVOKE_INTERFACE) &&
@@ -380,3 +382,4 @@ internal fun videoTimeHook(targetMethodClass: String, targetMethodName: String) 
         videoTimeConstructorInsertIndex++,
         "$targetMethodClass->$targetMethodName(J)V"
     )
+    

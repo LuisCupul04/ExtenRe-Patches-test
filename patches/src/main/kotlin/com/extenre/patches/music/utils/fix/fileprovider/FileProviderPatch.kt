@@ -18,7 +18,7 @@ fun fileProviderPatch(
     youtubePackageName: String,
     musicPackageName: String
 ) = bytecodePatch(
-    name = "file-Provider-Patch",
+    name = "file-provider-patch",
     description = "fileProviderPatch"
 ) {
     execute {

@@ -35,6 +35,7 @@ private const val EXTENSION_CLASS_DESCRIPTOR =
     "$GENERAL_PATH/ChangeStartPagePatch;"
 
 private val changeStartPageResourcePatch = resourcePatch(
+    name = "change-start-page-resource-patch",
     description = "changeStartPageResourcePatch"
 ) {
     dependsOn(

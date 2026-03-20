@@ -49,11 +49,13 @@ import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.reference.FieldReference
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
+import com.android.tools.smali.dexlib2.util.MethodUtil
 
 private const val FLAG = "android:layout_weight"
 private const val RESOURCE_FILE_PATH = "res/layout/image_with_text_tab.xml"
 
 private val navigationBarComponentsResourcePatch = resourcePatch(
+    name = "navigation-bar-components-resource-patch",
     description = "navigationBarComponentsResourcePatch"
 ) {
     execute {
@@ -127,58 +129,62 @@ val navigationBarComponentsPatch = bytecodePatch(
         /**
          * Hide navigation bar & buttons
          */
-        tabLayoutTextFingerprint.matchOrThrow().let {
-            it.mutableMethod.apply {
-                val mapIndex = indexOfMapInstruction(this)
-                val browseIdRegister =
-                    getInstruction<FiveRegisterInstruction>(mapIndex).registerD
-                val browseIdIndex = indexOfFirstInstructionReversedOrThrow(mapIndex + 1) {
-                    opcode == Opcode.IGET_OBJECT &&
-                            getReference<FieldReference>()?.type == "Ljava/lang/String;" &&
-                            (this as TwoRegisterInstruction).registerA == browseIdRegister
-                }
-                val browseIdClassRegister =
-                    getInstruction<TwoRegisterInstruction>(browseIdIndex).registerB
-                val browseIdFieldName =
-                    (getInstruction<ReferenceInstruction>(browseIdIndex).reference as FieldReference).name
+        val tabLayoutMatch = tabLayoutTextFingerprint.matchOrThrow()
+        val tabLayoutMethod = tabLayoutMatch.method
+        val tabLayoutClassDef = tabLayoutMatch.classDef
+        val tabLayoutMutableMethod = proxy(tabLayoutClassDef).mutableClass.methods.first {
+            MethodUtil.methodSignaturesMatch(it, tabLayoutMethod)
+        }
+        tabLayoutMutableMethod.apply {
+            val mapIndex = indexOfMapInstruction(this)
+            val browseIdRegister =
+                getInstruction<FiveRegisterInstruction>(mapIndex).registerD
+            val browseIdIndex = indexOfFirstInstructionReversedOrThrow(mapIndex + 1) {
+                opcode == Opcode.IGET_OBJECT &&
+                        getReference<FieldReference>()?.type == "Ljava/lang/String;" &&
+                        (this as TwoRegisterInstruction).registerA == browseIdRegister
+            }
+            val browseIdClassRegister =
+                getInstruction<TwoRegisterInstruction>(browseIdIndex).registerB
+            val browseIdFieldName =
+                (getInstruction<ReferenceInstruction>(browseIdIndex).reference as FieldReference).name
 
-                val enumIndex = it.patternMatch!!.startIndex + 3
-                val enumRegister = getInstruction<OneRegisterInstruction>(enumIndex).registerA
-                val insertEnumIndex = indexOfFirstInstructionOrThrow(Opcode.AND_INT_LIT8) - 2
+            val enumIndex = tabLayoutMatch.patternMatch!!.startIndex + 3
+            val enumRegister = getInstruction<OneRegisterInstruction>(enumIndex).registerA
+            val insertEnumIndex = indexOfFirstInstructionOrThrow(Opcode.AND_INT_LIT8) - 2
 
-                val pivotTabIndex = indexOfGetVisibilityInstruction(this)
-                val pivotTabRegister =
-                    getInstruction<FiveRegisterInstruction>(pivotTabIndex).registerC
+            val pivotTabIndex = indexOfGetVisibilityInstruction(this)
+            val pivotTabRegister =
+                getInstruction<FiveRegisterInstruction>(pivotTabIndex).registerC
 
-                val spannedIndex = indexOfSetTextInstruction(this)
-                val spannedRegister =
-                    getInstruction<FiveRegisterInstruction>(spannedIndex).registerD
+            val spannedIndex = indexOfSetTextInstruction(this)
+            val spannedRegister =
+                getInstruction<FiveRegisterInstruction>(spannedIndex).registerD
 
-                addInstruction(
-                    pivotTabIndex,
-                    "invoke-static {v$pivotTabRegister}, $NAVIGATION_CLASS_DESCRIPTOR->hideNavigationButton(Landroid/view/View;)V"
-                )
+            addInstruction(
+                pivotTabIndex,
+                "invoke-static {v$pivotTabRegister}, $NAVIGATION_CLASS_DESCRIPTOR->hideNavigationButton(Landroid/view/View;)V"
+            )
 
-                addInstructions(
-                    mapIndex, """
+            addInstructions(
+                mapIndex, """
                         const-string v$enumRegister, "$browseIdFieldName"
                         invoke-static {v$browseIdClassRegister, v$browseIdRegister, v$enumRegister}, $NAVIGATION_CLASS_DESCRIPTOR->replaceBrowseId(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
                         move-result-object v$browseIdRegister
                         """
-                )
+            )
 
-                addInstructions(
-                    spannedIndex, """
+            addInstructions(
+                spannedIndex, """
                         invoke-static {v$spannedRegister}, $NAVIGATION_CLASS_DESCRIPTOR->replaceNavigationLabel(Landroid/text/Spanned;)Landroid/text/Spanned;
                         move-result-object v$spannedRegister
                         """
-                )
+            )
 
-                addInstruction(
-                    insertEnumIndex,
-                    "invoke-static {v$enumRegister}, $NAVIGATION_CLASS_DESCRIPTOR->setLastAppNavigationEnum(Ljava/lang/Enum;)V"
-                )
-            }
+            addInstruction(
+                insertEnumIndex,
+                "invoke-static {v$enumRegister}, $NAVIGATION_CLASS_DESCRIPTOR->setLastAppNavigationEnum(Ljava/lang/Enum;)V"
+            )
         }
 
         val smaliInstruction = """

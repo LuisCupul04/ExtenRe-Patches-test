@@ -11,6 +11,7 @@ package com.extenre.patches.music.ads.general
 import com.extenre.patcher.extensions.InstructionExtensions.addInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.replaceInstruction
+import com.extenre.patcher.patch.PatchException
 import com.extenre.patches.music.navigation.components.navigationBarComponentsPatch
 import com.extenre.patches.music.utils.compatibility.Constants.COMPATIBLE_PACKAGE
 import com.extenre.patches.music.utils.extension.Constants.ADS_PATH
@@ -45,6 +46,7 @@ import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.reference.FieldReference
+import com.android.tools.smali.dexlib2.util.MethodUtil
 
 private const val ADS_FILTER_CLASS_DESCRIPTOR =
     "$COMPONENTS_PATH/AdsFilter;"
@@ -140,7 +142,12 @@ val adsPatch = adsPatch(
 
         // get premium button at the top of the account switching menu
         val premiumMatch = getPremiumTextViewFingerprint.matchOrThrow()
-        premiumMatch.mutableMethod.apply {
+        val premiumMethod = premiumMatch.method
+        val premiumClassDef = premiumMatch.classDef
+        val premiumMutableMethod = proxy(premiumClassDef).mutableClass.methods.first {
+            MethodUtil.methodSignaturesMatch(it, premiumMethod)
+        }
+        premiumMutableMethod.apply {
             val insertIndex = premiumMatch.patternMatch!!.startIndex
             val register = getInstruction<TwoRegisterInstruction>(insertIndex).registerA
 

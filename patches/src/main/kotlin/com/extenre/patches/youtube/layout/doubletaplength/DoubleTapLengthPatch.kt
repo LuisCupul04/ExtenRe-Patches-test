@@ -23,7 +23,7 @@ import java.nio.file.Files
 
 @Suppress("unused")
 val doubleTapLengthPatch = resourcePatch(
-    name = DISABLE_CAIRO_SPLASH_ANIMATION.key,
+    name = CUSTOM_DOUBLE_TAP_LENGTH.key,
     description = "${CUSTOM_DOUBLE_TAP_LENGTH.title}: ${CUSTOM_DOUBLE_TAP_LENGTH.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)

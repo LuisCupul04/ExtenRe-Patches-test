@@ -11,6 +11,7 @@ package com.extenre.patches.music.utils.videotype
 import com.extenre.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.patch.bytecodePatch
+import com.extenre.patcher.util.smali.ExternalLabel
 import com.extenre.patches.music.utils.extension.Constants.UTILS_PATH
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
@@ -26,7 +27,7 @@ private const val EXTENSION_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val videoTypeHookPatch = bytecodePatch(
-    name = "video-Type-Hook-Patch",
+    name = "video-type-hook-patch",
     description = "videoTypeHookPatch"
 ) {
 

@@ -12,6 +12,7 @@ import com.extenre.patcher.extensions.InstructionExtensions.addInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.addInstructions
 import com.extenre.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
+import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patcher.patch.resourcePatch
 import com.extenre.patcher.util.smali.ExternalLabel
@@ -57,6 +58,7 @@ private val resourceFileArray = arrayOf(
 ).map { "$it.png" }.toTypedArray()
 
 private val flyoutMenuComponentsResourcePatch = resourcePatch(
+    name = "flyout-menu-components-resource-patch",
     description = "flyoutMenuComponentsResourcePatch"
 ) {
     execute {
@@ -159,7 +161,7 @@ val flyoutMenuComponentsPatch = bytecodePatch(
         // region patch for enable compact dialog
 
         screenWidthFingerprint.matchOrThrow(screenWidthParentFingerprint).let {
-            it.method.apply {
+            it.mutableMethod.apply {
                 val index = it.patternMatch!!.startIndex
                 val register = getInstruction<TwoRegisterInstruction>(index).registerA
 
@@ -177,7 +179,7 @@ val flyoutMenuComponentsPatch = bytecodePatch(
         // region patch for hide flyout menu components and replace menu
 
         menuItemFingerprint.matchOrThrow().let {
-            it.method.apply {
+            it.mutableMethod.apply {
                 val freeIndex = indexOfFirstInstructionOrThrow(Opcode.OR_INT_LIT16)
                 val textViewIndex = it.patternMatch!!.startIndex
                 val imageViewIndex = it.patternMatch!!.endIndex

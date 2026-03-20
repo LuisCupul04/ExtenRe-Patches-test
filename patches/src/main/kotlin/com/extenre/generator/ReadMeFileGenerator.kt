@@ -82,7 +82,7 @@ internal class ReadMeFileGenerator : PatchesFileGenerator {
                 output.appendLine(tableHeader)
 
                 patchesForPkg.sortedBy { it.name }.forEach { patch ->
-                    val versions: Collection<String>? = patch.compatiblePackages?.get(pkg)
+                    val versions = patch.compatiblePackages?.get(pkg)
                     val supportedVersion = when {
                         versions != null && versions.isNotEmpty() -> {
                             val min = versions.minOrNull()!!

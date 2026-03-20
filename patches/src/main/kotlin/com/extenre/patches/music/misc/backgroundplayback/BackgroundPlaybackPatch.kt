@@ -27,6 +27,7 @@ import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
+import com.android.tools.smali.dexlib2.util.MethodUtil
 
 @Suppress("unused")
 val backgroundPlaybackPatch = bytecodePatch(
@@ -53,7 +54,12 @@ val backgroundPlaybackPatch = bytecodePatch(
 
         // don't play music video
         musicBrowserServiceFingerprint.matchOrThrow().let {
-            it.mutableMethod.apply {
+            val musicMethod = it.method
+            val musicClassDef = it.classDef
+            val musicMutableMethod = proxy(musicClassDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, musicMethod)
+            }
+            musicMutableMethod.apply {
                 val stringIndex = it.stringMatches!!.first().index
                 val targetIndex = indexOfFirstInstructionOrThrow(stringIndex) {
                     val reference = getReference<MethodReference>()

@@ -11,6 +11,7 @@ package com.extenre.patches.reddit.layout.navigation
 import com.extenre.patcher.extensions.InstructionExtensions.addInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.addInstructions
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
+import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patches.reddit.utils.compatibility.Constants.COMPATIBLE_PACKAGE
 import com.extenre.patches.reddit.utils.extension.Constants.PATCHES_PATH
@@ -26,6 +27,7 @@ import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
+import com.android.tools.smali.dexlib2.util.MethodUtil
 
 private const val EXTENSION_CLASS_DESCRIPTOR =
     "$PATCHES_PATH/NavigationButtonsPatch;"
@@ -71,24 +73,28 @@ val navigationButtonsPatch = bytecodePatch(
 
                     classBy { it.type == targetReference }
                         ?.mutableClass
-                        ?: throw ClassNotFoundException("Failed to find class $targetReference")
+                        ?: throw PatchException("Failed to find class $targetReference")
                 }
 
                 bottomNavScreenOnGlobalLayoutFingerprint.second.matchOrNull(
                     bottomNavScreenMutableClass
-                )
-                    ?.let {
-                        it.mutableMethod.apply {   // Corregido: it.method -> it.mutableMethod
-                            val startIndex = it.patternMatch!!.startIndex
-                            val targetRegister =
-                                getInstruction<FiveRegisterInstruction>(startIndex).registerC
-
-                            addInstruction(
-                                startIndex + 1,
-                                "invoke-static {v$targetRegister}, $EXTENSION_CLASS_DESCRIPTOR->hideNavigationButtons(Landroid/view/ViewGroup;)V"
-                            )
-                        }
+                )?.let { match ->
+                    val method = match.method
+                    val classDef = match.classDef
+                    val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                        MethodUtil.methodSignaturesMatch(it, method)
                     }
+                    mutableMethod.apply {
+                        val startIndex = match.patternMatch!!.startIndex
+                        val targetRegister =
+                            getInstruction<FiveRegisterInstruction>(startIndex).registerC
+
+                        addInstruction(
+                            startIndex + 1,
+                            "invoke-static {v$targetRegister}, $EXTENSION_CLASS_DESCRIPTOR->hideNavigationButtons(Landroid/view/ViewGroup;)V"
+                        )
+                    }
+                }
             } else {
                 // Legacy method.
                 bottomNavScreenHandlerFingerprint.mutableMethodOrThrow().apply {

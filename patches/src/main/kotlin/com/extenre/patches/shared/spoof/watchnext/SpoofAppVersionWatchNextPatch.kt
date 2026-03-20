@@ -42,6 +42,7 @@ import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 import com.android.tools.smali.dexlib2.iface.reference.TypeReference
 import com.android.tools.smali.dexlib2.immutable.ImmutableMethod
 import com.android.tools.smali.dexlib2.immutable.ImmutableMethodParameter
+import com.android.tools.smali.dexlib2.util.MethodUtil
 
 fun spoofAppVersionWatchNextPatch(
     block: BytecodePatchBuilder.() -> Unit = {},
@@ -105,49 +106,53 @@ fun spoofAppVersionWatchNextPatch(
 
             // region patch for spoof client body for the '/get_watch' endpoint.
 
-            createPlayerRequestBodyFingerprint.matchOrThrow().let {
-                it.mutableMethod.apply {   // Cambio: it.method -> it.mutableMethod
-                    val helperMethodName = "setClientInfo"
-                    val checkCastIndex = it.patternMatch!!.startIndex
+            val createPlayerRequestBodyMatch = createPlayerRequestBodyFingerprint.matchOrThrow()
+            val playerMethod = createPlayerRequestBodyMatch.method
+            val playerClassDef = createPlayerRequestBodyMatch.classDef
+            val playerMutableMethod = proxy(playerClassDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, playerMethod)
+            }
+            playerMutableMethod.apply {
+                val helperMethodName = "setClientInfo"
+                val checkCastIndex = createPlayerRequestBodyMatch.patternMatch!!.startIndex
 
-                    val checkCastInstruction =
-                        getInstruction<OneRegisterInstruction>(checkCastIndex)
-                    val requestMessageInstanceRegister = checkCastInstruction.registerA
-                    val clientInfoContainerClassName =
-                        checkCastInstruction.getReference<TypeReference>()!!.type
+                val checkCastInstruction =
+                    getInstruction<OneRegisterInstruction>(checkCastIndex)
+                val requestMessageInstanceRegister = checkCastInstruction.registerA
+                val clientInfoContainerClassName =
+                    checkCastInstruction.getReference<TypeReference>()!!.type
 
-                    addInstruction(
-                        checkCastIndex + 1,
-                        "invoke-static { v$requestMessageInstanceRegister }, " +
-                                "$definingClass->$helperMethodName($clientInfoContainerClassName)V",
-                    )
+                addInstruction(
+                    checkCastIndex + 1,
+                    "invoke-static { v$requestMessageInstanceRegister }, " +
+                            "$definingClass->$helperMethodName($clientInfoContainerClassName)V",
+                )
 
-                    // Change client info to use the spoofed values.
-                    // Do this in a helper method, to remove the need of picking out multiple free registers from the hooked code.
-                    it.classDef.methods.add(
-                        ImmutableMethod(
-                            definingClass,
-                            helperMethodName,
-                            listOf(
-                                ImmutableMethodParameter(
-                                    clientInfoContainerClassName,
-                                    annotations,
-                                    "clientInfoContainer"
-                                )
-                            ),
-                            "V",
-                            AccessFlags.PRIVATE or AccessFlags.STATIC,
-                            annotations,
-                            null,
-                            MutableMethodImplementation(4),
-                        ).toMutable().apply {
-                            addInstructionsWithLabels(
-                                0,
-                                getSmaliInstructions(true),
+                // Change client info to use the spoofed values.
+                // Do this in a helper method, to remove the need of picking out multiple free registers from the hooked code.
+                createPlayerRequestBodyMatch.classDef.methods.add(
+                    ImmutableMethod(
+                        definingClass,
+                        helperMethodName,
+                        listOf(
+                            ImmutableMethodParameter(
+                                clientInfoContainerClassName,
+                                annotations,
+                                "clientInfoContainer"
                             )
-                        },
-                    )
-                }
+                        ),
+                        "V",
+                        AccessFlags.PRIVATE or AccessFlags.STATIC,
+                        annotations,
+                        null,
+                        MutableMethodImplementation(4),
+                    ).toMutable().apply {
+                        addInstructionsWithLabels(
+                            0,
+                            getSmaliInstructions(true),
+                        )
+                    },
+                )
             }
 
             // endregion.
@@ -247,8 +252,13 @@ fun spoofAppVersionWatchNextPatch(
                 },
             )
 
-            clientMessageFingerprint.matchOrThrow().let {
-                it.method.apply {
+            clientMessageFingerprint.matchOrThrow().let { clientMatch ->
+                val clientMethod = clientMatch.method
+                val clientClassDef = clientMatch.classDef
+                val clientMutableMethod = proxy(clientClassDef).mutableClass.methods.first {
+                    MethodUtil.methodSignaturesMatch(it, clientMethod)
+                }
+                clientMutableMethod.apply {
                     val helperMethodName = "patch_setClientVersion"
 
                     val insertIndex = indexOfClientMessageInstruction(this)
@@ -260,7 +270,7 @@ fun spoofAppVersionWatchNextPatch(
                         "invoke-direct { p0, v$messageRegister }, $definingClass->$helperMethodName($clientInfoClass)V"
                     )
 
-                    it.classDef.methods.add(
+                    clientMatch.classDef.methods.add(
                         ImmutableMethod(
                             definingClass,
                             helperMethodName,

@@ -10,6 +10,7 @@ package com.extenre.patches.reddit.layout.toolbar
 
 import com.extenre.patcher.extensions.InstructionExtensions.addInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
+import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patches.reddit.utils.extension.Constants.PATCHES_PATH
 import com.extenre.patches.reddit.utils.patch.PatchList.HIDE_TOOLBAR_BUTTON
@@ -19,6 +20,7 @@ import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
+import com.android.tools.smali.dexlib2.util.MethodUtil
 
 private const val EXTENSION_METHOD_DESCRIPTOR =
     "$PATCHES_PATH/ToolBarButtonPatch;->hideToolBarButton(Landroid/view/View;)V"
@@ -34,18 +36,22 @@ val toolBarButtonPatch = bytecodePatch(
     dependsOn(settingsPatch)
 
     execute {
-        homePagerScreenFingerprint.matchOrThrow().let {
-            it.mutableMethod.apply {
-                val stringIndex = it.stringMatches!!.first().index
-                val insertIndex = indexOfFirstInstructionOrThrow(stringIndex, Opcode.CHECK_CAST)
-                val insertRegister =
-                    getInstruction<OneRegisterInstruction>(insertIndex).registerA
+        val homePagerScreenMatch = homePagerScreenFingerprint.matchOrThrow()
+        val method = homePagerScreenMatch.method
+        val classDef = homePagerScreenMatch.classDef
+        val mutableMethod = proxy(classDef).mutableClass.methods.first {
+            MethodUtil.methodSignaturesMatch(it, method)
+        }
+        mutableMethod.apply {
+            val stringIndex = homePagerScreenMatch.stringMatches!!.first().index
+            val insertIndex = indexOfFirstInstructionOrThrow(stringIndex, Opcode.CHECK_CAST)
+            val insertRegister =
+                getInstruction<OneRegisterInstruction>(insertIndex).registerA
 
-                addInstruction(
-                    insertIndex,
-                    "invoke-static {v$insertRegister}, $EXTENSION_METHOD_DESCRIPTOR"
-                )
-            }
+            addInstruction(
+                insertIndex,
+                "invoke-static {v$insertRegister}, $EXTENSION_METHOD_DESCRIPTOR"
+            )
         }
 
         updatePatchStatus(

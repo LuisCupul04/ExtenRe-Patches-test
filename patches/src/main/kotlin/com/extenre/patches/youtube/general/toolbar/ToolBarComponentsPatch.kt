@@ -42,7 +42,7 @@ import com.extenre.util.REGISTER_TEMPLATE_REPLACEMENT
 import com.extenre.util.Utils.printWarn
 import com.extenre.util.doRecursively
 import com.extenre.util.findInstructionIndicesReversedOrThrow
-import com.extenre.util.findmutableMethodOrThrow
+import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.methodCall
@@ -132,15 +132,24 @@ val toolBarComponentsPatch = bytecodePatch(
         val attributeResolverMethodCall =
             attributeResolverMethod.definingClass + "->" + attributeResolverMethod.name + "(Landroid/content/Context;I)Landroid/graphics/drawable/Drawable;"
 
-        findmutableMethodOrThrow(GENERAL_CLASS_DESCRIPTOR) {
-            name == "getHeaderDrawable"
-        }.addInstructions(
-            0, """
-                invoke-static {p0, p1}, $attributeResolverMethodCall
-                move-result-object p0
-                return-object p0
-                """
-        )
+        // Reemplazar findmutableMethodOrThrow por búsqueda manual
+        run {
+            val method = findMethodOrThrow(GENERAL_CLASS_DESCRIPTOR) {
+                name == "getHeaderDrawable"
+            }
+            val classDef = classes.find { it.type == GENERAL_CLASS_DESCRIPTOR }
+                ?: throw PatchException("Class not found: $GENERAL_CLASS_DESCRIPTOR")
+            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.addInstructions(
+                0, """
+                    invoke-static {p0, p1}, $attributeResolverMethodCall
+                    move-result-object p0
+                    return-object p0
+                    """
+            )
+        }
 
         // The sidebar's header is lithoView. Add a listener to change it.
         drawerContentViewFingerprint.mutableMethodOrThrow(drawerContentViewConstructorFingerprint).apply {
@@ -240,7 +249,7 @@ val toolBarComponentsPatch = bytecodePatch(
         }
 
         youActionBarFingerprint.matchOrThrow(setActionBarRingoFingerprint).let {
-            it.method.apply {
+            it.mutableMethod.apply {
                 injectSearchBarHook(
                     it.patternMatch!!.endIndex,
                     "enableWideSearchBarInYouTab"
@@ -364,27 +373,10 @@ val toolBarComponentsPatch = bytecodePatch(
 
         // endregion
 
-        /*
-        // region patch for hide voice search button
-
-        if (is_19_28_or_greater) {
-            imageSearchButtonConfigFingerprint.injectLiteralInstructionBooleanCall(
-                45617544L,
-                "$GENERAL_CLASS_DESCRIPTOR->hideImageSearchButton(Z)Z"
-            )
-
-            updatePatchStatus(PATCH_STATUS_CLASS_DESCRIPTOR, "ImageSearchButton")
-
-            settingArray += "SETTINGS: HIDE_IMAGE_SEARCH_BUTTON"
-        }
-
-        // endregion
-         */
-
         // region patch for hide voice search button
 
         searchBarFingerprint.matchOrThrow(searchBarParentFingerprint).let {
-            it.method.apply {
+            it.mutableMethod.apply {
                 val startIndex = it.patternMatch!!.startIndex
                 val setVisibilityIndex = indexOfFirstInstructionOrThrow(startIndex) {
                     opcode == Opcode.INVOKE_VIRTUAL &&
@@ -402,7 +394,7 @@ val toolBarComponentsPatch = bytecodePatch(
         }
 
         searchResultFingerprint.matchOrThrow().let {
-            it.method.apply {
+            it.mutableMethod.apply {
                 val voiceInputControllerActivityMethodCall =
                     voiceInputControllerFingerprint
                         .mutableMethodOrThrow(voiceInputControllerParentFingerprint)
@@ -455,7 +447,7 @@ val toolBarComponentsPatch = bytecodePatch(
             searchSuggestionCollectionFingerprint.matchOrThrow(
                 createSearchSuggestionsFingerprint
             ).let {
-                it.method.apply {
+                it.mutableMethod.apply {
                     val helperMethodName = "patch_setCollection"
 
                     it.classDef.methods.add(
@@ -587,14 +579,23 @@ val toolBarComponentsPatch = bytecodePatch(
 
         hookToolBar("$GENERAL_CLASS_DESCRIPTOR->replaceCreateButton")
 
-        findmutableMethodOrThrow(
-            "Lcom/google/android/apps/youtube/app/application/Shell_SettingsActivity;"
-        ) {
-            name == "onCreate"
-        }.addInstruction(
-            0,
-            "invoke-static {p0}, $GENERAL_CLASS_DESCRIPTOR->setShellActivityTheme(Landroid/app/Activity;)V"
-        )
+        // Reemplazar findmutableMethodOrThrow por búsqueda manual
+        run {
+            val method = findMethodOrThrow(
+                "Lcom/google/android/apps/youtube/app/application/Shell_SettingsActivity;"
+            ) {
+                name == "onCreate"
+            }
+            val classDef = classes.find { it.type == "Lcom/google/android/apps/youtube/app/application/Shell_SettingsActivity;" }
+                ?: throw PatchException("Class not found: Lcom/google/android/apps/youtube/app/application/Shell_SettingsActivity;")
+            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.addInstruction(
+                0,
+                "invoke-static {p0}, $GENERAL_CLASS_DESCRIPTOR->setShellActivityTheme(Landroid/app/Activity;)V"
+            )
+        }
 
         // endregion
 

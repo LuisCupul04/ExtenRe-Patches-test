@@ -13,6 +13,7 @@ import com.extenre.patcher.extensions.InstructionExtensions.addInstructions
 import com.extenre.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.replaceInstruction
+import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.booleanOption
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patcher.patch.resourcePatch
@@ -31,7 +32,7 @@ import com.extenre.patches.youtube.utils.resourceid.sharedResourceIdPatch
 import com.extenre.patches.youtube.utils.settings.ResourceUtils.addPreference
 import com.extenre.patches.youtube.utils.settings.settingsPatch
 import com.extenre.util.findElementByAttributeValueOrThrow
-import com.extenre.util.findmutableMethodOrThrow
+import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getNode
@@ -45,6 +46,7 @@ import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.reference.FieldReference
+import com.android.tools.smali.dexlib2.util.MethodUtil
 import org.w3c.dom.Element
 
 private const val EXTENSION_CLASS_DESCRIPTOR =
@@ -53,6 +55,7 @@ private const val FILTER_CLASS_DESCRIPTOR =
     "$SPANS_PATH/SnackBarFilter;"
 
 private val snackBarComponentsBytecodePatch = bytecodePatch(
+    name = "snack-bar-components-bytecode-patch",
     description = "snackBarComponentsBytecodePatch"
 ) {
     dependsOn(
@@ -75,7 +78,7 @@ private val snackBarComponentsBytecodePatch = bytecodePatch(
         }
 
         bottomUiContainerPreFingerprint.matchOrThrow().let {
-            it.method.apply {
+            it.mutableMethod.apply {
                 val insertIndex = it.patternMatch!!.startIndex + 1
 
                 addInstruction(
@@ -86,7 +89,7 @@ private val snackBarComponentsBytecodePatch = bytecodePatch(
         }
 
         bottomUiContainerThemeFingerprint.matchOrThrow().let {
-            it.method.apply {
+            it.mutableMethod.apply {
                 val darkThemeIndex = it.patternMatch!!.startIndex + 2
                 val darkThemeReference =
                     getInstruction<ReferenceInstruction>(darkThemeIndex).reference.toString()
@@ -152,32 +155,41 @@ private val snackBarComponentsBytecodePatch = bytecodePatch(
                     setBackground(index + 1, register)
                 }
 
-            findmutableMethodOrThrow(definingClass).apply {
-                val contextIndex = indexOfFirstInstructionOrThrow {
-                    opcode == Opcode.IPUT_OBJECT &&
-                            getReference<FieldReference>()?.type == "Landroid/content/Context;"
+            // Reemplazar findmutableMethodOrThrow por búsqueda manual
+            run {
+                val method = findMethodOrThrow(definingClass)
+                val classDef = classes.find { it.type == definingClass }
+                    ?: throw PatchException("Class not found: $definingClass")
+                val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                    MethodUtil.methodSignaturesMatch(it, method)
                 }
-                val contextRegister =
-                    getInstruction<TwoRegisterInstruction>(contextIndex).registerA
+                mutableMethod.apply {
+                    val contextIndex = indexOfFirstInstructionOrThrow {
+                        opcode == Opcode.IPUT_OBJECT &&
+                                getReference<FieldReference>()?.type == "Landroid/content/Context;"
+                    }
+                    val contextRegister =
+                        getInstruction<TwoRegisterInstruction>(contextIndex).registerA
 
-                addInstructions(
-                    contextIndex, """
+                    addInstructions(
+                        contextIndex, """
                         invoke-static {v$contextRegister}, $EXTENSION_CLASS_DESCRIPTOR->invertSnackBarTheme(Landroid/content/Context;)Landroid/content/Context;
                         move-result-object v$contextRegister
                         """
-                )
+                    )
 
-                val viewIndex = indexOfFirstInstructionOrThrow {
-                    opcode == Opcode.IPUT_OBJECT &&
-                            getReference<FieldReference>()?.type == "Landroid/widget/FrameLayout;"
+                    val viewIndex = indexOfFirstInstructionOrThrow {
+                        opcode == Opcode.IPUT_OBJECT &&
+                                getReference<FieldReference>()?.type == "Landroid/widget/FrameLayout;"
+                    }
+                    val viewRegister =
+                        getInstruction<TwoRegisterInstruction>(viewIndex).registerA
+
+                    addInstructions(
+                        viewIndex,
+                        "invoke-static {v$viewRegister}, $EXTENSION_CLASS_DESCRIPTOR->hideLithoSnackBar(Landroid/widget/FrameLayout;)V"
+                    )
                 }
-                val viewRegister =
-                    getInstruction<TwoRegisterInstruction>(viewIndex).registerA
-
-                addInstructions(
-                    viewIndex,
-                    "invoke-static {v$viewRegister}, $EXTENSION_CLASS_DESCRIPTOR->hideLithoSnackBar(Landroid/widget/FrameLayout;)V"
-                )
             }
         }
 
@@ -220,7 +232,7 @@ val snackBarComponentsPatch = resourcePatch(
         "Light Pink" to "#FFFCCFF3",
         "Light Blue" to "#FFD1E0FF",
         "Light Green" to "#FFCCFFCC",
-        "Light Yellow" to "#FFFDFFCC",
+        "Light Yellow" to "#FDFFCC",
         "Light Orange" to "#FFFFE6CC",
         "Light Red" to "#FFFFD6D6",
     )

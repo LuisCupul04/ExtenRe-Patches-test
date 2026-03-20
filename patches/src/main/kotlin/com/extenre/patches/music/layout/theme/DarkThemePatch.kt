@@ -11,6 +11,7 @@ package com.extenre.patches.music.layout.theme
 import com.extenre.patcher.extensions.InstructionExtensions.addInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.replaceInstruction
+import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.booleanOption
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patcher.patch.resourcePatch
@@ -27,11 +28,13 @@ import com.extenre.patches.shared.drawable.drawableColorHookPatch
 import com.extenre.patches.shared.materialyou.baseMaterialYou
 import com.extenre.util.ResourceGroup
 import com.extenre.util.copyResources
+import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
 import com.extenre.util.valueOrThrow
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
+import com.android.tools.smali.dexlib2.util.MethodUtil
 import org.w3c.dom.Element
 
 private const val EXTENSION_CLASS_DESCRIPTOR =
@@ -62,12 +65,21 @@ private val darkThemeBytecodePatch = bytecodePatch(
             )
         }
 
-        mutableMethodOrThrow(PATCH_STATUS_CLASS_DESCRIPTOR) {
-            name == "DarkTheme"
-        }.replaceInstruction(
-            0,
-            "const/4 v0, 0x1"
-        )
+        // Reemplazar mutableMethodOrThrow por búsqueda manual
+        run {
+            val method = findMethodOrThrow(PATCH_STATUS_CLASS_DESCRIPTOR) {
+                name == "DarkTheme"
+            }
+            val classDef = classes.find { it.type == PATCH_STATUS_CLASS_DESCRIPTOR }
+                ?: throw PatchException("Class not found: $PATCH_STATUS_CLASS_DESCRIPTOR")
+            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.replaceInstruction(
+                0,
+                "const/4 v0, 0x1"
+            )
+        }
     }
 }
 

@@ -14,7 +14,6 @@ import com.extenre.patcher.patch.stringOption
 import com.extenre.patches.youtube.layout.branding.icon.customBrandingIconPatch
 import com.extenre.patches.youtube.utils.compatibility.Constants.COMPATIBLE_PACKAGE
 import com.extenre.patches.youtube.utils.patch.PatchList.VISUAL_PREFERENCES_ICONS_FOR_YOUTUBE
-import com.extenre.patches.youtube.utils.settings.ResourceUtils.RVX_PREFERENCE_PATH
 import com.extenre.patches.youtube.utils.settings.ResourceUtils.YOUTUBE_SETTINGS_PATH
 import com.extenre.patches.youtube.utils.settings.ResourceUtils.addPreference
 import com.extenre.patches.youtube.utils.settings.settingsPatch
@@ -28,11 +27,12 @@ import org.w3c.dom.Element
 
 private const val DEFAULT_ICON = "extension"
 private const val EMPTY_ICON = "empty_icon"
+private const val EXTENRE_PREFERENCE_PATH = "res/xml/extenre_prefs.xml" // Definida localmente
 
 @Suppress("unused")
 val visualPreferencesIconsPatch = resourcePatch(
-    VISUAL_PREFERENCES_ICONS_FOR_YOUTUBE.title,
-    VISUAL_PREFERENCES_ICONS_FOR_YOUTUBE.summary,
+    name = VISUAL_PREFERENCES_ICONS_FOR_YOUTUBE.key,
+    description = "${VISUAL_PREFERENCES_ICONS_FOR_YOUTUBE.title}: ${VISUAL_PREFERENCES_ICONS_FOR_YOUTUBE.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 
@@ -63,9 +63,9 @@ val visualPreferencesIconsPatch = resourcePatch(
         description = """
             Whether to apply Visual preferences icons to all settings menus.
 
-            If true: icons are applied to the parent PreferenceScreen of YouTube settings, the parent PreferenceScreen of RVX settings and the RVX sub-settings (if supported).
+            If true: icons are applied to the parent PreferenceScreen of YouTube settings, the parent PreferenceScreen of ExtenRe settings and the ExtenRe sub-settings (if supported).
 
-            If false: icons are applied only to the parent PreferenceScreen of YouTube settings and RVX settings.
+            If false: icons are applied only to the parent PreferenceScreen of YouTube settings and ExtenRe settings.
             """.trimIndentMultiline(),
         required = true
     )
@@ -74,7 +74,7 @@ val visualPreferencesIconsPatch = resourcePatch(
 
     fun Set<String>.setPreferenceIcon() = associateWith { title ->
         when (title) {
-            // Internal RVX settings
+            // Internal ExtenRe settings
             "extenre_alt_thumbnail_home" -> "extenre_hide_navigation_home_button_icon"
             "extenre_alt_thumbnail_library" -> "extenre_preference_screen_video_icon"
             "extenre_alt_thumbnail_player" -> "extenre_preference_screen_player_icon"
@@ -143,11 +143,14 @@ val visualPreferencesIconsPatch = resourcePatch(
         val customBrandingIconType = appIconOption
             .underBarOrThrow()
 
-        if (applyToAll == true) {
-            preferenceKey += rvxPreferenceKey
+        val allPreferenceKeys = mutableSetOf<String>().apply {
+            addAll(preferenceKey)
+            if (applyToAll == true) {
+                addAll(extenrePreferenceKey)
+            }
         }
 
-        preferenceIcon = preferenceKey.setPreferenceIcon()
+        preferenceIcon = allPreferenceKeys.setPreferenceIcon()
 
         // region copy shared resources.
 
@@ -166,7 +169,7 @@ val visualPreferencesIconsPatch = resourcePatch(
 
         // endregion.
 
-        // region copy RVX settings menu icon.
+        // region copy ExtenRe settings menu icon.
 
         val fallbackIconPath = "youtube/visual/icons/extension"
         val iconPath = when (selectedIconType) {
@@ -185,7 +188,7 @@ val visualPreferencesIconsPatch = resourcePatch(
 
             // Add a fallback extended icon
             // It's needed if someone provides custom path to icon(s) folder
-            // but custom branding icons for Extended setting are predefined,
+            // but custom branding icons for ExtenRe setting are predefined,
             // so it won't copy custom branding icon
             // and will raise an error without fallback icon
             copyResources(fallbackIconPath, resourceGroup)
@@ -213,8 +216,7 @@ val visualPreferencesIconsPatch = resourcePatch(
                         ?.let { title ->
                             val drawableName = when (title) {
                                 in preferenceKey -> preferenceIcon[title]
-
-                                // Add custom RVX settings menu icon
+                                in extenrePreferenceKey -> preferenceIcon[title]
                                 in intentKey -> intentIcon[title]
                                 in emptyTitles -> EMPTY_ICON
                                 else -> null
@@ -258,7 +260,7 @@ val visualPreferencesIconsPatch = resourcePatch(
     }
 }
 
-private var preferenceKey = setOf(
+private val preferenceKey = setOf(
     // YouTube settings.
     "about_key",
     "accessibility_settings_key",
@@ -282,7 +284,7 @@ private var preferenceKey = setOf(
     "video_quality_settings_key",
     "your_data_key",
 
-    // RVX settings.
+    // ExtenRe settings (main screens)
     "extenre_preference_screen_ads",
     "extenre_preference_screen_alt_thumbnails",
     "extenre_preference_screen_feed",
@@ -297,8 +299,8 @@ private var preferenceKey = setOf(
     "extenre_preference_screen_misc",
 )
 
-private var extenrePreferenceKey = setOf(
-    // Internal RVX settings (items without prefix are listed first, others are sorted alphabetically)
+private val extenrePreferenceKey = setOf(
+    // Internal ExtenRe settings (items without prefix are listed first, others are sorted alphabetically)
     "gms_core_settings",
     "sb_create_new_segment",
     "sb_voting_button",
