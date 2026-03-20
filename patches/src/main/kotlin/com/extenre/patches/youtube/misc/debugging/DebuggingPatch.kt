@@ -60,33 +60,32 @@ val debuggingPatch = bytecodePatch(
             Pair(debugString, debugBooleanField)
         }
 
-        debuggingFingerprint.mutableClassOrThrow().let { mutableClass ->
-            val staticField = mutableClass.staticFields.find { field ->
-                field.type == "Z"
-            } ?: throw PatchException("Could not find static boolean field")
+        val mutableClass = debuggingFingerprint.mutableClassOrThrow()
+        val staticField = mutableClass.staticFields.find { field ->
+            field.type == "Z"
+        } ?: throw PatchException("Could not find static boolean field")
 
-            val getterMethod = mutableClass.methods.find { method ->
-                method.returnType == "Z" && method.parameters.isEmpty()
-            } ?: throw PatchException("Could not find getter method")
+        val getterMethod = mutableClass.methods.find { method ->
+            method.returnType == "Z" && method.parameters.isEmpty()
+        } ?: throw PatchException("Could not find getter method")
 
-            // Reemplazar originalmutableMethodOrThrow por búsqueda manual
-            val method = findMethodOrThrow(EXTENSION_CLASS_DESCRIPTOR) {
-                name == "getDebugState"
-            }
-            val classDef = classes.find { it.type == EXTENSION_CLASS_DESCRIPTOR }
-                ?: throw PatchException("Class not found: $EXTENSION_CLASS_DESCRIPTOR")
-            val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                MethodUtil.methodSignaturesMatch(it, method)
-            }
-            mutableMethod.addInstructions(
-                0, """
+        // Reemplazar findmutableMethodOrThrow por búsqueda manual
+        val method = findMethodOrThrow(EXTENSION_CLASS_DESCRIPTOR) {
+            name == "getDebugState"
+        }
+        val classDef = classes.find { it.type == EXTENSION_CLASS_DESCRIPTOR }
+            ?: throw PatchException("Class not found: $EXTENSION_CLASS_DESCRIPTOR")
+        val mutableMethod = proxy(classDef).mutableClass.methods.first {
+            MethodUtil.methodSignaturesMatch(it, method)
+        }
+        mutableMethod.addInstructions(
+            0, """
                     sget-object v0, $staticField
                     return v0
                     """
-            )
+        )
 
-            mutableClass.methods.add(getterMethod)
-        }
+        mutableClass.methods.add(getterMethod)
 
         // endregion
 

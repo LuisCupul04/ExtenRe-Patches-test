@@ -160,55 +160,63 @@ val flyoutMenuComponentsPatch = bytecodePatch(
 
         // region patch for enable compact dialog
 
-        screenWidthFingerprint.matchOrThrow(screenWidthParentFingerprint).let {
-            it.mutableMethod.apply {
-                val index = it.patternMatch!!.startIndex
-                val register = getInstruction<TwoRegisterInstruction>(index).registerA
+        val screenWidthMatch = screenWidthFingerprint.matchOrThrow(screenWidthParentFingerprint)
+        val screenWidthMethod = screenWidthMatch.method
+        val screenWidthClassDef = screenWidthMatch.classDef
+        val screenWidthMutableMethod = proxy(screenWidthClassDef).mutableClass.methods.first {
+            MethodUtil.methodSignaturesMatch(it, screenWidthMethod)
+        }
+        screenWidthMutableMethod.apply {
+            val index = screenWidthMatch.patternMatch!!.startIndex
+            val register = getInstruction<TwoRegisterInstruction>(index).registerA
 
-                addInstructions(
-                    index, """
-                        invoke-static {v$register}, $FLYOUT_CLASS_DESCRIPTOR->enableCompactDialog(I)I
-                        move-result v$register
-                        """
-                )
-            }
+            addInstructions(
+                index, """
+                    invoke-static {v$register}, $FLYOUT_CLASS_DESCRIPTOR->enableCompactDialog(I)I
+                    move-result v$register
+                    """
+            )
         }
 
         // endregion
 
         // region patch for hide flyout menu components and replace menu
 
-        menuItemFingerprint.matchOrThrow().let {
-            it.mutableMethod.apply {
-                val freeIndex = indexOfFirstInstructionOrThrow(Opcode.OR_INT_LIT16)
-                val textViewIndex = it.patternMatch!!.startIndex
-                val imageViewIndex = it.patternMatch!!.endIndex
+        val menuItemMatch = menuItemFingerprint.matchOrThrow()
+        val menuItemMethod = menuItemMatch.method
+        val menuItemClassDef = menuItemMatch.classDef
+        val menuItemMutableMethod = proxy(menuItemClassDef).mutableClass.methods.first {
+            MethodUtil.methodSignaturesMatch(it, menuItemMethod)
+        }
+        menuItemMutableMethod.apply {
+            val freeIndex = indexOfFirstInstructionOrThrow(Opcode.OR_INT_LIT16)
+            val textViewIndex = menuItemMatch.patternMatch!!.startIndex
+            val imageViewIndex = menuItemMatch.patternMatch!!.endIndex
 
-                val freeRegister =
-                    getInstruction<TwoRegisterInstruction>(freeIndex).registerA
-                val textViewRegister =
-                    getInstruction<OneRegisterInstruction>(textViewIndex).registerA
-                val imageViewRegister =
-                    getInstruction<OneRegisterInstruction>(imageViewIndex).registerA
+            val freeRegister =
+                getInstruction<TwoRegisterInstruction>(freeIndex).registerA
+            val textViewRegister =
+                getInstruction<OneRegisterInstruction>(textViewIndex).registerA
+            val imageViewRegister =
+                getInstruction<OneRegisterInstruction>(imageViewIndex).registerA
 
-                val enumIndex = indexOfFirstInstructionOrThrow {
-                    opcode == Opcode.INVOKE_STATIC
-                            && (this as? ReferenceInstruction)?.reference.toString()
-                        .contains("(I)L")
-                } + 1
-                val enumRegister = getInstruction<OneRegisterInstruction>(enumIndex).registerA
+            val enumIndex = indexOfFirstInstructionOrThrow {
+                opcode == Opcode.INVOKE_STATIC
+                        && (this as? ReferenceInstruction)?.reference.toString()
+                    .contains("(I)L")
+            } + 1
+            val enumRegister = getInstruction<OneRegisterInstruction>(enumIndex).registerA
 
-                addInstructionsWithLabels(
-                    enumIndex + 1,
-                    """
-                        invoke-static {v$enumRegister, v$textViewRegister, v$imageViewRegister}, $FLYOUT_CLASS_DESCRIPTOR->replaceComponents(Ljava/lang/Enum;Landroid/widget/TextView;Landroid/widget/ImageView;)V
-                        invoke-static {v$enumRegister}, $FLYOUT_CLASS_DESCRIPTOR->hideComponents(Ljava/lang/Enum;)Z
-                        move-result v$freeRegister
-                        if-nez v$freeRegister, :hide
-                        """,
-                    ExternalLabel("hide", getInstruction(implementation!!.instructions.lastIndex))
-                )
-            }
+            addInstructionsWithLabels(
+                enumIndex + 1,
+                """
+                    invoke-static {v$enumRegister, v$textViewRegister, v$imageViewRegister}, $FLYOUT_CLASS_DESCRIPTOR->replaceComponents(Ljava/lang/Enum;Landroid/widget/TextView;Landroid/widget/ImageView;)V
+                    invoke-static {v$enumRegister}, $FLYOUT_CLASS_DESCRIPTOR->hideComponents(Ljava/lang/Enum;)Z
+                    move-result v$freeRegister
+                    if-nez v$freeRegister, :hide
+                    """,
+                ExternalLabel("hide", getInstruction(implementation!!.instructions.lastIndex))
+            )
         }
 
         touchOutsideFingerprint.mutableMethodOrThrow().apply {
@@ -242,10 +250,6 @@ val flyoutMenuComponentsPatch = bytecodePatch(
 
         // region patch for enable sleep timer
 
-        /**
-         * Forces sleep timer menu to be enabled.
-         * This method may be desperate in the future.
-         */
         if (sleepTimerFingerprint.resolvable()) {
             sleepTimerFingerprint.mutableMethodOrThrow().apply {
                 val insertIndex = implementation!!.instructions.lastIndex

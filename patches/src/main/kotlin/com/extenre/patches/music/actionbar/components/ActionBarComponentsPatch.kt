@@ -13,6 +13,7 @@ import com.extenre.patcher.extensions.InstructionExtensions.addInstructions
 import com.extenre.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.removeInstruction
+import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patcher.util.smali.ExternalLabel
 import com.extenre.patches.music.utils.ACTION_BAR_POSITION_FEATURE_FLAG
@@ -55,6 +56,7 @@ import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
+import com.android.tools.smali.dexlib2.util.MethodUtil
 import kotlin.math.min
 
 private const val FILTER_CLASS_DESCRIPTOR =
@@ -112,91 +114,96 @@ val actionBarComponentsPatch = bytecodePatch(
         }
 
         if (!is_7_25_or_greater) {
-            actionBarComponentFingerprint.matchOrThrow().let {
-                it.mutableMethod.apply {
-                    // hook download button
-                    val addViewIndex = indexOfFirstInstructionOrThrow {
-                        opcode == Opcode.INVOKE_VIRTUAL &&
-                                getReference<MethodReference>()?.name == "addView"
-                    }
-                    val addViewRegister =
-                        getInstruction<FiveRegisterInstruction>(addViewIndex).registerD
+            val actionBarComponentMatch = actionBarComponentFingerprint.matchOrThrow()
+            val actionBarComponentMethod = actionBarComponentMatch.method
+            val actionBarComponentClassDef = actionBarComponentMatch.classDef
+            val actionBarComponentMutableMethod = proxy(actionBarComponentClassDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, actionBarComponentMethod)
+            }
 
-                    addInstruction(
-                        addViewIndex + 1,
-                        "invoke-static {v$addViewRegister}, $ACTIONBAR_CLASS_DESCRIPTOR->inAppDownloadButtonOnClick(Landroid/view/View;)V"
-                    )
+            actionBarComponentMutableMethod.apply {
+                // hook download button
+                val addViewIndex = indexOfFirstInstructionOrThrow {
+                    opcode == Opcode.INVOKE_VIRTUAL &&
+                            getReference<MethodReference>()?.name == "addView"
+                }
+                val addViewRegister =
+                    getInstruction<FiveRegisterInstruction>(addViewIndex).registerD
 
-                    // hide action button label
-                    val noLabelIndex = indexOfFirstInstructionOrThrow {
-                        val reference = (this as? ReferenceInstruction)?.reference.toString()
-                        opcode == Opcode.INVOKE_DIRECT &&
-                                reference.endsWith("<init>(Landroid/content/Context;)V") &&
-                                !reference.contains("Lcom/google/android/libraries/youtube/common/ui/YouTubeButton;")
-                    } - 2
-                    val replaceIndex = indexOfFirstInstructionOrThrow {
-                        opcode == Opcode.INVOKE_DIRECT &&
-                                (this as? ReferenceInstruction)?.reference.toString()
+                addInstruction(
+                    addViewIndex + 1,
+                    "invoke-static {v$addViewRegister}, $ACTIONBAR_CLASS_DESCRIPTOR->inAppDownloadButtonOnClick(Landroid/view/View;)V"
+                )
+
+                // hide action button label
+                val noLabelIndex = indexOfFirstInstructionOrThrow {
+                    val reference = (this as? ReferenceInstruction)?.reference.toString()
+                    opcode == Opcode.INVOKE_DIRECT &&
+                            reference.endsWith("<init>(Landroid/content/Context;)V") &&
+                            !reference.contains("Lcom/google/android/libraries/youtube/common/ui/YouTubeButton;")
+                } - 2
+                val replaceIndex = indexOfFirstInstructionOrThrow {
+                    opcode == Opcode.INVOKE_DIRECT &&
+                            (this as? ReferenceInstruction)?.reference.toString()
                                     .endsWith("Lcom/google/android/libraries/youtube/common/ui/YouTubeButton;-><init>(Landroid/content/Context;)V")
-                    } - 2
-                    val replaceInstruction = getInstruction<TwoRegisterInstruction>(replaceIndex)
-                    val replaceReference =
-                        getInstruction<ReferenceInstruction>(replaceIndex).reference
+                } - 2
+                val replaceInstruction = getInstruction<TwoRegisterInstruction>(replaceIndex)
+                val replaceReference =
+                    getInstruction<ReferenceInstruction>(replaceIndex).reference
 
-                    addInstructionsWithLabels(
-                        replaceIndex + 1, """
+                addInstructionsWithLabels(
+                    replaceIndex + 1, """
                             invoke-static {}, $ACTIONBAR_CLASS_DESCRIPTOR->hideActionBarLabel()Z
                             move-result v${replaceInstruction.registerA}
                             if-nez v${replaceInstruction.registerA}, :hidden
                             iget-object v${replaceInstruction.registerA}, v${replaceInstruction.registerB}, $replaceReference
                             """, ExternalLabel("hidden", getInstruction(noLabelIndex))
-                    )
-                    removeInstruction(replaceIndex)
+                )
+                removeInstruction(replaceIndex)
 
-                    // hide action button
-                    val hasNextIndex = indexOfFirstInstructionOrThrow {
-                        opcode == Opcode.INVOKE_INTERFACE &&
-                                getReference<MethodReference>()?.name == "hasNext"
-                    }
-                    val freeRegister = min(implementation!!.registerCount - parameters.size - 2, 15)
+                // hide action button
+                val hasNextIndex = indexOfFirstInstructionOrThrow {
+                    opcode == Opcode.INVOKE_INTERFACE &&
+                            getReference<MethodReference>()?.name == "hasNext"
+                }
+                val freeRegister = min(implementation!!.registerCount - parameters.size - 2, 15)
 
-                    val spannedIndex = indexOfFirstInstructionOrThrow {
-                        getReference<MethodReference>()?.returnType == "Landroid/text/Spanned;"
-                    }
-                    val spannedRegister =
-                        getInstruction<FiveRegisterInstruction>(spannedIndex).registerC
-                    val spannedReference =
-                        getInstruction<ReferenceInstruction>(spannedIndex).reference
+                val spannedIndex = indexOfFirstInstructionOrThrow {
+                    getReference<MethodReference>()?.returnType == "Landroid/text/Spanned;"
+                }
+                val spannedRegister =
+                    getInstruction<FiveRegisterInstruction>(spannedIndex).registerC
+                val spannedReference =
+                    getInstruction<ReferenceInstruction>(spannedIndex).reference
 
-                    addInstructionsWithLabels(
-                        spannedIndex + 1, """
+                addInstructionsWithLabels(
+                    spannedIndex + 1, """
                             invoke-static {}, $ACTIONBAR_CLASS_DESCRIPTOR->hideActionButton()Z
                             move-result v$freeRegister
                             if-nez v$freeRegister, :hidden
                             invoke-static {v$spannedRegister}, $spannedReference
                             """, ExternalLabel("hidden", getInstruction(hasNextIndex))
-                    )
-                    removeInstruction(spannedIndex)
+                )
+                removeInstruction(spannedIndex)
 
-                    // set action button identifier
-                    val buttonTypeDownloadIndex = it.patternMatch!!.startIndex + 1
-                    val buttonTypeDownloadRegister =
-                        getInstruction<OneRegisterInstruction>(buttonTypeDownloadIndex).registerA
+                // set action button identifier
+                val buttonTypeDownloadIndex = actionBarComponentMatch.patternMatch!!.startIndex + 1
+                val buttonTypeDownloadRegister =
+                    getInstruction<OneRegisterInstruction>(buttonTypeDownloadIndex).registerA
 
-                    val buttonTypeIndex = it.patternMatch!!.endIndex - 1
-                    val buttonTypeRegister =
-                        getInstruction<OneRegisterInstruction>(buttonTypeIndex).registerA
+                val buttonTypeIndex = actionBarComponentMatch.patternMatch!!.endIndex - 1
+                val buttonTypeRegister =
+                    getInstruction<OneRegisterInstruction>(buttonTypeIndex).registerA
 
-                    addInstruction(
-                        buttonTypeIndex + 2,
-                        "invoke-static {v$buttonTypeRegister}, $ACTIONBAR_CLASS_DESCRIPTOR->setButtonType(Ljava/lang/Object;)V"
-                    )
+                addInstruction(
+                    buttonTypeIndex + 2,
+                    "invoke-static {v$buttonTypeRegister}, $ACTIONBAR_CLASS_DESCRIPTOR->setButtonType(Ljava/lang/Object;)V"
+                )
 
-                    addInstruction(
-                        buttonTypeDownloadIndex,
-                        "invoke-static {v$buttonTypeDownloadRegister}, $ACTIONBAR_CLASS_DESCRIPTOR->setButtonTypeDownload(I)V"
-                    )
-                }
+                addInstruction(
+                    buttonTypeDownloadIndex,
+                    "invoke-static {v$buttonTypeDownloadRegister}, $ACTIONBAR_CLASS_DESCRIPTOR->setButtonTypeDownload(I)V"
+                )
             }
         }
 

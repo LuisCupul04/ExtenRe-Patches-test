@@ -177,7 +177,6 @@ val videoInformationPatch = bytecodePatch(
                 this,
                 seekSourceMethodName,
                 "overrideVideoTime",
-                "seekTo",
                 "videoInformationClass"
             )
         }
@@ -205,7 +204,6 @@ val videoInformationPatch = bytecodePatch(
                 this,
                 seekSourceMethodName,
                 "overrideMDXVideoTime",
-                "seekTo",
                 "videoInformationMDXClass"
             )
         }
@@ -382,4 +380,3 @@ internal fun videoTimeHook(targetMethodClass: String, targetMethodName: String) 
         videoTimeConstructorInsertIndex++,
         "$targetMethodClass->$targetMethodName(J)V"
     )
-    

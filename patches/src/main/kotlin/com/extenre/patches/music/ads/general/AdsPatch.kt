@@ -90,7 +90,6 @@ val adsPatch = adsPatch(
             )
         }
 
-
         // get premium dialog in player
         if (is_7_28_or_greater) {
             mapOf(

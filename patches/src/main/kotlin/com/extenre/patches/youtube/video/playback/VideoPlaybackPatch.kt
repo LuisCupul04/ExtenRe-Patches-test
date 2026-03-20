@@ -22,10 +22,8 @@ import com.extenre.patches.youtube.utils.playservice.is_19_18_or_greater
 import com.extenre.patches.youtube.utils.playservice.versionCheckPatch
 import com.extenre.patches.youtube.utils.settings.ResourceUtils.addPreference
 import com.extenre.patches.youtube.utils.settings.settingsPatch
-import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
-import com.extenre.util.fingerprint.mutableClassOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.getWalkerMethod
 import com.extenre.util.indexOfFirstInstructionOrThrow
@@ -60,19 +58,23 @@ val videoPlaybackPatch = bytecodePatch(
     execute {
         // region patch for default playback speed
 
-        playbackSpeedFingerprint.matchOrThrow(playbackSpeedParentFingerprint).let {
-            it.method.apply {
-                val startIndex = it.patternMatch!!.startIndex
-                val speedRegister =
-                    getInstruction<OneRegisterInstruction>(startIndex + 1).registerA
+        val playbackSpeedMatch = playbackSpeedFingerprint.matchOrThrow(playbackSpeedParentFingerprint)
+        val playbackSpeedMethod = playbackSpeedMatch.method
+        val playbackSpeedClassDef = playbackSpeedMatch.classDef
+        val playbackSpeedMutableMethod = proxy(playbackSpeedClassDef).mutableClass.methods.first {
+            MethodUtil.methodSignaturesMatch(it, playbackSpeedMethod)
+        }
+        playbackSpeedMutableMethod.apply {
+            val startIndex = playbackSpeedMatch.patternMatch!!.startIndex
+            val speedRegister =
+                getInstruction<OneRegisterInstruction>(startIndex + 1).registerA
 
-                addInstructions(
-                    startIndex + 2, """
+            addInstructions(
+                startIndex + 2, """
                         invoke-static {v$speedRegister}, $PLAYER_CLASS_DESCRIPTOR->getPlaybackSpeed(F)F
                         move-result v$speedRegister
                         """
-                )
-            }
+            )
         }
 
         // Called when user selects a playback speed from the flyout menu.

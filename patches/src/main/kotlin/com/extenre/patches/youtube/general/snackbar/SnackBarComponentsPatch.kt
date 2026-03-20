@@ -77,47 +77,55 @@ private val snackBarComponentsBytecodePatch = bytecodePatch(
             )
         }
 
-        bottomUiContainerPreFingerprint.matchOrThrow().let {
-            it.mutableMethod.apply {
-                val insertIndex = it.patternMatch!!.startIndex + 1
+        val bottomUiContainerPreMatch = bottomUiContainerPreFingerprint.matchOrThrow()
+        val bottomUiContainerPreMethod = bottomUiContainerPreMatch.method
+        val bottomUiContainerPreClassDef = bottomUiContainerPreMatch.classDef
+        val bottomUiContainerPreMutableMethod = proxy(bottomUiContainerPreClassDef).mutableClass.methods.first {
+            MethodUtil.methodSignaturesMatch(it, bottomUiContainerPreMethod)
+        }
+        bottomUiContainerPreMutableMethod.apply {
+            val insertIndex = bottomUiContainerPreMatch.patternMatch!!.startIndex + 1
 
-                addInstruction(
-                    insertIndex,
-                    "invoke-static {}, $EXTENSION_CLASS_DESCRIPTOR->lithoSnackBarLoaded()V"
-                )
-            }
+            addInstruction(
+                insertIndex,
+                "invoke-static {}, $EXTENSION_CLASS_DESCRIPTOR->lithoSnackBarLoaded()V"
+            )
         }
 
-        bottomUiContainerThemeFingerprint.matchOrThrow().let {
-            it.mutableMethod.apply {
-                val darkThemeIndex = it.patternMatch!!.startIndex + 2
-                val darkThemeReference =
-                    getInstruction<ReferenceInstruction>(darkThemeIndex).reference.toString()
+        val bottomUiContainerThemeMatch = bottomUiContainerThemeFingerprint.matchOrThrow()
+        val bottomUiContainerThemeMethod = bottomUiContainerThemeMatch.method
+        val bottomUiContainerThemeClassDef = bottomUiContainerThemeMatch.classDef
+        val bottomUiContainerThemeMutableMethod = proxy(bottomUiContainerThemeClassDef).mutableClass.methods.first {
+            MethodUtil.methodSignaturesMatch(it, bottomUiContainerThemeMethod)
+        }
+        bottomUiContainerThemeMutableMethod.apply {
+            val darkThemeIndex = bottomUiContainerThemeMatch.patternMatch!!.startIndex + 2
+            val darkThemeReference =
+                getInstruction<ReferenceInstruction>(darkThemeIndex).reference.toString()
 
-                implementation!!.instructions
-                    .withIndex()
-                    .filter { (_, instruction) ->
-                        instruction.opcode == Opcode.SGET_OBJECT &&
-                                (instruction as? ReferenceInstruction)?.reference?.toString() == darkThemeReference
-                    }
-                    .map { (index, _) -> index }
-                    .reversed()
-                    .forEach { index ->
-                        val appThemeIndex =
-                            indexOfFirstInstructionReversedOrThrow(index, Opcode.MOVE_RESULT_OBJECT)
-                        val appThemeRegister =
-                            getInstruction<OneRegisterInstruction>(appThemeIndex).registerA
-                        val darkThemeRegister =
-                            getInstruction<OneRegisterInstruction>(index).registerA
+            implementation!!.instructions
+                .withIndex()
+                .filter { (_, instruction) ->
+                    instruction.opcode == Opcode.SGET_OBJECT &&
+                            (instruction as? ReferenceInstruction)?.reference?.toString() == darkThemeReference
+                }
+                .map { (index, _) -> index }
+                .reversed()
+                .forEach { index ->
+                    val appThemeIndex =
+                        indexOfFirstInstructionReversedOrThrow(index, Opcode.MOVE_RESULT_OBJECT)
+                    val appThemeRegister =
+                        getInstruction<OneRegisterInstruction>(appThemeIndex).registerA
+                    val darkThemeRegister =
+                        getInstruction<OneRegisterInstruction>(index).registerA
 
-                        addInstructions(
-                            index + 1, """
+                    addInstructions(
+                        index + 1, """
                                 invoke-static {v$appThemeRegister, v$darkThemeRegister}, $EXTENSION_CLASS_DESCRIPTOR->invertSnackBarTheme(Ljava/lang/Enum;Ljava/lang/Enum;)Ljava/lang/Enum;
                                 move-result-object v$appThemeRegister
                                 """
-                        )
-                    }
-            }
+                    )
+                }
         }
 
         fun MutableMethod.setBackground(index: Int, register: Int) =

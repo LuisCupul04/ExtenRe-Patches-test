@@ -44,6 +44,7 @@ import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.formats.Instruction31i
 import com.android.tools.smali.dexlib2.iface.instruction.formats.Instruction35c
+import com.android.tools.smali.dexlib2.util.MethodUtil
 
 private const val ADS_FILTER_CLASS_DESCRIPTOR =
     "$COMPONENTS_PATH/AdsFilter;"
@@ -107,9 +108,13 @@ val adsPatch = adsPatch(
 
         // region patch for hide get premium
 
-        // Usamos matchOrThrow para obtener el Match y luego el mutableMethod
         val compactMatch = compactYpcOfferModuleViewFingerprint.matchOrThrow()
-        compactMatch.mutableMethod.apply {
+        val compactMethod = compactMatch.method
+        val compactClassDef = compactMatch.classDef
+        val compactMutableMethod = proxy(compactClassDef).mutableClass.methods.first {
+            MethodUtil.methodSignaturesMatch(it, compactMethod)
+        }
+        compactMutableMethod.apply {
             val startIndex = compactMatch.patternMatch!!.startIndex
             val measuredWidthRegister =
                 getInstruction<TwoRegisterInstruction>(startIndex).registerA
@@ -126,7 +131,7 @@ val adsPatch = adsPatch(
                     const/4 v$measuredWidthRegister, 0x0
                     const/4 v$measuredHeightRegister, 0x0
                     """,
-                listOf(ExternalLabel("show", getInstruction(startIndex + 2)))
+                ExternalLabel("show", getInstruction(startIndex + 2))
             )
         }
 
@@ -201,7 +206,7 @@ val adsPatch = adsPatch(
                             if-eqz v0, :show
                             return-void
                             """,
-                        listOf(ExternalLabel("show", getInstruction(0)))
+                        ExternalLabel("show", getInstruction(0))
                     )
                 }
 

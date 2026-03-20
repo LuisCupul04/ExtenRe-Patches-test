@@ -90,7 +90,12 @@ private val settingsBytecodePatch = bytecodePatch(
         // region patch for hook activity
 
         settingsHeadersFragmentFingerprint.matchOrThrow().let {
-            it.mutableMethod.apply {
+            val method = it.method
+            val classDef = it.classDef
+            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
                 val targetIndex = it.patternMatch!!.endIndex
                 val targetRegister = getInstruction<OneRegisterInstruction>(targetIndex).registerA
 
@@ -106,7 +111,12 @@ private val settingsBytecodePatch = bytecodePatch(
         // region patch for hook preference change listener
 
         preferenceFingerprint.matchOrThrow().let {
-            it.mutableMethod.apply {
+            val method = it.method
+            val classDef = it.classDef
+            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
                 val targetIndex = it.patternMatch!!.endIndex
                 val keyRegister = getInstruction<FiveRegisterInstruction>(targetIndex).registerD
                 val valueRegister = getInstruction<FiveRegisterInstruction>(targetIndex).registerE

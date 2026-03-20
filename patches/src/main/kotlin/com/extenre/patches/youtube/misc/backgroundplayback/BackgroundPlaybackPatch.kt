@@ -21,7 +21,6 @@ import com.extenre.patches.youtube.utils.playservice.is_19_28_or_greater
 import com.extenre.patches.youtube.utils.playservice.versionCheckPatch
 import com.extenre.patches.youtube.utils.settings.ResourceUtils.addPreference
 import com.extenre.patches.youtube.utils.settings.settingsPatch
-import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
@@ -91,35 +90,43 @@ val backgroundPlaybackPatch = bytecodePatch(
 
         // Don't play music videos in background when audio only is not available.
         // Called when the video is opened.
-        videoStageFingerprint.matchOrThrow().let {
-            it.method.apply {
-                val startIndex = it.patternMatch!!.startIndex
-                val targetIndex = indexOfFirstInstructionOrThrow(startIndex, Opcode.INVOKE_VIRTUAL)
-                val register = getInstruction<FiveRegisterInstruction>(targetIndex).registerC
+        val videoStageMatch = videoStageFingerprint.matchOrThrow()
+        val videoStageMethod = videoStageMatch.method
+        val videoStageClassDef = videoStageMatch.classDef
+        val videoStageMutableMethod = proxy(videoStageClassDef).mutableClass.methods.first {
+            MethodUtil.methodSignaturesMatch(it, videoStageMethod)
+        }
+        videoStageMutableMethod.apply {
+            val startIndex = videoStageMatch.patternMatch!!.startIndex
+            val targetIndex = indexOfFirstInstructionOrThrow(startIndex, Opcode.INVOKE_VIRTUAL)
+            val register = getInstruction<FiveRegisterInstruction>(targetIndex).registerC
 
-                addInstructions(
-                    targetIndex, """
+            addInstructions(
+                targetIndex, """
                         invoke-static {v$register}, $PLAYER_CLASS_DESCRIPTOR->checkAudioOnlyState(Ljava/lang/Object;)Ljava/lang/Object;
                         move-result-object v$register
                         """
-                )
-            }
+            )
         }
 
         // Called when a video is opened to check if audio only should be used.
-        audioTrackCheckFingerprint.matchOrThrow().let {
-            it.method.apply {
-                val startIndex = it.patternMatch!!.startIndex
-                val targetIndex = indexOfFirstInstructionOrThrow(startIndex, Opcode.IGET)
-                val register = getInstruction<TwoRegisterInstruction>(targetIndex).registerA
+        val audioTrackCheckMatch = audioTrackCheckFingerprint.matchOrThrow()
+        val audioTrackCheckMethod = audioTrackCheckMatch.method
+        val audioTrackCheckClassDef = audioTrackCheckMatch.classDef
+        val audioTrackCheckMutableMethod = proxy(audioTrackCheckClassDef).mutableClass.methods.first {
+            MethodUtil.methodSignaturesMatch(it, audioTrackCheckMethod)
+        }
+        audioTrackCheckMutableMethod.apply {
+            val startIndex = audioTrackCheckMatch.patternMatch!!.startIndex
+            val targetIndex = indexOfFirstInstructionOrThrow(startIndex, Opcode.IGET)
+            val register = getInstruction<TwoRegisterInstruction>(targetIndex).registerA
 
-                addInstructions(
-                    targetIndex, """
+            addInstructions(
+                targetIndex, """
                         invoke-static {v$register}, $PLAYER_CLASS_DESCRIPTOR->getAudioOnlyState(Z)Z
                         move-result v$register
                         """
-                )
-            }
+            )
         }
 
         // endregion

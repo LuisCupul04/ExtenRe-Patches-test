@@ -18,6 +18,7 @@ import com.extenre.patches.music.utils.playservice.is_7_03_or_greater
 import com.extenre.patches.music.utils.playservice.versionCheckPatch
 import com.extenre.util.fingerprint.methodOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
+import com.android.tools.smali.dexlib2.util.MethodUtil
 
 private val hooks = mutableSetOf<Hook>()
 

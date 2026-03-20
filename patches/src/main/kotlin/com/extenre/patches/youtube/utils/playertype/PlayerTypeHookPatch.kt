@@ -56,7 +56,7 @@ private const val FILTER_CLASS_DESCRIPTOR =
     "$COMPONENTS_PATH/LayoutReloadObserverFilter;"
 
 val playerTypeHookPatch = bytecodePatch(
-    name = "player-Type-Hook-Patch",
+    name = "player-type-hook-patch",
     description = "playerTypeHookPatch"
 ) {
     dependsOn(
@@ -133,49 +133,55 @@ val playerTypeHookPatch = bytecodePatch(
 
         // region patch for set video state
 
-        videoStateFingerprint.matchOrThrow().let {
-            it.mutableMethod.apply {  // Cambio: it.method -> it.mutableMethod
-                val endIndex = it.patternMatch!!.startIndex + 1
-                val videoStateFieldName =
-                    getInstruction<ReferenceInstruction>(endIndex).reference
+        val videoStateMatch = videoStateFingerprint.matchOrThrow()
+        val videoStateMethod = videoStateMatch.method
+        val videoStateClassDef = videoStateMatch.classDef
+        val videoStateMutableMethod = proxy(videoStateClassDef).mutableClass.methods.first {
+            MethodUtil.methodSignaturesMatch(it, videoStateMethod)
+        }
+        videoStateMutableMethod.apply {
+            val endIndex = videoStateMatch.patternMatch!!.startIndex + 1
+            val videoStateFieldName =
+                getInstruction<ReferenceInstruction>(endIndex).reference
 
-                addInstructions(
-                    0, """
+            addInstructions(
+                0, """
                         iget-object v0, p1, $videoStateFieldName  # copyvideoState parameter field
                         invoke-static {v0}, $EXTENSION_PLAYER_TYPE_HOOK_CLASS_DESCRIPTOR->setVideoState(Ljava/lang/Enum;)V
                         """
-                )
-            }
+            )
         }
 
         // endregion
 
         // region patch for hook browse id
 
-        browseIdClassFingerprint.matchOrThrow().let {
-            it.method.apply {
-                val targetIndex = indexOfFirstStringInstructionOrThrow("VL") - 1
-                val targetClass = getInstruction(targetIndex)
-                    .getReference<FieldReference>()
-                    ?.definingClass
-                    ?: throw PatchException("Could not find browseId class")
+        val browseIdClassMatch = browseIdClassFingerprint.matchOrThrow()
+        val browseIdClassMethod = browseIdClassMatch.method
+        val browseIdClassClassDef = browseIdClassMatch.classDef
+        browseIdClassMethod.apply {
+            val targetIndex = indexOfFirstStringInstructionOrThrow("VL") - 1
+            val targetClass = getInstruction(targetIndex)
+                .getReference<FieldReference>()
+                ?.definingClass
+                ?: throw PatchException("Could not find browseId class")
 
-                // Reemplazar findmutableMethodOrThrow por búsqueda manual
-                run {
-                    val method = findMethodOrThrow(targetClass)
-                    val classDef = classes.find { it.type == targetClass }
-                        ?: throw PatchException("Class not found: $targetClass")
-                    val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                        MethodUtil.methodSignaturesMatch(it, method)
-                    }
-                    mutableMethod.apply {
-                        val browseIdFieldReference = getInstruction<ReferenceInstruction>(
-                            indexOfFirstInstructionOrThrow(Opcode.IPUT_OBJECT)
-                        ).reference
-                        val browseIdFieldName = (browseIdFieldReference as FieldReference).name
+            // Reemplazar findmutableMethodOrThrow por búsqueda manual
+            run {
+                val method = findMethodOrThrow(targetClass)
+                val classDef = classes.find { it.type == targetClass }
+                    ?: throw PatchException("Class not found: $targetClass")
+                val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                    MethodUtil.methodSignaturesMatch(it, method)
+                }
+                mutableMethod.apply {
+                    val browseIdFieldReference = getInstruction<ReferenceInstruction>(
+                        indexOfFirstInstructionOrThrow(Opcode.IPUT_OBJECT)
+                    ).reference
+                    val browseIdFieldName = (browseIdFieldReference as FieldReference).name
 
-                        val smaliInstructions =
-                            """
+                    val smaliInstructions =
+                        """
                             if-eqz v0, :ignore
                             iget-object v0, v0, $definingClass->$browseIdFieldName:Ljava/lang/String;
                             if-eqz v0, :ignore
@@ -185,14 +191,13 @@ val playerTypeHookPatch = bytecodePatch(
                             return-object v0
                             """
 
-                        addStaticFieldToExtension(
-                            EXTENSION_ROOT_VIEW_HOOK_CLASS_DESCRIPTOR,
-                            "getBrowseId",
-                            "browseIdClass",
-                            definingClass,
-                            smaliInstructions
-                        )
-                    }
+                    addStaticFieldToExtension(
+                        EXTENSION_ROOT_VIEW_HOOK_CLASS_DESCRIPTOR,
+                        "getBrowseId",
+                        "browseIdClass",
+                        definingClass,
+                        smaliInstructions
+                    )
                 }
             }
         }
@@ -253,36 +258,35 @@ val playerTypeHookPatch = bytecodePatch(
         }
 
         // Add interface for extensions code to call obfuscated methods.
-        appCompatToolbarBackButtonFingerprint.matchOrThrow().let {
-            it.classDef.apply {
-                interfaces.add(EXTENSION_ROOT_VIEW_TOOLBAR_INTERFACE)
+        val appCompatToolbarBackButtonMatch = appCompatToolbarBackButtonFingerprint.matchOrThrow()
+        appCompatToolbarBackButtonMatch.classDef.apply {
+            interfaces.add(EXTENSION_ROOT_VIEW_TOOLBAR_INTERFACE)
 
-                val definingClass = type
-                val obfuscatedMethodName = it.originalMethod.name
-                val returnType = "Landroid/graphics/drawable/Drawable;"
+            val definingClass = type
+            val obfuscatedMethodName = appCompatToolbarBackButtonMatch.originalMethod.name
+            val returnType = "Landroid/graphics/drawable/Drawable;"
 
-                methods.add(
-                    ImmutableMethod(
-                        definingClass,
-                        "patch_getToolbarIcon",
-                        listOf(),
-                        returnType,
-                        AccessFlags.PUBLIC.value or AccessFlags.FINAL.value,
-                        null,
-                        null,
-                        MutableMethodImplementation(2),
-                    ).toMutable().apply {
-                        addInstructions(
-                            0,
-                            """
+            methods.add(
+                ImmutableMethod(
+                    definingClass,
+                    "patch_getToolbarIcon",
+                    listOf(),
+                    returnType,
+                    AccessFlags.PUBLIC.value or AccessFlags.FINAL.value,
+                    null,
+                    null,
+                    MutableMethodImplementation(2),
+                ).toMutable().apply {
+                    addInstructions(
+                        0,
+                        """
                                  invoke-virtual { p0 }, $definingClass->$obfuscatedMethodName()$returnType
                                  move-result-object v0
                                  return-object v0
                              """
-                        )
-                    }
-                )
-            }
+                    )
+                }
+            )
         }
 
         // endregion

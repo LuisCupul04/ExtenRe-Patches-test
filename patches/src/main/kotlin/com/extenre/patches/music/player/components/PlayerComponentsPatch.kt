@@ -378,19 +378,23 @@ val playerComponentsPatch = bytecodePatch(
             pendingIntentReceiverFingerprint.mutableMethodOrThrow()
 
         if (!is_6_42_or_greater) {
-            nextButtonVisibilityFingerprint.matchOrThrow(miniPlayerParentFingerprint).let {
-                it.mutableMethod.apply {
-                    val targetIndex = it.patternMatch!!.startIndex + 1
-                    val targetRegister =
-                        getInstruction<OneRegisterInstruction>(targetIndex).registerA
+            val nextButtonVisibilityMatch = nextButtonVisibilityFingerprint.matchOrThrow(miniPlayerParentFingerprint)
+            val nextButtonVisibilityMethod = nextButtonVisibilityMatch.method
+            val nextButtonVisibilityClassDef = nextButtonVisibilityMatch.classDef
+            val nextButtonVisibilityMutableMethod = proxy(nextButtonVisibilityClassDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, nextButtonVisibilityMethod)
+            }
+            nextButtonVisibilityMutableMethod.apply {
+                val targetIndex = nextButtonVisibilityMatch.patternMatch!!.startIndex + 1
+                val targetRegister =
+                    getInstruction<OneRegisterInstruction>(targetIndex).registerA
 
-                    addInstructions(
-                        targetIndex + 1, """
+                addInstructions(
+                    targetIndex + 1, """
                             invoke-static {v$targetRegister}, $PLAYER_CLASS_DESCRIPTOR->addMiniPlayerNextButton(Z)Z
                             move-result v$targetRegister
                             """
-                    )
-                }
+                )
             }
         } else {
             miniPlayerConstructorMutableMethod.setOnclickListener(
@@ -623,18 +627,22 @@ val playerComponentsPatch = bytecodePatch(
 
         // region patch for forced minimized player
 
-        minimizedPlayerFingerprint.matchOrThrow().let {
-            it.mutableMethod.apply {
-                val insertIndex = it.patternMatch!!.endIndex
-                val insertRegister = getInstruction<OneRegisterInstruction>(insertIndex).registerA
+        val minimizedPlayerMatch = minimizedPlayerFingerprint.matchOrThrow()
+        val minimizedPlayerMethod = minimizedPlayerMatch.method
+        val minimizedPlayerClassDef = minimizedPlayerMatch.classDef
+        val minimizedPlayerMutableMethod = proxy(minimizedPlayerClassDef).mutableClass.methods.first {
+            MethodUtil.methodSignaturesMatch(it, minimizedPlayerMethod)
+        }
+        minimizedPlayerMutableMethod.apply {
+            val insertIndex = minimizedPlayerMatch.patternMatch!!.endIndex
+            val insertRegister = getInstruction<OneRegisterInstruction>(insertIndex).registerA
 
-                addInstructions(
-                    insertIndex, """
+            addInstructions(
+                insertIndex, """
                         invoke-static {v$insertRegister}, $PLAYER_CLASS_DESCRIPTOR->enableForcedMiniPlayer(Z)Z
                         move-result v$insertRegister
                         """
-                )
-            }
+            )
         }
 
         addSwitchPreference(
@@ -800,19 +808,23 @@ val playerComponentsPatch = bytecodePatch(
 
                 // region hides default text display when the app is cold started
 
-                miniPlayerDefaultTextFingerprint.matchOrThrow().let {
-                    it.mutableMethod.apply {
-                        val insertIndex = it.patternMatch!!.endIndex
-                        val insertRegister =
-                            getInstruction<TwoRegisterInstruction>(insertIndex).registerB
+                val miniPlayerDefaultTextMatch = miniPlayerDefaultTextFingerprint.matchOrThrow()
+                val miniPlayerDefaultTextMethod = miniPlayerDefaultTextMatch.method
+                val miniPlayerDefaultTextClassDef = miniPlayerDefaultTextMatch.classDef
+                val miniPlayerDefaultTextMutableMethod = proxy(miniPlayerDefaultTextClassDef).mutableClass.methods.first {
+                    MethodUtil.methodSignaturesMatch(it, miniPlayerDefaultTextMethod)
+                }
+                miniPlayerDefaultTextMutableMethod.apply {
+                    val insertIndex = miniPlayerDefaultTextMatch.patternMatch!!.endIndex
+                    val insertRegister =
+                        getInstruction<TwoRegisterInstruction>(insertIndex).registerB
 
-                        addInstructions(
-                            insertIndex, """
+                    addInstructions(
+                        insertIndex, """
                                 invoke-static {v$insertRegister}, $PLAYER_CLASS_DESCRIPTOR->enableSwipeToDismissMiniPlayer(Ljava/lang/Object;)Ljava/lang/Object;
                                 move-result-object v$insertRegister
                                 """
-                        )
-                    }
+                    )
                 }
 
                 // endregion
@@ -979,18 +991,22 @@ val playerComponentsPatch = bytecodePatch(
 
         // region patch for hide fullscreen share button
 
-        remixGenericButtonFingerprint.matchOrThrow().let {
-            it.mutableMethod.apply {
-                val targetIndex = it.patternMatch!!.endIndex
-                val targetRegister = getInstruction<TwoRegisterInstruction>(targetIndex).registerA
+        val remixGenericButtonMatch = remixGenericButtonFingerprint.matchOrThrow()
+        val remixGenericButtonMethod = remixGenericButtonMatch.method
+        val remixGenericButtonClassDef = remixGenericButtonMatch.classDef
+        val remixGenericButtonMutableMethod = proxy(remixGenericButtonClassDef).mutableClass.methods.first {
+            MethodUtil.methodSignaturesMatch(it, remixGenericButtonMethod)
+        }
+        remixGenericButtonMutableMethod.apply {
+            val targetIndex = remixGenericButtonMatch.patternMatch!!.endIndex
+            val targetRegister = getInstruction<TwoRegisterInstruction>(targetIndex).registerA
 
-                addInstructions(
-                    targetIndex + 1, """
+            addInstructions(
+                targetIndex + 1, """
                         invoke-static {v$targetRegister}, $PLAYER_CLASS_DESCRIPTOR->hideFullscreenShareButton(I)I
                         move-result v$targetRegister
                         """
-                )
-            }
+            )
         }
 
         addSwitchPreference(
@@ -1238,21 +1254,24 @@ val playerComponentsPatch = bytecodePatch(
 
             // region region limit the height of the engagement panel
 
-            engagementPanelHeightFingerprint.matchOrThrow(engagementPanelHeightParentFingerprint)
-                .let {
-                    it.mutableMethod.apply {
-                        val targetIndex = it.patternMatch!!.endIndex
-                        val targetRegister =
-                            getInstruction<OneRegisterInstruction>(targetIndex).registerA
+            val engagementPanelHeightMatch = engagementPanelHeightFingerprint.matchOrThrow(engagementPanelHeightParentFingerprint)
+            val engagementPanelHeightMethod = engagementPanelHeightMatch.method
+            val engagementPanelHeightClassDef = engagementPanelHeightMatch.classDef
+            val engagementPanelHeightMutableMethod = proxy(engagementPanelHeightClassDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, engagementPanelHeightMethod)
+            }
+            engagementPanelHeightMutableMethod.apply {
+                val targetIndex = engagementPanelHeightMatch.patternMatch!!.endIndex
+                val targetRegister =
+                    getInstruction<OneRegisterInstruction>(targetIndex).registerA
 
-                        addInstructions(
-                            targetIndex + 1, """
+                addInstructions(
+                    targetIndex + 1, """
                             invoke-static {v$targetRegister}, $PLAYER_CLASS_DESCRIPTOR->restoreOldCommentsPopUpPanels(Z)Z
                             move-result v$targetRegister
                             """
-                        )
-                    }
-                }
+                )
+            }
 
             miniPlayerDefaultViewVisibilityFingerprint.mutableClassOrThrow().let {
                 it.methods.find { method ->

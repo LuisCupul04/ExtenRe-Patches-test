@@ -130,7 +130,7 @@ internal lateinit var speedSelectionInsertMethod: MutableMethod
 internal lateinit var videoEndMethod: MutableMethod
 
 val videoInformationPatch = bytecodePatch(
-    name = "video-Information-Patch",
+    name = "video-information-patch",
     description = "videoInformationPatch"
 ) {
     dependsOn(
@@ -351,7 +351,7 @@ val videoInformationPatch = bytecodePatch(
         videoIsLiveMethodCall = channelIdFingerprint.getPlayerResponseInstruction("Z")
 
         playbackInitializationFingerprint.matchOrThrow().let {
-            it.method.apply {
+            it.mutableMethod.apply {
                 val targetIndex = indexOfPlayerResponseModelDirectInstruction(this) + 1
                 val targetRegister = getInstruction<OneRegisterInstruction>(targetIndex).registerA
 
@@ -368,7 +368,7 @@ val videoInformationPatch = bytecodePatch(
         }
 
         videoIdFingerprintBackgroundPlay.matchOrThrow().let {
-            it.method.apply {
+            it.mutableMethod.apply {
                 val targetIndex = indexOfPlayerResponseModelInterfaceInstruction(this)
                 val targetRegister = getInstruction<FiveRegisterInstruction>(targetIndex).registerC
 
@@ -383,7 +383,7 @@ val videoInformationPatch = bytecodePatch(
         }
 
         videoIdFingerprintShorts.matchOrThrow().let {
-            it.method.apply {
+            it.mutableMethod.apply {
                 val targetIndex = indexOfPlayerResponseModelInterfaceInstruction(this)
                 val targetRegister = getInstruction<FiveRegisterInstruction>(targetIndex).registerC
 
@@ -429,7 +429,7 @@ val videoInformationPatch = bytecodePatch(
          * Hook current playback speed
          */
         onPlaybackSpeedItemClickFingerprint.matchOrThrow().let {
-            it.method.apply {
+            it.mutableMethod.apply {
                 speedSelectionInsertMethod = this
                 val speedSelectionValueInstructionIndex =
                     indexOfFirstInstructionOrThrow(Opcode.IGET)
@@ -496,7 +496,7 @@ val videoInformationPatch = bytecodePatch(
         }
 
         videoIdFingerprintShorts.matchOrThrow().let {
-            it.method.apply {
+            it.mutableMethod.apply {
                 val shortsPlaybackSpeedClassField = it.classDef.fields.find { field ->
                     field.type == setPlaybackSpeedMethodReference.definingClass
                 } ?: throw PatchException("Failed to find hook field")
@@ -812,7 +812,7 @@ val videoInformationPatch = bytecodePatch(
             }
 
         videoQualityArrayFingerprint.matchOrThrow(formatStreamModelBuilderFingerprint).let {
-            it.method.apply {
+            it.mutableMethod.apply {
                 val index = it.patternMatch!!.startIndex
                 val register = getInstruction<OneRegisterInstruction>(index).registerA
 
@@ -827,7 +827,7 @@ val videoInformationPatch = bytecodePatch(
 
         videoQualityListFingerprint.matchOrThrow().let {
             val classDef = it.classDef
-            it.method.apply {
+            it.mutableMethod.apply {
                 classDef.interfaces.add(EXTENSION_VIDEO_QUALITY_MENU_INTERFACE)
 
                 classDef.methods.add(
@@ -876,7 +876,7 @@ val videoInformationPatch = bytecodePatch(
         }
 
         videoQualitySetterFingerprint.matchOrThrow().let {
-            it.method.apply {
+            it.mutableMethod.apply {
                 val textIndex = it.patternMatch!!.endIndex
                 val textRegister = getInstruction<TwoRegisterInstruction>(textIndex).registerA
 

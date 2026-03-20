@@ -249,7 +249,12 @@ val toolBarComponentsPatch = bytecodePatch(
         }
 
         youActionBarFingerprint.matchOrThrow(setActionBarRingoFingerprint).let {
-            it.mutableMethod.apply {
+            val method = it.method
+            val classDef = it.classDef
+            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
                 injectSearchBarHook(
                     it.patternMatch!!.endIndex,
                     "enableWideSearchBarInYouTab"
@@ -375,49 +380,57 @@ val toolBarComponentsPatch = bytecodePatch(
 
         // region patch for hide voice search button
 
-        searchBarFingerprint.matchOrThrow(searchBarParentFingerprint).let {
-            it.mutableMethod.apply {
-                val startIndex = it.patternMatch!!.startIndex
-                val setVisibilityIndex = indexOfFirstInstructionOrThrow(startIndex) {
-                    opcode == Opcode.INVOKE_VIRTUAL &&
-                            getReference<MethodReference>()?.name == "setVisibility"
-                }
-                val setVisibilityInstruction =
-                    getInstruction<FiveRegisterInstruction>(setVisibilityIndex)
-
-                replaceInstruction(
-                    setVisibilityIndex,
-                    "invoke-static {v${setVisibilityInstruction.registerC}, v${setVisibilityInstruction.registerD}}, " +
-                            "$GENERAL_CLASS_DESCRIPTOR->hideVoiceSearchButton(Landroid/view/View;I)V"
-                )
+        val searchBarMatch = searchBarFingerprint.matchOrThrow(searchBarParentFingerprint)
+        val searchBarMethod = searchBarMatch.method
+        val searchBarClassDef = searchBarMatch.classDef
+        val searchBarMutableMethod = proxy(searchBarClassDef).mutableClass.methods.first {
+            MethodUtil.methodSignaturesMatch(it, searchBarMethod)
+        }
+        searchBarMutableMethod.apply {
+            val startIndex = searchBarMatch.patternMatch!!.startIndex
+            val setVisibilityIndex = indexOfFirstInstructionOrThrow(startIndex) {
+                opcode == Opcode.INVOKE_VIRTUAL &&
+                        getReference<MethodReference>()?.name == "setVisibility"
             }
+            val setVisibilityInstruction =
+                getInstruction<FiveRegisterInstruction>(setVisibilityIndex)
+
+            replaceInstruction(
+                setVisibilityIndex,
+                "invoke-static {v${setVisibilityInstruction.registerC}, v${setVisibilityInstruction.registerD}}, " +
+                        "$GENERAL_CLASS_DESCRIPTOR->hideVoiceSearchButton(Landroid/view/View;I)V"
+            )
         }
 
-        searchResultFingerprint.matchOrThrow().let {
-            it.mutableMethod.apply {
-                val voiceInputControllerActivityMethodCall =
-                    voiceInputControllerFingerprint
-                        .mutableMethodOrThrow(voiceInputControllerParentFingerprint)
-                        .methodCall()
+        val searchResultMatch = searchResultFingerprint.matchOrThrow()
+        val searchResultMethod = searchResultMatch.method
+        val searchResultClassDef = searchResultMatch.classDef
+        val searchResultMutableMethod = proxy(searchResultClassDef).mutableClass.methods.first {
+            MethodUtil.methodSignaturesMatch(it, searchResultMethod)
+        }
+        searchResultMutableMethod.apply {
+            val voiceInputControllerActivityMethodCall =
+                voiceInputControllerFingerprint
+                    .mutableMethodOrThrow(voiceInputControllerParentFingerprint)
+                    .methodCall()
 
-                val voiceInputControllerActivityIndex =
-                    indexOfFirstInstructionOrThrow {
-                        opcode == Opcode.INVOKE_VIRTUAL &&
-                                getReference<MethodReference>()?.toString() == voiceInputControllerActivityMethodCall
-                    }
-                val setOnClickListenerIndex =
-                    indexOfFirstInstructionOrThrow(voiceInputControllerActivityIndex) {
-                        opcode == Opcode.INVOKE_VIRTUAL &&
-                                getReference<MethodReference>()?.name == "setOnClickListener"
-                    }
-                val viewRegister =
-                    getInstruction<FiveRegisterInstruction>(setOnClickListenerIndex).registerC
+            val voiceInputControllerActivityIndex =
+                indexOfFirstInstructionOrThrow {
+                    opcode == Opcode.INVOKE_VIRTUAL &&
+                            getReference<MethodReference>()?.toString() == voiceInputControllerActivityMethodCall
+                }
+            val setOnClickListenerIndex =
+                indexOfFirstInstructionOrThrow(voiceInputControllerActivityIndex) {
+                    opcode == Opcode.INVOKE_VIRTUAL &&
+                            getReference<MethodReference>()?.name == "setOnClickListener"
+                }
+            val viewRegister =
+                getInstruction<FiveRegisterInstruction>(setOnClickListenerIndex).registerC
 
-                addInstruction(
-                    setOnClickListenerIndex + 1,
-                    "invoke-static {v$viewRegister}, $GENERAL_CLASS_DESCRIPTOR->hideVoiceSearchButton(Landroid/view/View;)V"
-                )
-            }
+            addInstruction(
+                setOnClickListenerIndex + 1,
+                "invoke-static {v$viewRegister}, $GENERAL_CLASS_DESCRIPTOR->hideVoiceSearchButton(Landroid/view/View;)V"
+            )
         }
 
         // endregion
@@ -444,37 +457,42 @@ val toolBarComponentsPatch = bytecodePatch(
                 )
             }
 
-            searchSuggestionCollectionFingerprint.matchOrThrow(
+            val searchSuggestionCollectionMatch = searchSuggestionCollectionFingerprint.matchOrThrow(
                 createSearchSuggestionsFingerprint
-            ).let {
-                it.mutableMethod.apply {
-                    val helperMethodName = "patch_setCollection"
+            )
+            val searchSuggestionCollectionMethod = searchSuggestionCollectionMatch.method
+            val searchSuggestionCollectionClassDef = searchSuggestionCollectionMatch.classDef
+            val searchSuggestionCollectionMutableMethod = proxy(searchSuggestionCollectionClassDef).mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, searchSuggestionCollectionMethod)
+            }
+            searchSuggestionCollectionMutableMethod.apply {
+                val helperMethodName = "patch_setCollection"
 
-                    it.classDef.methods.add(
-                        ImmutableMethod(
-                            it.classDef.type,
-                            helperMethodName,
-                            listOf(
-                                ImmutableMethodParameter(
-                                    "Ljava/util/Collection;",
-                                    annotations,
-                                    "collection"
-                                ),
-                                ImmutableMethodParameter(
-                                    "Ljava/lang/String;",
-                                    annotations,
-                                    "searchQuery"
-                                )
+                searchSuggestionCollectionMatch.classDef.methods.add(
+                    ImmutableMethod(
+                        searchSuggestionCollectionMatch.classDef.type,
+                        helperMethodName,
+                        listOf(
+                            ImmutableMethodParameter(
+                                "Ljava/util/Collection;",
+                                annotations,
+                                "collection"
                             ),
-                            "Ljava/util/Collection;",
-                            AccessFlags.PRIVATE.value or AccessFlags.FINAL.value,
-                            annotations,
-                            null,
-                            MutableMethodImplementation(8),
-                        ).toMutable().apply {
-                            addInstructionsWithLabels(
-                                0,
-                                """
+                            ImmutableMethodParameter(
+                                "Ljava/lang/String;",
+                                annotations,
+                                "searchQuery"
+                            )
+                        ),
+                        "Ljava/util/Collection;",
+                        AccessFlags.PRIVATE.value or AccessFlags.FINAL.value,
+                        annotations,
+                        null,
+                        MutableMethodImplementation(8),
+                    ).toMutable().apply {
+                        addInstructionsWithLabels(
+                            0,
+                            """
                                     # Collection.
                                     move-object/from16 v0, p1
                                     # Search query.
@@ -515,18 +533,17 @@ val toolBarComponentsPatch = bytecodePatch(
                                     :exit
                                     return-object v0
                                     """,
-                            )
-                        }
-                    )
+                        )
+                    }
+                )
 
-                    addInstructions(
-                        0, """
+                addInstructions(
+                    0, """
                             invoke-direct/range {p0 .. p2}, $definingClass->$helperMethodName(Ljava/util/Collection;Ljava/lang/String;)Ljava/util/Collection;
                             move-result-object v0
                             move-object/from16 p1, v0
                             """
-                    )
-                }
+                )
             }
 
             roundEdgeSearchBarFeatureFlagFingerprint.injectLiteralInstructionBooleanCall(
