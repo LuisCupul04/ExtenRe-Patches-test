@@ -11,6 +11,7 @@ package com.extenre.patches.music.ads.general
 import com.extenre.patcher.extensions.InstructionExtensions.addInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.replaceInstruction
+import com.extenre.patcher.patch.PatchException
 import com.extenre.patches.music.navigation.components.navigationBarComponentsPatch
 import com.extenre.patches.music.utils.compatibility.Constants.COMPATIBLE_PACKAGE
 import com.extenre.patches.music.utils.extension.Constants.ADS_PATH
@@ -59,7 +60,7 @@ private const val PREMIUM_PROMOTION_BANNER_CLASS_DESCRIPTOR =
 @Suppress("unused")
 val adsPatch = adsPatch(
     block = {
-        // Usar funciones para establecer nombre y descripción
+        // Usar funciones en lugar de asignaciones directas
         name(HIDE_ADS.key)
         description("${HIDE_ADS.title}: ${HIDE_ADS.summary}")
 
@@ -231,7 +232,7 @@ val adsPatch = adsPatch(
     }
 )
 
-// Función auxiliar para encontrar la instrucción setContentView (si no está importada)
+// Función auxiliar para encontrar la instrucción setContentView
 private fun indexOfSetContentViewInstruction(method: com.extenre.patcher.util.proxy.mutableTypes.MutableMethod): Int {
     return method.indexOfFirstInstructionOrThrow {
         opcode == Opcode.INVOKE_VIRTUAL &&
