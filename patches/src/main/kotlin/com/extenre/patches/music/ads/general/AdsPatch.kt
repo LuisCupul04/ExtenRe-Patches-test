@@ -60,9 +60,6 @@ private const val PREMIUM_PROMOTION_BANNER_CLASS_DESCRIPTOR =
 @Suppress("unused")
 val adsPatch = adsPatch(
     block = {
-        // Usar funciones en lugar de asignaciones directas
-        name(HIDE_ADS.key)
-        description("${HIDE_ADS.title}: ${HIDE_ADS.summary}")
 
         compatibleWith(COMPATIBLE_PACKAGE)
 
