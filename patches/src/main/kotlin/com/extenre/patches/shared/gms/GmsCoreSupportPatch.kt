@@ -34,6 +34,7 @@ import com.extenre.patches.shared.gms.Constants.PERMISSIONS
 import com.extenre.patches.shared.gms.Constants.PERMISSIONS_LEGACY
 import com.extenre.util.Utils.printWarn
 import com.extenre.util.Utils.trimIndentMultiline
+import com.extenre.util.fingerprint.methodOrNull
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
 import com.extenre.util.getReference
@@ -294,14 +295,19 @@ fun gmsCoreSupportPatch(
 
         fun transformPrimeMethod(packageName: String) {
             if (patchAllManifestEnabled) {
-                primeMethodFingerprint.mutableMethodOrNull()?.apply {
+                primeMethodFingerprint.methodOrNull()?.let { method ->
+                    val classDef = primeMethodFingerprint.classDefOrNull()
+                        ?: return@let
+                    val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                        MethodUtil.methodSignaturesMatch(it, method)
+                    }
                     var register = 2
-                    val index = instructions.indexOfFirst {
+                    val index = mutableMethod.instructions.indexOfFirst {
                         if (it.getReference<StringReference>()?.string != fromPackageName) return@indexOfFirst false
                         register = (it as OneRegisterInstruction).registerA
                         return@indexOfFirst true
                     }
-                    replaceInstruction(index, "const-string v$register, \"$packageName\"")
+                    mutableMethod.replaceInstruction(index, "const-string v$register, \"$packageName\"")
                 }
             } else {
                 setOf(
@@ -398,21 +404,28 @@ fun gmsCoreSupportPatch(
 
         // Verify GmsCore is installed and whitelisted for power optimizations and background usage.
         if (checkGmsCore == true) {
-            mainActivityOnCreateFingerprint.mutableMethodOrThrow().apply {
-                // Temporary fix for patches with an extension patch that hook the onCreate method as well.
-                val setContextIndex = indexOfFirstInstruction {
-                    val reference =
-                        getReference<MethodReference>() ?: return@indexOfFirstInstruction false
-
-                    reference.toString() == "Lcom/extenre/extension/shared/Utils;->setContext(Landroid/content/Context;)V"
+            mainActivityOnCreateFingerprint.methodOrNull()?.let { method ->
+                val classDef = mainActivityOnCreateFingerprint.classDefOrNull()
+                    ?: return@let
+                val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                    MethodUtil.methodSignaturesMatch(it, method)
                 }
+                mutableMethod.apply {
+                    // Temporary fix for patches with an extension patch that hook the onCreate method as well.
+                    val setContextIndex = indexOfFirstInstruction {
+                        val reference =
+                            getReference<MethodReference>() ?: return@indexOfFirstInstruction false
 
-                // Add after setContext call, because this patch needs the context.
-                addInstructions(
-                    if (setContextIndex < 0) 0 else setContextIndex + 1,
-                    "invoke-static/range { p0 .. p0 }, $EXTENSION_CLASS_DESCRIPTOR->" +
-                            "checkGmsCore(Landroid/app/Activity;)V",
-                )
+                        reference.toString() == "Lcom/extenre/extension/shared/Utils;->setContext(Landroid/content/Context;)V"
+                    }
+
+                    // Add after setContext call, because this patch needs the context.
+                    addInstructions(
+                        if (setContextIndex < 0) 0 else setContextIndex + 1,
+                        "invoke-static/range { p0 .. p0 }, $EXTENSION_CLASS_DESCRIPTOR->" +
+                                "checkGmsCore(Landroid/app/Activity;)V",
+                    )
+                }
             }
         }
 
