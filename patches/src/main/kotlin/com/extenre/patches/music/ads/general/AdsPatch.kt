@@ -11,7 +11,6 @@ package com.extenre.patches.music.ads.general
 import com.extenre.patcher.extensions.InstructionExtensions.addInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.replaceInstruction
-import com.extenre.patcher.util.MethodNavigator
 import com.extenre.patches.music.navigation.components.navigationBarComponentsPatch
 import com.extenre.patches.music.utils.compatibility.Constants.COMPATIBLE_PACKAGE
 import com.extenre.patches.music.utils.extension.Constants.ADS_PATH
@@ -45,6 +44,7 @@ import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.reference.FieldReference
+import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 import com.android.tools.smali.dexlib2.util.MethodUtil
 
 private const val ADS_FILTER_CLASS_DESCRIPTOR =
@@ -58,9 +58,11 @@ private const val PREMIUM_PROMOTION_BANNER_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val adsPatch = adsPatch(
-    name = HIDE_ADS.key,                     // ← Ahora como parámetro
-    description = "${HIDE_ADS.title}: ${HIDE_ADS.summary}", // ← como parámetro
     block = {
+        // Usar funciones para establecer nombre y descripción
+        name(HIDE_ADS.key)
+        description("${HIDE_ADS.title}: ${HIDE_ADS.summary}")
+
         compatibleWith(COMPATIBLE_PACKAGE)
 
         dependsOn(
@@ -160,10 +162,18 @@ val adsPatch = adsPatch(
             val viewIndex = indexOfFirstInstructionOrThrow(constIndex, Opcode.IGET_OBJECT)
             val viewReference = getInstruction<ReferenceInstruction>(viewIndex).reference.toString()
 
-            // Usar el contexto para crear el navigator
-            val navigator = with(this@execute) { MethodNavigator(this@apply) }
-            val walkerMethod = navigator.navigate(walkerIndex).stop()
-            walkerMethod.apply {
+            // Obtener la instrucción que hace la llamada
+            val invokeInstruction = getInstruction<ReferenceInstruction>(walkerIndex)
+            val methodRef = invokeInstruction.reference as? MethodReference
+                ?: throw PatchException("Could not get method reference at index $walkerIndex")
+
+            // Buscar el método mutable en la clase correspondiente
+            val targetClass = methodRef.definingClass
+            val targetMethod = mutableClassDefBy(targetClass).methods.first {
+                it.name == methodRef.name && it.parameterTypes == methodRef.parameterTypes
+            }
+
+            targetMethod.apply {
                 val insertIndex = indexOfFirstInstructionOrThrow {
                     getReference<FieldReference>()?.toString() == viewReference
                 }
@@ -221,11 +231,10 @@ val adsPatch = adsPatch(
     }
 )
 
-// Función auxiliar (mantenida igual)
+// Función auxiliar para encontrar la instrucción setContentView (si no está importada)
 private fun indexOfSetContentViewInstruction(method: com.extenre.patcher.util.proxy.mutableTypes.MutableMethod): Int {
-    // Implementación necesaria si no está en utils
     return method.indexOfFirstInstructionOrThrow {
         opcode == Opcode.INVOKE_VIRTUAL &&
-                getReference<com.android.tools.smali.dexlib2.iface.reference.MethodReference>()?.name == "setContentView"
+                getReference<MethodReference>()?.name == "setContentView"
     }
 }
