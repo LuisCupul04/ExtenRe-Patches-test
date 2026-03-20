@@ -11,12 +11,12 @@ package com.extenre.patches.music.utils.dismiss
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
-import com.extenre.patcher.util.MethodNavigator
 import com.extenre.patches.music.utils.extension.Constants.EXTENSION_PATH
 import com.extenre.util.addStaticFieldToExtension
 import com.extenre.util.fingerprint.methodOrThrow
-import com.extenre.util.indexOfDismissQueueInstruction   // Asegúrate de que esta función exista
-import com.android.tools.smali.dexlib2.util.MethodUtil
+import com.android.tools.smali.dexlib2.Opcode
+import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
+import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 
 private const val EXTENSION_VIDEO_UTILS_CLASS_DESCRIPTOR =
     "$EXTENSION_PATH/utils/VideoUtils;"
@@ -29,26 +29,31 @@ val dismissQueueHookPatch = bytecodePatch(
 
     execute {
         dismissQueueFingerprint.methodOrThrow().let { method ->
-            val dismissQueueIndex = indexOfDismissQueueInstruction(method)
+            // Buscar la primera instrucción INVOKE_VIRTUAL o INVOKE_STATIC en el método
+            val invokeIndex = method.implementation?.instructions?.indexOfFirst { instruction ->
+                instruction.opcode == Opcode.INVOKE_VIRTUAL || instruction.opcode == Opcode.INVOKE_STATIC
+            } ?: throw PatchException("No se encontró ninguna instrucción INVOKE en el método")
 
-            // Navegar al método llamado desde la instrucción en dismissQueueIndex
-            val navigator = MethodNavigator(method)
-            val targetMethod = navigator.navigate(dismissQueueIndex).stop() // MutableMethod
+            val invokeInstruction = method.getInstruction<ReferenceInstruction>(invokeIndex)
+            val methodRef = invokeInstruction.reference as? MethodReference
+                ?: throw PatchException("La instrucción INVOKE no contiene una referencia a método")
 
-            // Construir el código smali usando la clase del método destino
+            // Obtenemos la clase y nombre del método destino
+            val targetClass = methodRef.definingClass
+            val targetMethodName = methodRef.name
+
             val smaliInstructions = """
                 if-eqz v0, :ignore
-                invoke-virtual {v0}, ${targetMethod.definingClass}->${targetMethod.name}()V
+                invoke-virtual {v0}, $targetClass->$targetMethodName()V
                 :ignore
                 return-void
             """.trimIndent()
 
-            // Llamar a la función auxiliar (asumimos que está adaptada a la nueva API)
             addStaticFieldToExtension(
                 EXTENSION_VIDEO_UTILS_CLASS_DESCRIPTOR,
                 "dismissQueue",
                 "dismissQueueClass",
-                targetMethod.definingClass,
+                targetClass,
                 smaliInstructions
             )
         }
