@@ -310,37 +310,33 @@ internal object ResourceUtils {
         }
     }
 
-    fun addextenreSettingsPreference(insertKey: String) {
+    fun addEXTENRESettingsPreference(insertKey: String) {
         context.document(SETTINGS_HEADER_PATH).use { document ->
             document.doRecursively node@{
                 if (it !is Element) return@node
 
-                it.getAttributeNode("android:key")?.let { attribute ->
-                    if (attribute.textContent == insertKey && it.getAttributeNode(
-                            "app:allowDividerBelow"
-                        ).textContent == "false"
-                    ) {
-                        it.insertNode(PREFERENCE_SCREEN_TAG_NAME, it) {
-                            setAttribute(
-                                "android:title",
-                                "@string/extenre_settings_title"
-                            )
-                            setAttribute("android:key", "extenre_settings")
-                            setAttribute("app:allowDividerAbove", "false")
-                        }
-                        it.getAttributeNode("app:allowDividerBelow").textContent = "true"
-                        return@node
+                val keyAttr = it.getAttributeNode("android:key")
+                val allowDividerBelowAttr = it.getAttributeNode("app:allowDividerBelow")
+                if (keyAttr?.textContent == insertKey && allowDividerBelowAttr?.textContent == "false") {
+                    it.insertNode(PREFERENCE_SCREEN_TAG_NAME, it) {
+                        setAttribute(
+                            "android:title",
+                            "@string/extenre_settings_title"
+                        )
+                        setAttribute("android:key", "extenre_settings")
+                        setAttribute("app:allowDividerAbove", "false")
                     }
+                    allowDividerBelowAttr.textContent = "true"
+                    return@node
                 }
             }
 
             document.doRecursively node@{
                 if (it !is Element) return@node
 
-                it.getAttributeNode("app:allowDividerBelow")?.let { attribute ->
-                    if (attribute.textContent == "true") {
-                        attribute.textContent = "false"
-                    }
+                val allowDividerBelowAttr = it.getAttributeNode("app:allowDividerBelow")
+                if (allowDividerBelowAttr?.textContent == "true") {
+                    allowDividerBelowAttr.textContent = "false"
                 }
             }
         }

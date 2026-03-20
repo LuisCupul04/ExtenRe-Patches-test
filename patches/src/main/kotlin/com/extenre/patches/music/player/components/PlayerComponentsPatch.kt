@@ -96,8 +96,6 @@ import com.android.tools.smali.dexlib2.immutable.ImmutableMethodParameter
 import com.android.tools.smali.dexlib2.util.MethodUtil
 import org.w3c.dom.Element
 
-// ... (las constantes y funciones auxiliares se mantienen igual)
-
 private const val IMAGE_VIEW_TAG_NAME =
     "com.google.android.libraries.youtube.common.ui.TouchImageView"
 private const val NEXT_BUTTON_VIEW_ID =
@@ -894,12 +892,18 @@ val playerComponentsPatch = bytecodePatch(
 
         // this method is used for old player background (deprecated since YT Music v6.34.51)
         zenModeFingerprint.matchOrNull(miniPlayerConstructorFingerprint)?.let {
-            it.mutableMethod.apply {
-                val startIndex = it.patternMatch!!.startIndex
+            val zenMatch = it
+            val zenMethod = zenMatch.method
+            val zenClassDef = zenMatch.classDef
+            val zenMutableMethod = mutableClassDefBy(zenClassDef.type).methods.first {
+                MethodUtil.methodSignaturesMatch(it, zenMethod)
+            }
+            zenMutableMethod.apply {
+                val startIndex = zenMatch.patternMatch!!.startIndex
                 val targetRegister =
                     getInstruction<OneRegisterInstruction>(startIndex).registerA
 
-                val insertIndex = it.patternMatch!!.endIndex + 1
+                val insertIndex = zenMatch.patternMatch!!.endIndex + 1
 
                 addInstructions(
                     insertIndex, """

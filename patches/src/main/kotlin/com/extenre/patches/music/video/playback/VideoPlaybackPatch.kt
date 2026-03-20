@@ -118,22 +118,26 @@ val videoPlaybackPatch = bytecodePatch(
 
         // region patch for default video quality
 
-        val videoQualityClass = videoQualityListFingerprint.matchOrThrow().let {
-            with(it.method) {
-                // set video quality array
-                val listIndex = it.patternMatch!!.startIndex
-                val listRegister = getInstruction<FiveRegisterInstruction>(listIndex).registerD
+        val videoQualityMatch = videoQualityListFingerprint.matchOrThrow()
+        val videoQualityMethod = videoQualityMatch.method
+        val videoQualityClassDef = videoQualityMatch.classDef
+        val videoQualityMutableMethod = mutableClassDefBy(videoQualityClassDef.type).methods.first {
+            MethodUtil.methodSignaturesMatch(it, videoQualityMethod)
+        }
+        videoQualityMutableMethod.apply {
+            // set video quality array
+            val listIndex = videoQualityMatch.patternMatch!!.startIndex
+            val listRegister = getInstruction<FiveRegisterInstruction>(listIndex).registerD
 
-                addInstruction(
-                    listIndex,
-                    "invoke-static {v$listRegister}, $EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR->setVideoQualities([Ljava/lang/Object;)V"
-                )
+            addInstruction(
+                listIndex,
+                "invoke-static {v$listRegister}, $EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR->setVideoQualities([Ljava/lang/Object;)V"
+            )
 
-                val literalIndex = indexOfFirstLiteralInstructionOrThrow(qualityAuto)
-                val qualityClassIndex =
-                    indexOfFirstInstructionReversedOrThrow(literalIndex + 1, Opcode.NEW_INSTANCE)
-                getInstruction<ReferenceInstruction>(qualityClassIndex).reference.toString()
-            }
+            val literalIndex = indexOfFirstLiteralInstructionOrThrow(qualityAuto)
+            val qualityClassIndex =
+                indexOfFirstInstructionReversedOrThrow(literalIndex + 1, Opcode.NEW_INSTANCE)
+            val videoQualityClass = getInstruction<ReferenceInstruction>(qualityClassIndex).reference.toString()
         }
 
         fun indexOfVideoQualityNameFieldInstruction(method: Method) =
