@@ -130,8 +130,8 @@ val videoPlaybackPatch = bytecodePatch(
             MethodUtil.methodSignaturesMatch(it, videoQualityMethod)
         }
 
-        // Guardamos la referencia de la clase de calidad en una variable accesible
-        val videoQualityClass = videoQualityMutableMethod.apply {
+        // Obtenemos el descriptor de la clase de calidad (ej: "Lcom/example/VideoQuality;")
+        val videoQualityClass = videoQualityMutableMethod.run {
             val listIndex = videoQualityMatch.patternMatch!!.startIndex
             val listRegister = getInstruction<FiveRegisterInstruction>(listIndex).registerD
 
@@ -143,9 +143,11 @@ val videoPlaybackPatch = bytecodePatch(
             val literalIndex = indexOfFirstLiteralInstructionOrThrow(qualityAuto)
             val qualityClassIndex =
                 indexOfFirstInstructionReversedOrThrow(literalIndex + 1, Opcode.NEW_INSTANCE)
+            // Extraemos la referencia de la clase (String)
             getInstruction<ReferenceInstruction>(qualityClassIndex).reference.toString()
         }
 
+        // Funciones auxiliares (no usan contexto de mutabilidad)
         fun indexOfVideoQualityNameFieldInstruction(method: Method) =
             method.indexOfFirstInstruction {
                 val reference = getReference<FieldReference>()
@@ -162,7 +164,10 @@ val videoPlaybackPatch = bytecodePatch(
                         reference.definingClass == method.definingClass
             }
 
+        // Obtenemos la clase mutable de la calidad
         val videoQualityMutableClass = mutableClassDefBy(videoQualityClass)
+
+        // Buscamos el constructor que tiene los campos de nombre y resolución
         val qualityConstructor = videoQualityMutableClass.methods.first { method ->
             MethodUtil.isConstructor(method) &&
                     method.parameterTypes.size > 3 &&
@@ -170,6 +175,7 @@ val videoPlaybackPatch = bytecodePatch(
                     indexOfVideoQualityResolutionFieldInstruction(method) >= 0
         }
 
+        // Modificamos el constructor
         qualityConstructor.apply {
             val qualityNameIndex = indexOfVideoQualityNameFieldInstruction(this)
             val resolutionIndex = indexOfVideoQualityResolutionFieldInstruction(this)
@@ -183,19 +189,21 @@ val videoPlaybackPatch = bytecodePatch(
                     move-result v$resolutionRegister
                     """
             )
-
-            val extensionClass = mutableClassDefBy(EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR)
-            val extensionMethod = extensionClass.methods.find { it.name == "getVideoQualityResolution" }
-                ?: throw PatchException("Method getVideoQualityResolution not found in $EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR")
-            extensionMethod.addInstructions(
-                0, """
-                    check-cast p0, $videoQualityClass
-                    iget p0, p0, $resolutionField
-                    return p0
-                    """
-            )
         }
 
+        // Añadimos el método en la extensión
+        val extensionClass = mutableClassDefBy(EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR)
+        val extensionMethod = extensionClass.methods.find { it.name == "getVideoQualityResolution" }
+            ?: throw PatchException("Method getVideoQualityResolution not found in $EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR")
+        extensionMethod.addInstructions(
+            0, """
+                check-cast p0, $videoQualityClass
+                iget p0, p0, ${qualityConstructor.getInstruction<ReferenceInstruction>(indexOfVideoQualityResolutionFieldInstruction(qualityConstructor)).reference}
+                return p0
+                """
+        )
+
+        // Campo de resolución inicial (desde el fingerprint)
         val initialResolutionField = run {
             val match = playbackStartParametersToStringFingerprint.matchOrThrow()
             val method = match.method
@@ -206,6 +214,7 @@ val videoPlaybackPatch = bytecodePatch(
             mutableMethod.findFieldFromToString(FIXED_RESOLUTION_STRING)
         }
 
+        // Hook para el constructor de parámetros de inicio
         playbackStartParametersConstructorFingerprint
             .mutableMethodOrThrow(playbackStartParametersToStringFingerprint)
             .apply {
@@ -223,8 +232,10 @@ val videoPlaybackPatch = bytecodePatch(
                 )
             }
 
+        // Hook para cuando se inicia un video
         onCreateHook(EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR, "newVideoStarted")
 
+        // Hook para cuando el usuario cambia la calidad
         userQualityChangeFingerprint.matchOrThrow().let { match ->
             val method = match.method
             val classDef = match.classDef
