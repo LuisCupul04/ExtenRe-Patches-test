@@ -26,7 +26,6 @@ import com.extenre.patches.music.video.playerresponse.playerResponseMethodHookPa
 import com.extenre.patches.shared.mdxPlayerDirectorSetVideoStageFingerprint
 import com.extenre.patches.shared.videoLengthFingerprint
 import com.extenre.util.addStaticFieldToExtension
-import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
@@ -47,11 +46,8 @@ const val EXTENSION_CLASS_DESCRIPTOR =
     "$SHARED_PATH/VideoInformation;"
 
 private const val REGISTER_PLAYER_RESPONSE_MODEL = 4
-
 private const val REGISTER_VIDEO_ID = 0
 private const val REGISTER_VIDEO_LENGTH = 1
-
-@Suppress("unused")
 private const val REGISTER_VIDEO_LENGTH_DUMMY = 2
 
 private lateinit var PLAYER_RESPONSE_MODEL_CLASS_DESCRIPTOR: String
@@ -60,11 +56,6 @@ private lateinit var videoLengthMethodCall: String
 
 private lateinit var videoInformationMethod: MutableMethod
 
-/**
- * Used in [videoEndFingerprint] and [mdxPlayerDirectorSetVideoStageFingerprint].
- * Since both classes are inherited from the same class,
- * [videoEndFingerprint] and [mdxPlayerDirectorSetVideoStageFingerprint] always have the same [seekSourceEnumType] and [seekSourceMethodName].
- */
 private var seekSourceEnumType = ""
 private var seekSourceMethodName = ""
 
@@ -152,18 +143,14 @@ val videoInformationPatch = bytecodePatch(
         }
 
         videoEndFingerprint.mutableMethodOrThrow().apply {
-            // Reemplazar findmutableMethodOrThrow por búsqueda manual
-            run {
-                val method = findMethodOrThrow(definingClass)
-                val classDef = classes.find { it.type == definingClass }
-                    ?: throw PatchException("Class not found: $definingClass")
-                playerConstructorMethod = proxy(classDef).mutableClass.methods.first {
-                    MethodUtil.methodSignaturesMatch(it, method)
-                }
-                playerConstructorInsertIndex = playerConstructorMethod.indexOfFirstInstructionOrThrow {
-                    opcode == Opcode.INVOKE_DIRECT && getReference<MethodReference>()?.name == "<init>"
-                } + 1
+            // Reemplazar findMethodOrThrow por búsqueda con mutableClassDefBy
+            val mutableClass = mutableClassDefBy(definingClass)
+            playerConstructorMethod = mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, this)
             }
+            playerConstructorInsertIndex = playerConstructorMethod.indexOfFirstInstructionOrThrow {
+                opcode == Opcode.INVOKE_DIRECT && getReference<MethodReference>()?.name == "<init>"
+            } + 1
 
             // hook the player controller for use through extension
             onCreateHook(EXTENSION_CLASS_DESCRIPTOR, "initialize")
@@ -173,7 +160,7 @@ val videoInformationPatch = bytecodePatch(
 
             // Create extension interface methods.
             addSeekInterfaceMethods(
-                videoEndFingerprint.mutableClassOrThrow(),
+                mutableClassDefBy(definingClass),
                 this,
                 seekSourceMethodName,
                 "overrideVideoTime",
@@ -182,25 +169,20 @@ val videoInformationPatch = bytecodePatch(
         }
 
         mdxPlayerDirectorSetVideoStageFingerprint.mutableMethodOrThrow().apply {
-            // Reemplazar findmutableMethodOrThrow por búsqueda manual
-            run {
-                val method = findMethodOrThrow(definingClass)
-                val classDef = classes.find { it.type == definingClass }
-                    ?: throw PatchException("Class not found: $definingClass")
-                mdxConstructorMethod = proxy(classDef).mutableClass.methods.first {
-                    MethodUtil.methodSignaturesMatch(it, method)
-                }
-                mdxConstructorInsertIndex = mdxConstructorMethod.indexOfFirstInstructionOrThrow {
-                    opcode == Opcode.INVOKE_DIRECT && getReference<MethodReference>()?.name == "<init>"
-                } + 1
+            val mutableClass = mutableClassDefBy(definingClass)
+            mdxConstructorMethod = mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, this)
             }
+            mdxConstructorInsertIndex = mdxConstructorMethod.indexOfFirstInstructionOrThrow {
+                opcode == Opcode.INVOKE_DIRECT && getReference<MethodReference>()?.name == "<init>"
+            } + 1
 
             // hook the MDX director for use through extension
             onCreateHookMdx(EXTENSION_CLASS_DESCRIPTOR, "initializeMdx")
 
             // Create extension interface methods.
             addSeekInterfaceMethods(
-                mdxPlayerDirectorSetVideoStageFingerprint.mutableClassOrThrow(),
+                mutableClassDefBy(definingClass),
                 this,
                 seekSourceMethodName,
                 "overrideMDXVideoTime",

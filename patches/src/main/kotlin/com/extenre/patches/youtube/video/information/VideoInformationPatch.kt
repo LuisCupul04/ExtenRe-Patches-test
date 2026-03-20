@@ -47,7 +47,6 @@ import com.extenre.util.addStaticFieldToExtension
 import com.extenre.util.cloneMutable
 import com.extenre.util.findFieldFromToString
 import com.extenre.util.findMethodFromToString
-import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.methodCall
 import com.extenre.util.fingerprint.mutableMethodOrThrow
@@ -243,18 +242,14 @@ val videoInformationPatch = bytecodePatch(
         }
 
         videoEndFingerprint.mutableMethodOrThrow().apply {
-            // Reemplazar findmutableMethodOrThrow por búsqueda manual
-            run {
-                val method = findMethodOrThrow(definingClass)
-                val classDef = classes.find { it.type == definingClass }
-                    ?: throw PatchException("Class not found: $definingClass")
-                playerConstructorMethod = proxy(classDef).mutableClass.methods.first {
-                    MethodUtil.methodSignaturesMatch(it, method)
-                }
-                playerConstructorInsertIndex = playerConstructorMethod.indexOfFirstInstructionOrThrow {
-                    opcode == Opcode.INVOKE_DIRECT && getReference<MethodReference>()?.name == "<init>"
-                } + 1
+            // Obtener la clase mutable directamente
+            val mutableClass = mutableClassDefBy(definingClass)
+            playerConstructorMethod = mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, this)
             }
+            playerConstructorInsertIndex = playerConstructorMethod.indexOfFirstInstructionOrThrow {
+                opcode == Opcode.INVOKE_DIRECT && getReference<MethodReference>()?.name == "<init>"
+            } + 1
 
             // hook the player controller for use through extension
             onCreateHook(EXTENSION_CLASS_DESCRIPTOR, "initialize")
@@ -300,18 +295,14 @@ val videoInformationPatch = bytecodePatch(
         }
 
         mdxPlayerDirectorSetVideoStageFingerprint.mutableMethodOrThrow().apply {
-            // Reemplazar findmutableMethodOrThrow por búsqueda manual
-            run {
-                val method = findMethodOrThrow(definingClass)
-                val classDef = classes.find { it.type == definingClass }
-                    ?: throw PatchException("Class not found: $definingClass")
-                mdxConstructorMethod = proxy(classDef).mutableClass.methods.first {
-                    MethodUtil.methodSignaturesMatch(it, method)
-                }
-                mdxConstructorInsertIndex = mdxConstructorMethod.indexOfFirstInstructionOrThrow {
-                    opcode == Opcode.INVOKE_DIRECT && getReference<MethodReference>()?.name == "<init>"
-                } + 1
+            // Obtener la clase mutable directamente
+            val mutableClass = mutableClassDefBy(definingClass)
+            mdxConstructorMethod = mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, this)
             }
+            mdxConstructorInsertIndex = mdxConstructorMethod.indexOfFirstInstructionOrThrow {
+                opcode == Opcode.INVOKE_DIRECT && getReference<MethodReference>()?.name == "<init>"
+            } + 1
 
             // hook the MDX director for use through extension
             onCreateHookMdx(EXTENSION_CLASS_DESCRIPTOR, "initializeMdx")
@@ -690,11 +681,10 @@ val videoInformationPatch = bytecodePatch(
             .mutableMethodOrThrow()
             .methodCall()
 
-        // Reemplazar originalmutableMethodOrThrow por búsqueda manual
         val formatStreamITagReference = run {
             val method = formatStreamModelToStringFingerprint.methodOrThrow()
             val classDef = formatStreamModelToStringFingerprint.classDefOrThrow()
-            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.findMethodFromToString("FormatStream(itag=")
@@ -739,10 +729,8 @@ val videoInformationPatch = bytecodePatch(
                     move-result-object v0
                     return-object v0
                 """
-            // Reemplazar findMutableClassOrThrow por búsqueda manual
-            val mutableClass = classes.find { it.type == YOUTUBE_FORMAT_STREAM_MODEL_CLASS_TYPE }
-                ?.let { proxy(it).mutableClass }
-                ?: throw PatchException("Class not found: $YOUTUBE_FORMAT_STREAM_MODEL_CLASS_TYPE")
+            // Obtener la clase mutable directamente
+            val mutableClass = mutableClassDefBy(YOUTUBE_FORMAT_STREAM_MODEL_CLASS_TYPE)
             mutableClass.methods.add(
                 ImmutableMethod(
                     YOUTUBE_FORMAT_STREAM_MODEL_CLASS_TYPE,
@@ -784,11 +772,10 @@ val videoInformationPatch = bytecodePatch(
                 )
             }
 
-        // Reemplazar originalmutableMethodOrThrow por búsqueda manual
         val initialResolutionField = run {
             val method = playbackStartParametersToStringFingerprint.methodOrThrow()
             val classDef = playbackStartParametersToStringFingerprint.classDefOrThrow()
-            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.findFieldFromToString(FIXED_RESOLUTION_STRING)

@@ -15,8 +15,6 @@ import com.extenre.patches.music.utils.extension.Constants.EXTENSION_PATH
 import com.extenre.util.addStaticFieldToExtension
 import com.extenre.util.fingerprint.methodOrThrow
 import com.extenre.util.getWalkerMethod
-import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
-import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 import com.android.tools.smali.dexlib2.util.MethodUtil
 
 private const val EXTENSION_VIDEO_UTILS_CLASS_DESCRIPTOR =
@@ -42,10 +40,10 @@ val dismissQueueHookPatch = bytecodePatch(
                     return-void
                     """
 
-            // Convertir walkerMethod a mutable si es necesario
+            // Obtener la clase mutable del método walker usando la nueva API
             val classDef = walkerMethod.definingClass
-            val mutableClass = proxy(classes.find { it.type == classDef }
-                ?: throw PatchException("Class not found: $classDef")).mutableClass
+            // Usamos mutableClassDefBy para obtener directamente la clase mutable
+            val mutableClass = mutableClassDefBy(classDef)
             val mutableWalkerMethod = mutableClass.methods.first {
                 MethodUtil.methodSignaturesMatch(it, walkerMethod)
             }
