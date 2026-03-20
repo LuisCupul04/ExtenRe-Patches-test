@@ -11,7 +11,7 @@ package com.extenre.patches.music.ads.general
 import com.extenre.patcher.extensions.InstructionExtensions.addInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.replaceInstruction
-import com.extenre.patcher.patch.PatchException
+import com.extenre.patcher.util.MethodNavigator
 import com.extenre.patches.music.navigation.components.navigationBarComponentsPatch
 import com.extenre.patches.music.utils.compatibility.Constants.COMPATIBLE_PACKAGE
 import com.extenre.patches.music.utils.extension.Constants.ADS_PATH
@@ -37,7 +37,6 @@ import com.extenre.patches.shared.mainactivity.onStopMethod
 import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
-import com.extenre.util.getWalkerMethod
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstLiteralInstructionOrThrow
 import com.android.tools.smali.dexlib2.Opcode
@@ -59,9 +58,11 @@ private const val PREMIUM_PROMOTION_BANNER_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val adsPatch = adsPatch(
-    name = HIDE_ADS.key,
-    description = "${HIDE_ADS.title}: ${HIDE_ADS.summary}",
     block = {
+        // Ahora name y description van dentro del bloque
+        name = HIDE_ADS.key
+        description = "${HIDE_ADS.title}: ${HIDE_ADS.summary}"
+
         compatibleWith(COMPATIBLE_PACKAGE)
 
         dependsOn(
@@ -166,7 +167,9 @@ val adsPatch = adsPatch(
             val viewReference =
                 getInstruction<ReferenceInstruction>(viewIndex).reference.toString()
 
-            val walkerMethod = getWalkerMethod(walkerIndex)
+            // Reemplazar getWalkerMethod con MethodNavigator
+            val navigator = MethodNavigator(this)
+            val walkerMethod = navigator.navigate(walkerIndex).stop()
             walkerMethod.apply {
                 val insertIndex = indexOfFirstInstructionOrThrow {
                     getReference<FieldReference>()?.toString() == viewReference
