@@ -130,7 +130,7 @@ val videoPlaybackPatch = bytecodePatch(
             MethodUtil.methodSignaturesMatch(it, videoQualityMethod)
         }
 
-        // Extraemos la clase de calidad (String) y la guardamos en una variable accesible en todo el bloque
+        // Guardamos la referencia de la clase de calidad en una variable accesible
         val videoQualityClass = videoQualityMutableMethod.apply {
             val listIndex = videoQualityMatch.patternMatch!!.startIndex
             val listRegister = getInstruction<FiveRegisterInstruction>(listIndex).registerD
@@ -163,12 +163,14 @@ val videoPlaybackPatch = bytecodePatch(
             }
 
         val videoQualityMutableClass = mutableClassDefBy(videoQualityClass)
-        videoQualityMutableClass.methods.first { method ->
+        val qualityConstructor = videoQualityMutableClass.methods.first { method ->
             MethodUtil.isConstructor(method) &&
                     method.parameterTypes.size > 3 &&
                     indexOfVideoQualityNameFieldInstruction(method) >= 0 &&
                     indexOfVideoQualityResolutionFieldInstruction(method) >= 0
-        }.apply {
+        }
+
+        qualityConstructor.apply {
             val qualityNameIndex = indexOfVideoQualityNameFieldInstruction(this)
             val resolutionIndex = indexOfVideoQualityResolutionFieldInstruction(this)
             val resolutionField = getInstruction<ReferenceInstruction>(resolutionIndex).reference
