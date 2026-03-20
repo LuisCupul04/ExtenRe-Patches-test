@@ -10,14 +10,12 @@ package com.extenre.patches.music.video.playerresponse
 
 import com.extenre.patcher.extensions.InstructionExtensions.addInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.addInstructions
-import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod
 import com.extenre.patches.music.utils.extension.sharedExtensionPatch
 import com.extenre.patches.music.utils.playservice.is_7_03_or_greater
 import com.extenre.patches.music.utils.playservice.versionCheckPatch
-import com.extenre.util.fingerprint.methodOrThrow
-import com.extenre.util.fingerprint.mutableMethodOrThrow
+import com.extenre.util.fingerprint.matchOrThrow
 import com.android.tools.smali.dexlib2.util.MethodUtil
 
 private val hooks = mutableSetOf<Hook>()
@@ -44,18 +42,15 @@ val playerResponseMethodHookPatch = bytecodePatch(
     )
 
     execute {
-        playerResponseMethod = if (is_7_03_or_greater) {
-            playerParameterBuilderFingerprint
+        val match = if (is_7_03_or_greater) {
+            playerParameterBuilderFingerprint.matchOrThrow()
         } else {
-            playerParameterBuilderLegacyFingerprint
-        }.methodOrThrow().let { method ->
-            val classDef = when (is_7_03_or_greater) {
-                true -> playerParameterBuilderFingerprint.classDefOrThrow()
-                else -> playerParameterBuilderLegacyFingerprint.classDefOrThrow()
-            }
-            mutableClassDefBy(classDef.type).methods.first {
-                MethodUtil.methodSignaturesMatch(it, method)
-            }
+            playerParameterBuilderLegacyFingerprint.matchOrThrow()
+        }
+        val method = match.method
+        val classDef = match.classDef
+        playerResponseMethod = mutableClassDefBy(classDef.type).methods.first {
+            MethodUtil.methodSignaturesMatch(it, method)
         }
     }
 

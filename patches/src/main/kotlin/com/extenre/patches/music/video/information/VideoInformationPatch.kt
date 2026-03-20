@@ -13,7 +13,6 @@ import com.extenre.patcher.extensions.InstructionExtensions.addInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
-import com.extenre.patcher.util.MethodNavigator
 import com.extenre.patcher.util.proxy.mutableTypes.MutableClass
 import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod
 import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod.Companion.toMutable
@@ -31,7 +30,6 @@ import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
 import com.extenre.util.getReference
-import com.extenre.util.getWalkerMethod
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.or
 import com.android.tools.smali.dexlib2.AccessFlags
@@ -143,7 +141,6 @@ val videoInformationPatch = bytecodePatch(
             }
         }
 
-        // videoEndFingerprint.mutableMethodOrThrow() devuelve MutableMethod directamente
         videoEndFingerprint.mutableMethodOrThrow().apply {
             val mutableClass = mutableClassDefBy(definingClass)
             playerConstructorMethod = mutableClass.methods.first {
@@ -153,13 +150,11 @@ val videoInformationPatch = bytecodePatch(
                 opcode == Opcode.INVOKE_DIRECT && getReference<MethodReference>()?.name == "<init>"
             } + 1
 
-            // hook the player controller for use through extension
             onCreateHook(EXTENSION_CLASS_DESCRIPTOR, "initialize")
 
             seekSourceEnumType = parameterTypes[1].toString()
             seekSourceMethodName = name
 
-            // Create extension interface methods.
             addSeekInterfaceMethods(
                 mutableClassDefBy(definingClass),
                 this,
@@ -178,10 +173,8 @@ val videoInformationPatch = bytecodePatch(
                 opcode == Opcode.INVOKE_DIRECT && getReference<MethodReference>()?.name == "<init>"
             } + 1
 
-            // hook the MDX director for use through extension
             onCreateHookMdx(EXTENSION_CLASS_DESCRIPTOR, "initializeMdx")
 
-            // Create extension interface methods.
             addSeekInterfaceMethods(
                 mutableClassDefBy(definingClass),
                 this,
@@ -233,8 +226,18 @@ val videoInformationPatch = bytecodePatch(
          * Set the video time method
          */
         playerControllerSetTimeReferenceFingerprint.matchOrThrow().let { match ->
-            val navigator = MethodNavigator(match.method)
-            videoTimeConstructorMethod = navigator.navigate(match.patternMatch!!.startIndex).stop()
+            // Obtener la instrucción en la posición startIndex del patrón
+            val method = match.method
+            val startIndex = match.patternMatch!!.startIndex
+            val referenceInstruction = method.getInstruction<ReferenceInstruction>(startIndex)
+            val methodRef = referenceInstruction.reference as? MethodReference
+                ?: throw PatchException("No method reference at index $startIndex")
+
+            // Obtener la clase mutable del método referenciado
+            val targetClass = methodRef.definingClass
+            videoTimeConstructorMethod = mutableClassDefBy(targetClass).methods.first {
+                it.name == methodRef.name && it.parameterTypes == methodRef.parameterTypes
+            }
         }
 
         /**
@@ -256,8 +259,6 @@ val videoInformationPatch = bytecodePatch(
                 "$EXTENSION_CLASS_DESCRIPTOR->setPlayerResponseVideoId(Ljava/lang/String;)V"
             ),
         )
-        // Call before any other video id hooks,
-        // so they can use VideoInformation and check if the video id is for a Short.
         addPlayerResponseMethodHook(
             Hook.PlayerParameterBeforeVideoId(
                 "$EXTENSION_CLASS_DESCRIPTOR->newPlayerResponseParameter(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;"
@@ -267,8 +268,17 @@ val videoInformationPatch = bytecodePatch(
          * Hook current playback speed
          */
         playbackSpeedFingerprint.matchOrThrow(playbackSpeedParentFingerprint).let { match ->
-            val navigator = MethodNavigator(match.method)
-            val targetMethod = navigator.navigate(match.patternMatch!!.endIndex).stop()
+            val method = match.method
+            val endIndex = match.patternMatch!!.endIndex
+            val referenceInstruction = method.getInstruction<ReferenceInstruction>(endIndex)
+            val methodRef = referenceInstruction.reference as? MethodReference
+                ?: throw PatchException("No method reference at index $endIndex")
+
+            val targetClass = methodRef.definingClass
+            val targetMethod = mutableClassDefBy(targetClass).methods.first {
+                it.name == methodRef.name && it.parameterTypes == methodRef.parameterTypes
+            }
+
             targetMethod.apply {
                 addInstruction(
                     implementation!!.instructions.lastIndex,
@@ -279,7 +289,7 @@ val videoInformationPatch = bytecodePatch(
     }
 }
 
-// Las siguientes funciones auxiliares permanecen sin cambios, ya que no usan API obsoleta.
+// Las siguientes funciones auxiliares permanecen sin cambios
 private fun MutableMethod.getVideoInformationMethod(): MutableMethod =
     ImmutableMethod(
         definingClass,
@@ -314,27 +324,12 @@ private fun MutableMethod.insert(insertIndex: Int, register: String, descriptor:
 private fun MutableMethod.insertTimeHook(insertIndex: Int, descriptor: String) =
     insert(insertIndex, "p1, p2", descriptor)
 
-/**
- * Hook the player controller.  Called when a video is opened or the current video is changed.
- *
- * Note: This hook is called very early and is called before the video id, video time, video length,
- * and many other data fields are set.
- *
- * @param targetMethodClass The descriptor for the class to invoke when the player controller is created.
- * @param targetMethodName The name of the static method to invoke when the player controller is created.
- */
 internal fun onCreateHook(targetMethodClass: String, targetMethodName: String) =
     playerConstructorMethod.addInstruction(
         playerConstructorInsertIndex++,
         "invoke-static { }, $targetMethodClass->$targetMethodName()V"
     )
 
-/**
- * Hook the MDX player director. Called when playing videos while casting to a big screen device.
- *
- * @param targetMethodClass The descriptor for the class to invoke when the player controller is created.
- * @param targetMethodName The name of the static method to invoke when the player controller is created.
- */
 internal fun onCreateHookMdx(targetMethodClass: String, targetMethodName: String) =
     mdxConstructorMethod.addInstruction(
         mdxConstructorInsertIndex++,
@@ -359,13 +354,6 @@ internal fun videoLengthHook(
     )
 }
 
-/**
- * Hook the video time.
- * The hook is usually called once per second.
- *
- * @param targetMethodClass The descriptor for the static method to invoke when the player controller is created.
- * @param targetMethodName The name of the static method to invoke when the player controller is created.
- */
 internal fun videoTimeHook(targetMethodClass: String, targetMethodName: String) =
     videoTimeConstructorMethod.insertTimeHook(
         videoTimeConstructorInsertIndex++,

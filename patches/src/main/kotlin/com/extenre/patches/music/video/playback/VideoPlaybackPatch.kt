@@ -99,9 +99,14 @@ val videoPlaybackPatch = bytecodePatch(
             }
         }
 
-        playbackSpeedFingerprint.matchOrThrow(playbackSpeedParentFingerprint).let {
-            it.mutableMethod.apply {
-                val startIndex = it.patternMatch!!.startIndex
+        playbackSpeedFingerprint.matchOrThrow(playbackSpeedParentFingerprint).let { match ->
+            val method = match.method
+            val classDef = match.classDef
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
+                val startIndex = match.patternMatch!!.startIndex
                 val speedRegister =
                     getInstruction<OneRegisterInstruction>(startIndex + 1).registerA
 
@@ -125,7 +130,6 @@ val videoPlaybackPatch = bytecodePatch(
             MethodUtil.methodSignaturesMatch(it, videoQualityMethod)
         }
         videoQualityMutableMethod.apply {
-            // set video quality array
             val listIndex = videoQualityMatch.patternMatch!!.startIndex
             val listRegister = getInstruction<FiveRegisterInstruction>(listIndex).registerD
 
@@ -156,9 +160,8 @@ val videoPlaybackPatch = bytecodePatch(
                         reference.definingClass == method.definingClass
             }
 
-        // CORREGIDO: obtener la clase mutable directamente
+        // NOTA: Usamos videoQualityClass que se definió en el bloque anterior
         val videoQualityMutableClass = mutableClassDefBy(videoQualityClass)
-
         videoQualityMutableClass.methods.first { method ->
             MethodUtil.isConstructor(method) &&
                     method.parameterTypes.size > 3 &&
@@ -181,7 +184,6 @@ val videoPlaybackPatch = bytecodePatch(
                     """
             )
 
-            // CORREGIDO: obtener el método mutable de la clase de extensión
             val extensionClass = mutableClassDefBy(EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR)
             val extensionMethod = extensionClass.methods.find { it.name == "getVideoQualityResolution" }
                 ?: throw PatchException("Method getVideoQualityResolution not found in $EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR")
@@ -194,10 +196,10 @@ val videoPlaybackPatch = bytecodePatch(
             )
         }
 
-        // CORREGIDO: obtener el método mutable del fingerprint playbackStartParametersToStringFingerprint
         val initialResolutionField = run {
-            val method = playbackStartParametersToStringFingerprint.methodOrThrow()
-            val classDef = playbackStartParametersToStringFingerprint.classDefOrThrow()
+            val match = playbackStartParametersToStringFingerprint.matchOrThrow()
+            val method = match.method
+            val classDef = match.classDef
             val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
@@ -223,13 +225,17 @@ val videoPlaybackPatch = bytecodePatch(
 
         onCreateHook(EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR, "newVideoStarted")
 
-        userQualityChangeFingerprint.matchOrThrow().let {
-            it.mutableMethod.apply {
-                val endIndex = it.patternMatch!!.endIndex
+        userQualityChangeFingerprint.matchOrThrow().let { match ->
+            val method = match.method
+            val classDef = match.classDef
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
+                val endIndex = match.patternMatch!!.endIndex
                 val qualityChangedClass =
                     getInstruction<ReferenceInstruction>(endIndex).reference.toString()
 
-                // CORREGIDO: obtener la clase mutable de qualityChangedClass
                 val changedClass = mutableClassDefBy(qualityChangedClass)
                 val onItemClickMethod = changedClass.methods.find { it.name == "onItemClick" }
                     ?: throw PatchException("Method onItemClick not found in $qualityChangedClass")
@@ -280,6 +286,5 @@ val videoPlaybackPatch = bytecodePatch(
         )
 
         updatePatchStatus(VIDEO_PLAYBACK)
-
     }
 }
