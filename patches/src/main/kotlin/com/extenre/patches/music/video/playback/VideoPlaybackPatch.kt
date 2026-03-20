@@ -129,7 +129,9 @@ val videoPlaybackPatch = bytecodePatch(
         val videoQualityMutableMethod = mutableClassDefBy(videoQualityClassDef.type).methods.first {
             MethodUtil.methodSignaturesMatch(it, videoQualityMethod)
         }
-        videoQualityMutableMethod.apply {
+
+        // Extraemos la clase de calidad (String) y la guardamos en una variable accesible en todo el bloque
+        val videoQualityClass = videoQualityMutableMethod.apply {
             val listIndex = videoQualityMatch.patternMatch!!.startIndex
             val listRegister = getInstruction<FiveRegisterInstruction>(listIndex).registerD
 
@@ -141,7 +143,7 @@ val videoPlaybackPatch = bytecodePatch(
             val literalIndex = indexOfFirstLiteralInstructionOrThrow(qualityAuto)
             val qualityClassIndex =
                 indexOfFirstInstructionReversedOrThrow(literalIndex + 1, Opcode.NEW_INSTANCE)
-            val videoQualityClass = getInstruction<ReferenceInstruction>(qualityClassIndex).reference.toString()
+            getInstruction<ReferenceInstruction>(qualityClassIndex).reference.toString()
         }
 
         fun indexOfVideoQualityNameFieldInstruction(method: Method) =
@@ -160,7 +162,6 @@ val videoPlaybackPatch = bytecodePatch(
                         reference.definingClass == method.definingClass
             }
 
-        // NOTA: Usamos videoQualityClass que se definió en el bloque anterior
         val videoQualityMutableClass = mutableClassDefBy(videoQualityClass)
         videoQualityMutableClass.methods.first { method ->
             MethodUtil.isConstructor(method) &&
@@ -170,12 +171,9 @@ val videoPlaybackPatch = bytecodePatch(
         }.apply {
             val qualityNameIndex = indexOfVideoQualityNameFieldInstruction(this)
             val resolutionIndex = indexOfVideoQualityResolutionFieldInstruction(this)
-            val resolutionField =
-                getInstruction<ReferenceInstruction>(resolutionIndex).reference
-            val qualityNameRegister =
-                getInstruction<TwoRegisterInstruction>(qualityNameIndex).registerA
-            val resolutionRegister =
-                getInstruction<TwoRegisterInstruction>(resolutionIndex).registerA
+            val resolutionField = getInstruction<ReferenceInstruction>(resolutionIndex).reference
+            val qualityNameRegister = getInstruction<TwoRegisterInstruction>(qualityNameIndex).registerA
+            val resolutionRegister = getInstruction<TwoRegisterInstruction>(resolutionIndex).registerA
 
             addInstructions(
                 0, """
