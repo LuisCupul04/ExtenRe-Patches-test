@@ -34,7 +34,6 @@ import com.extenre.patches.shared.gms.Constants.PERMISSIONS
 import com.extenre.patches.shared.gms.Constants.PERMISSIONS_LEGACY
 import com.extenre.util.Utils.printWarn
 import com.extenre.util.Utils.trimIndentMultiline
-import com.extenre.util.fingerprint.methodOrNull
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
 import com.extenre.util.getReference
@@ -213,20 +212,16 @@ fun gmsCoreSupportPatch(
         else
             AUTHORITIES_LEGACY
 
-        fun transformStringReferences(transform: (str: String) -> String?) =
-            // Usamos patchClasses.classMap.values para iterar sobre las clases del contexto.
-            patchClasses.classMap.values.forEach { classDef ->
-                // Obtenemos la clase mutable usando mutableClassDefBy.
+        fun transformStringReferences(transform: (str: String) -> String?) {
+            // Iterar sobre todas las clases del contexto usando la propiedad `classes` (ProxyClassList)
+            classes.forEach { classDef ->
                 val mutableClass = mutableClassDefBy(classDef.type)
 
                 classDef.methods.forEach classLoop@{ method ->
                     val implementation = method.implementation ?: return@classLoop
 
                     val mutableMethod = mutableClass.methods.first { target ->
-                        MethodUtil.methodSignaturesMatch(
-                            target,
-                            method
-                        )
+                        MethodUtil.methodSignaturesMatch(target, method)
                     }
 
                     implementation.instructions.forEachIndexed insnLoop@{ index, instruction ->
@@ -234,17 +229,18 @@ fun gmsCoreSupportPatch(
                             ((instruction as? Instruction21c)?.reference as? StringReference)?.string
                                 ?: return@insnLoop
 
-                    // Apply transformation.
-                    val transformedString = transform(string) ?: return@insnLoop
+                        // Apply transformation.
+                        val transformedString = transform(string) ?: return@insnLoop
 
-                    mutableMethod.replaceInstruction(
-                        index,
-                        BuilderInstruction21c(
-                            Opcode.CONST_STRING,
-                            instruction.registerA,
-                            ImmutableStringReference(transformedString),
-                        ),
-                    )
+                        mutableMethod.replaceInstruction(
+                            index,
+                            BuilderInstruction21c(
+                                Opcode.CONST_STRING,
+                                instruction.registerA,
+                                ImmutableStringReference(transformedString),
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -298,22 +294,14 @@ fun gmsCoreSupportPatch(
 
         fun transformPrimeMethod(packageName: String) {
             if (patchAllManifestEnabled) {
-                primeMethodFingerprint.methodOrNull()?.let { method ->
-                    val classDef = primeMethodFingerprint.classDefOrNull()
-                        ?: return@let
-                    // Usamos mutableClassDefBy en lugar de proxy.
-                    val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
-                        MethodUtil.methodSignaturesMatch(it, method)
+                primeMethodFingerprint.mutableMethodOrNull()?.apply {
+                    var register = 2
+                    val index = instructions.indexOfFirst {
+                        if (it.getReference<StringReference>()?.string != fromPackageName) return@indexOfFirst false
+                        register = (it as OneRegisterInstruction).registerA
+                        return@indexOfFirst true
                     }
-                    mutableMethod.apply {
-                        var register = 2
-                        val index = instructions.indexOfFirst {
-                            if (it.getReference<StringReference>()?.string != fromPackageName) return@indexOfFirst false
-                            register = (it as OneRegisterInstruction).registerA
-                            return@indexOfFirst true
-                        }
-                        replaceInstruction(index, "const-string v$register, \"$packageName\"")
-                    }
+                    replaceInstruction(index, "const-string v$register, \"$packageName\"")
                 }
             } else {
                 setOf(
@@ -410,7 +398,7 @@ fun gmsCoreSupportPatch(
 
         // Verify GmsCore is installed and whitelisted for power optimizations and background usage.
         if (checkGmsCore == true) {
-            mainActivityOnCreateFingerprint.method.apply {
+            mainActivityOnCreateFingerprint.mutableMethodOrThrow().apply {
                 // Temporary fix for patches with an extension patch that hook the onCreate method as well.
                 val setContextIndex = indexOfFirstInstruction {
                     val reference =
@@ -437,7 +425,6 @@ fun gmsCoreSupportPatch(
             "PackageNameYouTube" to packageNameYouTubeOption.valueOrThrow(),
             "PackageNameYouTubeMusic" to packageNameYouTubeMusicOption.valueOrThrow()
         ).forEach { (methodName, value) ->
-            // Obtenemos la clase mutable de PatchStatus directamente.
             val patchStatusClass = mutableClassDefBy("$PATCHES_PATH/PatchStatus;")
             val method = patchStatusClass.methods.find { it.name == methodName }
                 ?: throw PatchException("Method $methodName not found in $PATCHES_PATH/PatchStatus;")
@@ -897,7 +884,6 @@ fun gmsCoreSupportResourcePatch(
                 
                 // GmsCore presence detection in extension.
                 applicationNode.adoptChild("meta-data") {
-                    // Usar el vendor group ID para construir el nombre del metadata
                     setAttribute("android:name", "$gmsCoreVendorGroupId.MICROG_PACKAGE_NAME")
                     setAttribute("android:value", "$gmsCoreVendorGroupId.android.gms")
                 }
