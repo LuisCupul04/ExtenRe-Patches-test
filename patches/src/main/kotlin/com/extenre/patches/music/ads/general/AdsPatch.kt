@@ -58,17 +58,15 @@ private const val PREMIUM_PROMOTION_BANNER_CLASS_DESCRIPTOR =
 
 @Suppress("unused")
 val adsPatch = adsPatch(
+    name = HIDE_ADS.key,                     // ← Ahora como parámetro
+    description = "${HIDE_ADS.title}: ${HIDE_ADS.summary}", // ← como parámetro
     block = {
-        // Ahora name y description van dentro del bloque
-        name = HIDE_ADS.key
-        description = "${HIDE_ADS.title}: ${HIDE_ADS.summary}"
-
         compatibleWith(COMPATIBLE_PACKAGE)
 
         dependsOn(
             settingsPatch,
             lithoFilterPatch,
-            navigationBarComponentsPatch, // for 'Hide upgrade button' setting
+            navigationBarComponentsPatch,
             navigationBarHookPatch,
             sharedResourceIdPatch,
             versionCheckPatch,
@@ -80,7 +78,6 @@ val adsPatch = adsPatch(
     executeBlock = {
         // region patch for hide premium promotion popup
 
-        // get premium bottom sheet
         floatingLayoutFingerprint.mutableMethodOrThrow().apply {
             val targetIndex = indexOfFirstLiteralInstructionOrThrow(floatingLayout) + 2
             val targetRegister = getInstruction<OneRegisterInstruction>(targetIndex).registerA
@@ -91,7 +88,6 @@ val adsPatch = adsPatch(
             )
         }
 
-        // get premium dialog in player
         if (is_7_28_or_greater) {
             mapOf(
                 onStartMethod to "onAppForegrounded",
@@ -140,7 +136,7 @@ val adsPatch = adsPatch(
 
         // region patch for hide get premium
 
-        // get premium button at the top of the account switching menu
+        // get premium button at the top
         val premiumMatch = getPremiumTextViewFingerprint.matchOrThrow()
         val premiumMethod = premiumMatch.method
         val premiumClassDef = premiumMatch.classDef
@@ -157,27 +153,22 @@ val adsPatch = adsPatch(
             )
         }
 
-        // get premium button at the bottom of the account switching menu
+        // get premium button at the bottom
         accountMenuFooterFingerprint.mutableMethodOrThrow().apply {
-            val constIndex =
-                indexOfFirstLiteralInstructionOrThrow(privacyTosFooter)
-            val walkerIndex =
-                indexOfFirstInstructionOrThrow(constIndex + 2, Opcode.INVOKE_VIRTUAL)
+            val constIndex = indexOfFirstLiteralInstructionOrThrow(privacyTosFooter)
+            val walkerIndex = indexOfFirstInstructionOrThrow(constIndex + 2, Opcode.INVOKE_VIRTUAL)
             val viewIndex = indexOfFirstInstructionOrThrow(constIndex, Opcode.IGET_OBJECT)
-            val viewReference =
-                getInstruction<ReferenceInstruction>(viewIndex).reference.toString()
+            val viewReference = getInstruction<ReferenceInstruction>(viewIndex).reference.toString()
 
-            // Reemplazar getWalkerMethod con MethodNavigator
-            val navigator = MethodNavigator(this)
+            // Usar el contexto para crear el navigator
+            val navigator = with(this@execute) { MethodNavigator(this@apply) }
             val walkerMethod = navigator.navigate(walkerIndex).stop()
             walkerMethod.apply {
                 val insertIndex = indexOfFirstInstructionOrThrow {
                     getReference<FieldReference>()?.toString() == viewReference
                 }
-                val nullCheckIndex =
-                    indexOfFirstInstructionOrThrow(insertIndex - 1, Opcode.IF_NEZ)
-                val nullCheckRegister =
-                    getInstruction<OneRegisterInstruction>(nullCheckIndex).registerA
+                val nullCheckIndex = indexOfFirstInstructionOrThrow(insertIndex - 1, Opcode.IF_NEZ)
+                val nullCheckRegister = getInstruction<OneRegisterInstruction>(nullCheckIndex).registerA
 
                 addInstruction(
                     nullCheckIndex,
@@ -229,3 +220,12 @@ val adsPatch = adsPatch(
         updatePatchStatus(HIDE_ADS)
     }
 )
+
+// Función auxiliar (mantenida igual)
+private fun indexOfSetContentViewInstruction(method: com.extenre.patcher.util.proxy.mutableTypes.MutableMethod): Int {
+    // Implementación necesaria si no está en utils
+    return method.indexOfFirstInstructionOrThrow {
+        opcode == Opcode.INVOKE_VIRTUAL &&
+                getReference<com.android.tools.smali.dexlib2.iface.reference.MethodReference>()?.name == "setContentView"
+    }
+}
