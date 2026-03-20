@@ -420,7 +420,6 @@ fun gmsCoreSupportPatch(
  * A collection of permissions, intents and content provider authorities
  * that are present in GmsCore which need to be transformed.
  */
-
 private object Constants {
     /**
      * All permissions.
@@ -446,17 +445,11 @@ private object Constants {
     )
 
     val PERMISSIONS_LEGACY = setOf(
-        // C2DM / GCM
         "com.google.android.c2dm.permission.RECEIVE",
         "com.google.android.c2dm.permission.SEND",
         "com.google.android.providers.gsf.permission.READ_GSERVICES",
-
-        // ads
         "com.google.android.gms.permission.AD_ID",
         "com.google.android.gms.permission.AD_ID_NOTIFICATION",
-
-        // TODO: Add this permission when bumping GmsCore
-        // "com.google.android.gms.permission.ACTIVITY_RECOGNITION",
     )
 
     /**
@@ -687,45 +680,25 @@ private object Constants {
     )
 
     val ACTIONS_LEGACY = setOf(
-        // C2DM / GCM
         "com.google.android.c2dm.intent.REGISTER",
         "com.google.android.c2dm.intent.REGISTRATION",
         "com.google.android.c2dm.intent.RECEIVE",
         "com.google.iid.TOKEN_REQUEST",
-
-        // people
         "com.google.android.gms.people.service.START",
-
-        // auth
         "com.google.android.gsf.login",
         "com.google.android.gsf.action.GET_GLS",
         "com.google.android.gms.auth.service.START",
         "com.google.android.gms.signin.service.START",
         "com.google.android.gms.accountsettings.action.VIEW_SETTINGS",
         "com.google.android.gms.auth.account.authapi.START",
-
-        // gass
         "com.google.android.gms.gass.START",
-
-        // help
         "com.google.android.gms.googlehelp.service.GoogleHelpService.START",
         "com.google.android.gms.googlehelp.HELP",
         "com.google.android.gms.feedback.internal.IFeedbackService",
-
-        // cast
         "com.google.android.gms.cast.firstparty.START",
         "com.google.android.gms.cast.service.BIND_CAST_DEVICE_CONTROLLER_SERVICE",
-
-        // TODO: Add this permission when bumping GmsCore
-        // "android.media.MediaRouteProviderService",
-
-        // fonts
         "com.google.android.gms.fonts",
-
-        // phenotype
         "com.google.android.gms.phenotype.service.START",
-
-        // misc
         "com.google.android.gms.ads.identifier.service.START",
         "com.google.android.gms.clearcut.service.START",
         "com.google.android.gms.common.telemetry.service.START",
@@ -736,11 +709,7 @@ private object Constants {
         "com.google.android.gms.pseudonymous.service.START",
         "com.google.android.gms.usagereporting.service.START",
         "com.google.android.gms.wallet.service.BIND",
-
-        // potoken
         "com.google.android.gms.potokens.service.START",
-
-        // droidguard
         "com.google.android.gms.droidguard.service.START",
     )
 
@@ -757,16 +726,9 @@ private object Constants {
     )
 
     val AUTHORITIES_LEGACY = setOf(
-        // gsf
         "com.google.android.gsf.gservices",
-
-        // auth
         "com.google.android.gms.auth.accounts",
-
-        // fonts
         "com.google.android.gms.fonts",
-
-        // phenotype
         "com.google.android.gms.phenotype",
     )
 }
