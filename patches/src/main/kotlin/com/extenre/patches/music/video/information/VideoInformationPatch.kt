@@ -13,6 +13,7 @@ import com.extenre.patcher.extensions.InstructionExtensions.addInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
+import com.extenre.patcher.util.MethodNavigator
 import com.extenre.patcher.util.proxy.mutableTypes.MutableClass
 import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod
 import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod.Companion.toMutable
@@ -142,8 +143,8 @@ val videoInformationPatch = bytecodePatch(
             }
         }
 
+        // videoEndFingerprint.mutableMethodOrThrow() devuelve MutableMethod directamente
         videoEndFingerprint.mutableMethodOrThrow().apply {
-            // Reemplazar findMethodOrThrow por búsqueda con mutableClassDefBy
             val mutableClass = mutableClassDefBy(definingClass)
             playerConstructorMethod = mutableClass.methods.first {
                 MethodUtil.methodSignaturesMatch(it, this)
@@ -193,8 +194,13 @@ val videoInformationPatch = bytecodePatch(
         /**
          * Set current video information
          */
-        videoIdFingerprint.matchOrThrow().let {
-            it.mutableMethod.apply {
+        videoIdFingerprint.matchOrThrow().let { match ->
+            val method = match.method
+            val classDef = match.classDef
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
                 val playerResponseModelIndex = indexOfFirstInstructionOrThrow {
                     val reference = getReference<MethodReference>()
                     (opcode == Opcode.INVOKE_INTERFACE_RANGE || opcode == Opcode.INVOKE_INTERFACE) &&
@@ -214,7 +220,7 @@ val videoInformationPatch = bytecodePatch(
                     videoLengthFingerprint.getPlayerResponseInstruction("J")
 
                 videoInformationMethod = getVideoInformationMethod()
-                it.classDef.methods.add(videoInformationMethod)
+                classDef.methods.add(videoInformationMethod)
 
                 addInstruction(
                     playerResponseModelIndex + 2,
@@ -226,9 +232,9 @@ val videoInformationPatch = bytecodePatch(
         /**
          * Set the video time method
          */
-        playerControllerSetTimeReferenceFingerprint.matchOrThrow().let {
-            videoTimeConstructorMethod =
-                it.getWalkerMethod(it.patternMatch!!.startIndex)
+        playerControllerSetTimeReferenceFingerprint.matchOrThrow().let { match ->
+            val navigator = MethodNavigator(match.method)
+            videoTimeConstructorMethod = navigator.navigate(match.patternMatch!!.startIndex).stop()
         }
 
         /**
@@ -260,8 +266,10 @@ val videoInformationPatch = bytecodePatch(
         /**
          * Hook current playback speed
          */
-        playbackSpeedFingerprint.matchOrThrow(playbackSpeedParentFingerprint).let {
-            it.getWalkerMethod(it.patternMatch!!.endIndex).apply {
+        playbackSpeedFingerprint.matchOrThrow(playbackSpeedParentFingerprint).let { match ->
+            val navigator = MethodNavigator(match.method)
+            val targetMethod = navigator.navigate(match.patternMatch!!.endIndex).stop()
+            targetMethod.apply {
                 addInstruction(
                     implementation!!.instructions.lastIndex,
                     "invoke-static {p1}, $EXTENSION_CLASS_DESCRIPTOR->setPlaybackSpeed(F)V"
@@ -271,6 +279,7 @@ val videoInformationPatch = bytecodePatch(
     }
 }
 
+// Las siguientes funciones auxiliares permanecen sin cambios, ya que no usan API obsoleta.
 private fun MutableMethod.getVideoInformationMethod(): MutableMethod =
     ImmutableMethod(
         definingClass,

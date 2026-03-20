@@ -11,10 +11,11 @@ package com.extenre.patches.music.utils.dismiss
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
+import com.extenre.patcher.util.MethodNavigator
 import com.extenre.patches.music.utils.extension.Constants.EXTENSION_PATH
 import com.extenre.util.addStaticFieldToExtension
 import com.extenre.util.fingerprint.methodOrThrow
-import com.extenre.util.getWalkerMethod
+import com.extenre.util.indexOfDismissQueueInstruction   // Asegúrate de que esta función exista
 import com.android.tools.smali.dexlib2.util.MethodUtil
 
 private const val EXTENSION_VIDEO_UTILS_CLASS_DESCRIPTOR =
@@ -27,35 +28,29 @@ val dismissQueueHookPatch = bytecodePatch(
 ) {
 
     execute {
+        dismissQueueFingerprint.methodOrThrow().let { method ->
+            val dismissQueueIndex = indexOfDismissQueueInstruction(method)
 
-        dismissQueueFingerprint.methodOrThrow().apply {
-            val dismissQueueIndex = indexOfDismissQueueInstruction(this)
+            // Navegar al método llamado desde la instrucción en dismissQueueIndex
+            val navigator = MethodNavigator(method)
+            val targetMethod = navigator.navigate(dismissQueueIndex).stop() // MutableMethod
 
-            val walkerMethod = getWalkerMethod(dismissQueueIndex)
-            val smaliInstructions =
-                """
-                    if-eqz v0, :ignore
-                    invoke-virtual {v0}, $definingClass->$name()V
-                    :ignore
-                    return-void
-                    """
+            // Construir el código smali usando la clase del método destino
+            val smaliInstructions = """
+                if-eqz v0, :ignore
+                invoke-virtual {v0}, ${targetMethod.definingClass}->${targetMethod.name}()V
+                :ignore
+                return-void
+            """.trimIndent()
 
-            // Obtener la clase mutable del método walker usando la nueva API
-            val classDef = walkerMethod.definingClass
-            // Usamos mutableClassDefBy para obtener directamente la clase mutable
-            val mutableClass = mutableClassDefBy(classDef)
-            val mutableWalkerMethod = mutableClass.methods.first {
-                MethodUtil.methodSignaturesMatch(it, walkerMethod)
-            }
-
+            // Llamar a la función auxiliar (asumimos que está adaptada a la nueva API)
             addStaticFieldToExtension(
                 EXTENSION_VIDEO_UTILS_CLASS_DESCRIPTOR,
                 "dismissQueue",
                 "dismissQueueClass",
-                definingClass,
+                targetMethod.definingClass,
                 smaliInstructions
             )
         }
-
     }
 }
