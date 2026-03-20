@@ -34,7 +34,6 @@ import com.extenre.patches.shared.gms.Constants.PERMISSIONS
 import com.extenre.patches.shared.gms.Constants.PERMISSIONS_LEGACY
 import com.extenre.util.Utils.printWarn
 import com.extenre.util.Utils.trimIndentMultiline
-import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.methodOrNull
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
@@ -214,27 +213,26 @@ fun gmsCoreSupportPatch(
         else
             AUTHORITIES_LEGACY
 
-        fun transformStringReferences(transform: (str: String) -> String?) = classes.forEach {
-            val mutableClass by lazy {
-                proxy(it).mutableClass
-            }
+        fun transformStringReferences(transform: (str: String) -> String?) =
+            // Usamos patchClasses.classMap.values para iterar sobre las clases del contexto.
+            patchClasses.classMap.values.forEach { classDef ->
+                // Obtenemos la clase mutable usando mutableClassDefBy.
+                val mutableClass = mutableClassDefBy(classDef.type)
 
-            it.methods.forEach classLoop@{ method ->
-                val implementation = method.implementation ?: return@classLoop
+                classDef.methods.forEach classLoop@{ method ->
+                    val implementation = method.implementation ?: return@classLoop
 
-                val mutableMethod by lazy {
-                    mutableClass.methods.first { target ->
+                    val mutableMethod = mutableClass.methods.first { target ->
                         MethodUtil.methodSignaturesMatch(
                             target,
                             method
                         )
                     }
-                }
 
-                implementation.instructions.forEachIndexed insnLoop@{ index, instruction ->
-                    val string =
-                        ((instruction as? Instruction21c)?.reference as? StringReference)?.string
-                            ?: return@insnLoop
+                    implementation.instructions.forEachIndexed insnLoop@{ index, instruction ->
+                        val string =
+                            ((instruction as? Instruction21c)?.reference as? StringReference)?.string
+                                ?: return@insnLoop
 
                     // Apply transformation.
                     val transformedString = transform(string) ?: return@insnLoop
@@ -300,11 +298,11 @@ fun gmsCoreSupportPatch(
 
         fun transformPrimeMethod(packageName: String) {
             if (patchAllManifestEnabled) {
-                // Convertir a mutable si existe
                 primeMethodFingerprint.methodOrNull()?.let { method ->
                     val classDef = primeMethodFingerprint.classDefOrNull()
                         ?: return@let
-                    val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                    // Usamos mutableClassDefBy en lugar de proxy.
+                    val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
                         MethodUtil.methodSignaturesMatch(it, method)
                     }
                     mutableMethod.apply {
@@ -439,18 +437,11 @@ fun gmsCoreSupportPatch(
             "PackageNameYouTube" to packageNameYouTubeOption.valueOrThrow(),
             "PackageNameYouTubeMusic" to packageNameYouTubeMusicOption.valueOrThrow()
         ).forEach { (methodName, value) ->
-            // Reemplazar findmutableMethodOrThrow por búsqueda manual
-            run {
-                val method = findMethodOrThrow("$PATCHES_PATH/PatchStatus;") {
-                    name == methodName
-                }
-                val classDef = classes.find { it.type == "$PATCHES_PATH/PatchStatus;" }
-                    ?: throw PatchException("Class not found: $PATCHES_PATH/PatchStatus;")
-                val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                    MethodUtil.methodSignaturesMatch(it, method)
-                }
-                mutableMethod.returnEarly(value)
-            }
+            // Obtenemos la clase mutable de PatchStatus directamente.
+            val patchStatusClass = mutableClassDefBy("$PATCHES_PATH/PatchStatus;")
+            val method = patchStatusClass.methods.find { it.name == methodName }
+                ?: throw PatchException("Method $methodName not found in $PATCHES_PATH/PatchStatus;")
+            method.returnEarly(value)
         }
 
         executeBlock()

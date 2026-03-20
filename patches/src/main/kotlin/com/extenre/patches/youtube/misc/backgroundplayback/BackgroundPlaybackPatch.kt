@@ -52,8 +52,6 @@ val backgroundPlaybackPatch = bytecodePatch(
     execute {
         // region patch for background playback
 
-        // Called when the app is in the background, and when the video details are loaded.
-        // Should return true if background playback is allowed, otherwise false.
         backgroundPlaybackManagerFingerprint.mutableMethodOrThrow().addInstructions(
             0, """
                 invoke-static {}, $PLAYER_CLASS_DESCRIPTOR->getBackgroundPlaybackState()Z
@@ -62,8 +60,6 @@ val backgroundPlaybackPatch = bytecodePatch(
                 """
         )
 
-        // Called only when the app is in the background.
-        // Should return true to resume playback when returning to the app.
         backgroundPlaybackResumeFingerprint.mutableMethodOrThrow().addInstructions(
             0, """
                 invoke-static {}, $PLAYER_CLASS_DESCRIPTOR->getBackgroundPlaybackResumeState()Z
@@ -88,12 +84,10 @@ val backgroundPlaybackPatch = bytecodePatch(
 
         // region patch for exclusive audio playback
 
-        // Don't play music videos in background when audio only is not available.
-        // Called when the video is opened.
         val videoStageMatch = videoStageFingerprint.matchOrThrow()
         val videoStageMethod = videoStageMatch.method
         val videoStageClassDef = videoStageMatch.classDef
-        val videoStageMutableMethod = proxy(videoStageClassDef).mutableClass.methods.first {
+        val videoStageMutableMethod = mutableClassDefBy(videoStageClassDef.type).methods.first {
             MethodUtil.methodSignaturesMatch(it, videoStageMethod)
         }
         videoStageMutableMethod.apply {
@@ -109,11 +103,10 @@ val backgroundPlaybackPatch = bytecodePatch(
             )
         }
 
-        // Called when a video is opened to check if audio only should be used.
         val audioTrackCheckMatch = audioTrackCheckFingerprint.matchOrThrow()
         val audioTrackCheckMethod = audioTrackCheckMatch.method
         val audioTrackCheckClassDef = audioTrackCheckMatch.classDef
-        val audioTrackCheckMutableMethod = proxy(audioTrackCheckClassDef).mutableClass.methods.first {
+        val audioTrackCheckMutableMethod = mutableClassDefBy(audioTrackCheckClassDef.type).methods.first {
             MethodUtil.methodSignaturesMatch(it, audioTrackCheckMethod)
         }
         audioTrackCheckMutableMethod.apply {
@@ -131,16 +124,11 @@ val backgroundPlaybackPatch = bytecodePatch(
 
         // endregion
 
-        // region patch for background playback for kids videos
-
         kidsBackgroundPlaybackPolicyControllerFingerprint.mutableMethodOrThrow().addInstruction(
             0, "return-void"
         )
 
-        // endregion
-
         // region add settings
-
         addPreference(
             arrayOf(
                 "PREFERENCE_SCREEN: GENERAL",
@@ -148,7 +136,6 @@ val backgroundPlaybackPatch = bytecodePatch(
             ),
             REMOVE_BACKGROUND_PLAYBACK_RESTRICTIONS
         )
-
         // endregion
     }
 }

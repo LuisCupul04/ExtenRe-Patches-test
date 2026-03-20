@@ -37,7 +37,6 @@ import com.extenre.patches.shared.opus.baseOpusCodecsPatch
 import com.extenre.patches.shared.playbackStartParametersConstructorFingerprint
 import com.extenre.patches.shared.playbackStartParametersToStringFingerprint
 import com.extenre.util.findFieldFromToString
-import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
@@ -153,10 +152,8 @@ val videoPlaybackPatch = bytecodePatch(
                         reference.definingClass == method.definingClass
             }
 
-        // Reemplazar findMutableClassOrThrow por búsqueda manual
-        val videoQualityMutableClass = classes.find { it.type == videoQualityClass }
-            ?.let { proxy(it).mutableClass }
-            ?: throw PatchException("Class not found: $videoQualityClass")
+        // CORREGIDO: obtener la clase mutable directamente
+        val videoQualityMutableClass = mutableClassDefBy(videoQualityClass)
 
         videoQualityMutableClass.methods.first { method ->
             MethodUtil.isConstructor(method) &&
@@ -180,31 +177,24 @@ val videoPlaybackPatch = bytecodePatch(
                     """
             )
 
-            // Reemplazar findmutableMethodOrThrow por búsqueda manual
-            run {
-                val method = findMethodOrThrow(EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR) {
-                    name == "getVideoQualityResolution"
-                }
-                val classDef = classes.find { it.type == EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR }
-                    ?: throw PatchException("Class not found: $EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR")
-                val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                    MethodUtil.methodSignaturesMatch(it, method)
-                }
-                mutableMethod.addInstructions(
-                    0, """
-                        check-cast p0, $videoQualityClass
-                        iget p0, p0, $resolutionField
-                        return p0
-                        """
-                )
-            }
+            // CORREGIDO: obtener el método mutable de la clase de extensión
+            val extensionClass = mutableClassDefBy(EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR)
+            val extensionMethod = extensionClass.methods.find { it.name == "getVideoQualityResolution" }
+                ?: throw PatchException("Method getVideoQualityResolution not found in $EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR")
+            extensionMethod.addInstructions(
+                0, """
+                    check-cast p0, $videoQualityClass
+                    iget p0, p0, $resolutionField
+                    return p0
+                    """
+            )
         }
 
-        // Reemplazar originalmutableMethodOrThrow por búsqueda manual
+        // CORREGIDO: obtener el método mutable del fingerprint playbackStartParametersToStringFingerprint
         val initialResolutionField = run {
             val method = playbackStartParametersToStringFingerprint.methodOrThrow()
             val classDef = playbackStartParametersToStringFingerprint.classDefOrThrow()
-            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.findFieldFromToString(FIXED_RESOLUTION_STRING)
@@ -235,21 +225,14 @@ val videoPlaybackPatch = bytecodePatch(
                 val qualityChangedClass =
                     getInstruction<ReferenceInstruction>(endIndex).reference.toString()
 
-                // Reemplazar findmutableMethodOrThrow por búsqueda manual
-                run {
-                    val method = findMethodOrThrow(qualityChangedClass) {
-                        name == "onItemClick"
-                    }
-                    val classDef = classes.find { it.type == qualityChangedClass }
-                        ?: throw PatchException("Class not found: $qualityChangedClass")
-                    val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                        MethodUtil.methodSignaturesMatch(it, method)
-                    }
-                    mutableMethod.addInstruction(
-                        0,
-                        "invoke-static { p3 }, $EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR->userSelectedVideoQuality(I)V"
-                    )
-                }
+                // CORREGIDO: obtener la clase mutable de qualityChangedClass
+                val changedClass = mutableClassDefBy(qualityChangedClass)
+                val onItemClickMethod = changedClass.methods.find { it.name == "onItemClick" }
+                    ?: throw PatchException("Method onItemClick not found in $qualityChangedClass")
+                onItemClickMethod.addInstruction(
+                    0,
+                    "invoke-static { p3 }, $EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR->userSelectedVideoQuality(I)V"
+                )
             }
         }
 

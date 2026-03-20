@@ -41,7 +41,6 @@ import com.extenre.patches.youtube.video.information.videoInformationPatch
 import com.extenre.patches.youtube.video.videoid.hookPlayerResponseVideoId
 import com.extenre.patches.youtube.video.videoid.hookVideoId
 import com.extenre.util.findFreeRegister
-import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
@@ -71,18 +70,12 @@ private val returnYouTubeDislikeRollingNumberPatch = bytecodePatch(
         }
 
         rollingNumberSetterFingerprint.matchOrThrow().let {
-            it.mutableMethod.apply {  // Cambio: it.method -> it.mutableMethod
+            it.mutableMethod.apply {
                 val rollingNumberClassIndex = it.patternMatch!!.startIndex
                 val rollingNumberClassReference =
                     getInstruction<ReferenceInstruction>(rollingNumberClassIndex).reference.toString()
-                // Reemplazar findmutableMethodOrThrow por búsqueda manual
-                val rollingNumberConstructorMethod = run {
-                    val method = findMethodOrThrow(rollingNumberClassReference)
-                    val classDef = classes.find { it.type == rollingNumberClassReference }
-                        ?: throw PatchException("Class not found: $rollingNumberClassReference")
-                    proxy(classDef).mutableClass.methods.first {
-                        MethodUtil.methodSignaturesMatch(it, method)
-                    }
+                val rollingNumberConstructorMethod = mutableClassDefBy(rollingNumberClassReference).methods.first { method ->
+                    MethodUtil.isConstructor(method)
                 }
                 val charSequenceFieldReference = with(rollingNumberConstructorMethod) {
                     getInstruction<ReferenceInstruction>(
@@ -112,10 +105,8 @@ private val returnYouTubeDislikeRollingNumberPatch = bytecodePatch(
             }
         }
 
-        // Rolling Number text views use the measured width of the raw string for layout.
-        // Modify the measure text calculation to include the left drawable separator if needed.
         rollingNumberMeasureAnimatedTextFingerprint.matchOrThrow().let {
-            it.mutableMethod.apply {  // Cambio: it.method -> it.mutableMethod
+            it.mutableMethod.apply {
                 val endIndex = it.patternMatch!!.endIndex
                 val measuredTextWidthIndex = endIndex - 2
                 val measuredTextWidthRegister =
@@ -143,7 +134,7 @@ private val returnYouTubeDislikeRollingNumberPatch = bytecodePatch(
         rollingNumberMeasureStaticLabelFingerprint.matchOrThrow(
             rollingNumberMeasureTextParentFingerprint
         ).let {
-            it.mutableMethod.apply {  // Cambio: it.method -> it.mutableMethod
+            it.mutableMethod.apply {
                 val measureTextIndex = it.patternMatch!!.startIndex + 1
                 val freeRegister = getInstruction<TwoRegisterInstruction>(0).registerA
 
@@ -156,26 +147,16 @@ private val returnYouTubeDislikeRollingNumberPatch = bytecodePatch(
             }
         }
 
-        // The rolling number Span is missing styling since it's initially set as a String.
-        // Modify the UI text view and use the styled like/dislike Span.
         arrayOf(
-            // Initial TextView is set in this method.
-            rollingNumberTextViewFingerprint
-                .mutableMethodOrThrow(),
-
-            // Video less than 24 hours after uploaded, like counts will be updated in real time.
-            // Whenever like counts are updated, TextView is set in this method.
-            rollingNumberTextViewAnimationUpdateFingerprint
-                .mutableMethodOrThrow(rollingNumberTextViewFingerprint)
+            rollingNumberTextViewFingerprint.mutableMethodOrThrow(),
+            rollingNumberTextViewAnimationUpdateFingerprint.mutableMethodOrThrow(rollingNumberTextViewFingerprint)
         ).forEach { method ->
             method.apply {
                 val setTextIndex = indexOfFirstInstructionOrThrow {
                     getReference<MethodReference>()?.name == "setText"
                 }
-                val textViewRegister =
-                    getInstruction<FiveRegisterInstruction>(setTextIndex).registerC
-                val textSpanRegister =
-                    getInstruction<FiveRegisterInstruction>(setTextIndex).registerD
+                val textViewRegister = getInstruction<FiveRegisterInstruction>(setTextIndex).registerC
+                val textSpanRegister = getInstruction<FiveRegisterInstruction>(setTextIndex).registerD
 
                 addInstructions(
                     setTextIndex, """
@@ -192,40 +173,25 @@ private val returnYouTubeDislikeShortsPatch = bytecodePatch(
     name = "return-YouTube-Dislike-Shorts-Patch",
     description = "returnYouTubeDislikeShortsPatch"
 ) {
-    dependsOn(
-        textComponentPatch,
-        versionCheckPatch
-    )
+    dependsOn(textComponentPatch, versionCheckPatch)
 
     execute {
         shortsTextViewFingerprint.matchOrThrow().let {
-            it.mutableMethod.apply {  // Cambio: it.method -> it.mutableMethod
+            it.mutableMethod.apply {
                 val startIndex = it.patternMatch!!.startIndex
 
-                val isDisLikesBooleanIndex =
-                    indexOfFirstInstructionReversedOrThrow(startIndex, Opcode.IGET_BOOLEAN)
-                val textViewFieldIndex =
-                    indexOfFirstInstructionReversedOrThrow(startIndex, Opcode.IGET_OBJECT)
+                val isDisLikesBooleanIndex = indexOfFirstInstructionReversedOrThrow(startIndex, Opcode.IGET_BOOLEAN)
+                val textViewFieldIndex = indexOfFirstInstructionReversedOrThrow(startIndex, Opcode.IGET_OBJECT)
 
-                // If the field is true, the TextView is for a dislike button.
-                val isDisLikesBooleanReference =
-                    getInstruction<ReferenceInstruction>(isDisLikesBooleanIndex).reference
+                val isDisLikesBooleanReference = getInstruction<ReferenceInstruction>(isDisLikesBooleanIndex).reference
+                val textViewFieldReference = getInstruction<ReferenceInstruction>(textViewFieldIndex).reference
 
-                val textViewFieldReference = // Like/Dislike button TextView field
-                    getInstruction<ReferenceInstruction>(textViewFieldIndex).reference
-
-                // Check if the hooked TextView object is that of the dislike button.
-                // If RYD is disabled, or the TextView object is not that of the dislike button, the execution flow is not interrupted.
-                // Otherwise, the TextView object is modified, and the execution flow is interrupted to prevent it from being changed afterward.
                 val insertIndex = indexOfFirstInstructionOrThrow(Opcode.CHECK_CAST) + 1
 
                 addInstructionsWithLabels(
                     insertIndex, """
-                    # Check, if the TextView is for a dislike button
                     iget-boolean v0, p0, $isDisLikesBooleanReference
                     if-eqz v0, :ryd_disabled
-                    
-                    # Hook the TextView, if it is for the dislike button
                     iget-object v0, p0, $textViewFieldReference
                     invoke-static {v0}, $EXTENSION_RYD_CLASS_DESCRIPTOR->setShortsDislikes(Landroid/view/View;)Z
                     move-result v0
@@ -237,10 +203,7 @@ private val returnYouTubeDislikeShortsPatch = bytecodePatch(
         }
 
         if (is_18_34_or_greater) {
-            hookSpannableString(
-                EXTENSION_RYD_CLASS_DESCRIPTOR,
-                "onCharSequenceLoaded"
-            )
+            hookSpannableString(EXTENSION_RYD_CLASS_DESCRIPTOR, "onCharSequenceLoaded")
         }
     }
 }
@@ -271,54 +234,35 @@ val returnYouTubeDislikePatch = bytecodePatch(
             removeLikeFingerprint to Vote.REMOVE_LIKE,
         ).forEach { (fingerprint, vote) ->
             fingerprint.mutableMethodOrThrow().addInstructions(
-                0,
-                """
+                0, """
                     const/4 v0, ${vote.value}
                     invoke-static {v0}, $EXTENSION_RYD_CLASS_DESCRIPTOR->sendVote(I)V
-                    """,
+                    """
             )
         }
 
         hookTextComponent(EXTENSION_RYD_CLASS_DESCRIPTOR)
 
-        // region Inject newVideoLoaded event handler to update dislikes when a new video is loaded.
         hookVideoId("$EXTENSION_RYD_CLASS_DESCRIPTOR->newVideoLoaded(Ljava/lang/String;)V")
-
-        // Hook the player response video id, to start loading RYD sooner in the background.
         hookPlayerResponseVideoId("$EXTENSION_RYD_CLASS_DESCRIPTOR->preloadVideoId(Ljava/lang/String;Z)V")
 
-        // endregion
-
-        // Player response video id is needed to search for the video ids in Shorts litho components.
         if (is_18_34_or_greater) {
             addLithoFilter(FILTER_CLASS_DESCRIPTOR)
             hookPlayerResponseVideoId("$FILTER_CLASS_DESCRIPTOR->newPlayerResponseVideoId(Ljava/lang/String;Z)V")
             hookShortsVideoInformation("$FILTER_CLASS_DESCRIPTOR->newShortsVideoStarted(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JZ)V")
         }
 
-        // endregion
-
         if (is_20_07_or_greater) {
-            // Turn off a/b flag that enables new code for creating litho spans.
-            // If enabled then the litho text span hook is never called.
-            // Target code is very obfuscated and exactly what the code does is not clear.
-            // Return late so debug patch logs if the flag is enabled.
             textComponentFeatureFlagFingerprint.injectLiteralInstructionBooleanCall(
                 LITHO_NEW_TEXT_COMPONENT_FEATURE_FLAG,
                 "0x0"
             )
         }
 
-        // region add settings
-
         addPreference(
-            arrayOf(
-                "PREFERENCE_SCREEN: RETURN_YOUTUBE_DISLIKE"
-            ),
+            arrayOf("PREFERENCE_SCREEN: RETURN_YOUTUBE_DISLIKE"),
             RETURN_YOUTUBE_DISLIKE
         )
-
-        // endregion
     }
 }
 

@@ -53,7 +53,7 @@ val playerResponseMethodHookPatch = bytecodePatch(
                 true -> playerParameterBuilderFingerprint.classDefOrThrow()
                 else -> playerParameterBuilderLegacyFingerprint.classDefOrThrow()
             }
-            proxy(classDef).mutableClass.methods.first {
+            mutableClassDefBy(classDef.type).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
         }

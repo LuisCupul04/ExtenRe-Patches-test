@@ -20,7 +20,6 @@ import com.extenre.patches.youtube.utils.extension.Constants.UTILS_PATH
 import com.extenre.patches.youtube.utils.patch.PatchList.ENABLE_DEBUG_LOGGING
 import com.extenre.patches.youtube.utils.settings.ResourceUtils.addPreference
 import com.extenre.patches.youtube.utils.settings.settingsPatch
-import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.getReference
 import com.extenre.util.indexOfFirstInstructionOrThrow
@@ -43,53 +42,36 @@ val debuggingPatch = bytecodePatch(
     dependsOn(settingsPatch)
 
     execute {
-        // region patch for debug logging
-
-        val (debugString, debugBooleanField) = with(
-            debuggingFingerprint.mutableMethodOrThrow()
-        ) {
+        val (debugString, debugBooleanField) = with(debuggingFingerprint.mutableMethodOrThrow()) {
             val stringIndex = indexOfFirstInstructionOrThrow(Opcode.CONST_STRING)
             val debugString = getInstruction<ReferenceInstruction>(stringIndex).reference.toString()
             val booleanFieldIndex = indexOfFirstInstructionOrThrow(stringIndex) {
-                opcode == Opcode.SGET_BOOLEAN &&
-                        getReference<FieldReference>()?.type == "Z"
+                opcode == Opcode.SGET_BOOLEAN && getReference<FieldReference>()?.type == "Z"
             }
-            val debugBooleanField =
-                getInstruction<ReferenceInstruction>(booleanFieldIndex).reference
-
+            val debugBooleanField = getInstruction<ReferenceInstruction>(booleanFieldIndex).reference
             Pair(debugString, debugBooleanField)
         }
 
         val mutableClass = debuggingFingerprint.mutableClassOrThrow()
-        val staticField = mutableClass.staticFields.find { field ->
-            field.type == "Z"
-        } ?: throw PatchException("Could not find static boolean field")
+        val staticField = mutableClass.staticFields.find { field -> field.type == "Z" }
+            ?: throw PatchException("Could not find static boolean field")
 
         val getterMethod = mutableClass.methods.find { method ->
             method.returnType == "Z" && method.parameters.isEmpty()
         } ?: throw PatchException("Could not find getter method")
 
-        // Reemplazar findmutableMethodOrThrow por búsqueda manual
-        val method = findMethodOrThrow(EXTENSION_CLASS_DESCRIPTOR) {
-            name == "getDebugState"
-        }
-        val classDef = classes.find { it.type == EXTENSION_CLASS_DESCRIPTOR }
-            ?: throw PatchException("Class not found: $EXTENSION_CLASS_DESCRIPTOR")
-        val mutableMethod = proxy(classDef).mutableClass.methods.first {
-            MethodUtil.methodSignaturesMatch(it, method)
-        }
+        val mutableMethod = mutableClassDefBy(EXTENSION_CLASS_DESCRIPTOR).methods.find { method ->
+            method.name == "getDebugState"
+        } ?: throw PatchException("getDebugState method not found in $EXTENSION_CLASS_DESCRIPTOR")
+
         mutableMethod.addInstructions(
             0, """
-                    sget-object v0, $staticField
-                    return v0
-                    """
+                sget-object v0, $staticField
+                return v0
+                """
         )
 
         mutableClass.methods.add(getterMethod)
-
-        // endregion
-
-        // region add settings
 
         addPreference(
             arrayOf(
@@ -98,7 +80,5 @@ val debuggingPatch = bytecodePatch(
             ),
             ENABLE_DEBUG_LOGGING
         )
-
-        // endregion
     }
 }

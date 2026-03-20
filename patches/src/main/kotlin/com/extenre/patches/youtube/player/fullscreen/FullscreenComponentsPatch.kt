@@ -9,11 +9,8 @@
 package com.extenre.patches.youtube.player.fullscreen
 
 import com.extenre.patcher.extensions.InstructionExtensions.addInstruction
-import com.extenre.patcher.extensions.InstructionExtensions.addInstructions
 import com.extenre.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
-import com.extenre.patcher.extensions.InstructionExtensions.removeInstruction
-import com.extenre.patcher.extensions.InstructionExtensions.replaceInstruction
 import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patcher.util.smali.ExternalLabel
@@ -46,32 +43,25 @@ val fullscreenComponentsPatch = bytecodePatch(
     dependsOn(settingsPatch)
 
     execute {
-        // region patch for hide fullscreen button
-
         val fullscreenButtonMatch = fullscreenButtonFingerprint.matchOrThrow()
         val fullscreenButtonMethod = fullscreenButtonMatch.method
         val fullscreenButtonClassDef = fullscreenButtonMatch.classDef
-        val fullscreenButtonMutableMethod = proxy(fullscreenButtonClassDef).mutableClass.methods.first {
+        val fullscreenButtonMutableMethod = mutableClassDefBy(fullscreenButtonClassDef.type).methods.first {
             MethodUtil.methodSignaturesMatch(it, fullscreenButtonMethod)
         }
         fullscreenButtonMutableMethod.apply {
             val insertIndex = fullscreenButtonMatch.patternMatch!!.endIndex
             val register = getInstruction<OneRegisterInstruction>(insertIndex).registerA
-
             addInstruction(
                 insertIndex,
                 "invoke-static {v$register}, $PLAYER_CLASS_DESCRIPTOR->hideFullscreenButton(Landroid/view/View;)V"
             )
         }
 
-        // endregion
-
-        // region patch for hide fullscreen dialog
-
         val fullscreenDialogMatch = fullscreenDialogFingerprint.matchOrThrow()
         val fullscreenDialogMethod = fullscreenDialogMatch.method
         val fullscreenDialogClassDef = fullscreenDialogMatch.classDef
-        val fullscreenDialogMutableMethod = proxy(fullscreenDialogClassDef).mutableClass.methods.first {
+        val fullscreenDialogMutableMethod = mutableClassDefBy(fullscreenDialogClassDef.type).methods.first {
             MethodUtil.methodSignaturesMatch(it, fullscreenDialogMethod)
         }
         fullscreenDialogMutableMethod.apply {
@@ -85,10 +75,6 @@ val fullscreenComponentsPatch = bytecodePatch(
             )
         }
 
-        // endregion
-
-        // region add settings
-
         addPreference(
             arrayOf(
                 "PREFERENCE_SCREEN: PLAYER",
@@ -96,7 +82,5 @@ val fullscreenComponentsPatch = bytecodePatch(
             ),
             FULLSCREEN_COMPONENTS
         )
-
-        // endregion
     }
 }

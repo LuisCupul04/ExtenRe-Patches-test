@@ -40,7 +40,6 @@ import com.extenre.util.ResourceGroup
 import com.extenre.util.Utils.printInfo
 import com.extenre.util.copyResources
 import com.extenre.util.copyXmlNode
-import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.indexOfFirstInstructionOrThrow
@@ -92,7 +91,7 @@ private val settingsBytecodePatch = bytecodePatch(
         settingsHeadersFragmentFingerprint.matchOrThrow().let {
             val method = it.method
             val classDef = it.classDef
-            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
@@ -113,7 +112,7 @@ private val settingsBytecodePatch = bytecodePatch(
         preferenceFingerprint.matchOrThrow().let {
             val method = it.method
             val classDef = it.classDef
-            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
@@ -149,15 +148,10 @@ private val settingsBytecodePatch = bytecodePatch(
 
         // apply the current theme of the settings page
         run {
-            val method = findMethodOrThrow(EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR) {
-                name == "setThemeColor"
-            }
-            val classDef = classes.find { it.type == EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR }
-                ?: throw PatchException("Class not found: $EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR")
-            val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                MethodUtil.methodSignaturesMatch(it, method)
-            }
-            mutableMethod.addInstruction(
+            val themeUtilsClass = mutableClassDefBy(EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR)
+            val method = themeUtilsClass.methods.find { it.name == "setThemeColor" }
+                ?: throw PatchException("Method setThemeColor not found in $EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR")
+            method.addInstruction(
                 0,
                 "invoke-static {}, $EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR->updateDarkModeStatus()V"
             )
@@ -234,7 +228,7 @@ val settingsPatch = resourcePatch(
             "NEKO" to "NEKO",
             "RE+" to "RE+",
             "RVX" to "RVX",
-            "ReVanced Extended" to "ReVanced Extended",          
+            "ReVanced Extended" to "ReVanced Extended",
         ),
         title = "ExtenRe settings label",
         description = "The name of the ExtenRe settings menu.",

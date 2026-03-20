@@ -56,19 +56,15 @@ val videoPlaybackPatch = bytecodePatch(
     )
 
     execute {
-        // region patch for default playback speed
-
         val playbackSpeedMatch = playbackSpeedFingerprint.matchOrThrow(playbackSpeedParentFingerprint)
         val playbackSpeedMethod = playbackSpeedMatch.method
         val playbackSpeedClassDef = playbackSpeedMatch.classDef
-        val playbackSpeedMutableMethod = proxy(playbackSpeedClassDef).mutableClass.methods.first {
+        val playbackSpeedMutableMethod = mutableClassDefBy(playbackSpeedClassDef.type).methods.first {
             MethodUtil.methodSignaturesMatch(it, playbackSpeedMethod)
         }
         playbackSpeedMutableMethod.apply {
             val startIndex = playbackSpeedMatch.patternMatch!!.startIndex
-            val speedRegister =
-                getInstruction<OneRegisterInstruction>(startIndex + 1).registerA
-
+            val speedRegister = getInstruction<OneRegisterInstruction>(startIndex + 1).registerA
             addInstructions(
                 startIndex + 2, """
                         invoke-static {v$speedRegister}, $PLAYER_CLASS_DESCRIPTOR->getPlaybackSpeed(F)F
@@ -77,26 +73,18 @@ val videoPlaybackPatch = bytecodePatch(
             )
         }
 
-        // Called when user selects a playback speed from the flyout menu.
         userSelectedPlaybackSpeedFingerprint.mutableMethodOrThrow().apply {
             val index = indexOfFirstInstructionOrThrow(Opcode.INVOKE_STATIC)
             val register = getInstruction<FiveRegisterInstruction>(index).registerC
-
             addInstruction(
                 index,
                 "invoke-static {v$register}, $PLAYER_CLASS_DESCRIPTOR->userSelectedPlaybackSpeed(F)V"
             )
         }
 
-        // endregion
-
-        // region patch for remember playback speed
-
-        // Hook into the method that saves the selected speed.
         playbackSpeedSaveFingerprint.mutableMethodOrThrow().apply {
             val index = indexOfFirstInstructionOrThrow(Opcode.IPUT)
             val register = getInstruction<TwoRegisterInstruction>(index).registerA
-
             addInstructions(
                 index, """
                     invoke-static {v$register}, $PLAYER_CLASS_DESCRIPTOR->savePlaybackSpeed(F)V
@@ -104,11 +92,9 @@ val videoPlaybackPatch = bytecodePatch(
             )
         }
 
-        // Hook into the method that loads the saved speed.
         playbackSpeedLoadFingerprint.mutableMethodOrThrow().apply {
             val index = indexOfFirstInstructionOrThrow(Opcode.IGET)
             val register = getInstruction<TwoRegisterInstruction>(index).registerA
-
             addInstructions(
                 index + 1, """
                     invoke-static {v$register}, $PLAYER_CLASS_DESCRIPTOR->loadPlaybackSpeed(F)F
@@ -117,10 +103,6 @@ val videoPlaybackPatch = bytecodePatch(
             )
         }
 
-        // endregion
-
-        // region add settings
-
         addPreference(
             arrayOf(
                 "PREFERENCE_SCREEN: PLAYER",
@@ -128,7 +110,5 @@ val videoPlaybackPatch = bytecodePatch(
             ),
             VIDEO_PLAYBACK
         )
-
-        // endregion
     }
 }

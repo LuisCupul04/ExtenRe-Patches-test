@@ -88,8 +88,6 @@ import com.extenre.util.containsLiteralInstruction
 import com.extenre.util.containsStringInstruction
 import com.extenre.util.copyResources
 import com.extenre.util.doRecursively
-import com.extenre.util.findMethodOrThrow
-import com.extenre.util.findMutableMethodOf
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.methodCall
@@ -299,18 +297,10 @@ private val shortsCustomActionsPatch = bytecodePatch(
                             "$EXTENSION_CUSTOM_ACTIONS_CLASS_DESCRIPTOR->setFlyoutMenuObject(Ljava/lang/Object;)V"
                 )
 
-                // Reemplazar findmutableMethodOrThrow por búsqueda manual
-                val addFlyoutMenuMethod = run {
-                    val method = findMethodOrThrow(EXTENSION_CUSTOM_ACTIONS_CLASS_DESCRIPTOR) {
-                        name == "addFlyoutMenu" &&
-                                accessFlags == AccessFlags.PRIVATE or AccessFlags.STATIC
-                    }
-                    val classDef = classes.find { it.type == EXTENSION_CUSTOM_ACTIONS_CLASS_DESCRIPTOR }
-                        ?: throw PatchException("Class not found: $EXTENSION_CUSTOM_ACTIONS_CLASS_DESCRIPTOR")
-                    proxy(classDef).mutableClass.methods.first {
-                        MethodUtil.methodSignaturesMatch(it, method)
-                    }
-                }
+                val addFlyoutMenuMethod = mutableClassDefBy(EXTENSION_CUSTOM_ACTIONS_CLASS_DESCRIPTOR).methods.find { method ->
+                    method.name == "addFlyoutMenu" &&
+                    method.accessFlags == (AccessFlags.PRIVATE.value or AccessFlags.STATIC.value)
+                } ?: throw PatchException("addFlyoutMenu method not found in $EXTENSION_CUSTOM_ACTIONS_CLASS_DESCRIPTOR")
 
                 val customActionClass = with(addFlyoutMenuMethod) {
                     val thirdParameter = parameters[2]
@@ -425,31 +415,30 @@ private val shortsNavigationBarPatch = bytecodePatch(
 
     execute {
         var count = 0
-        classes.forEach { classDef ->
+        patchClasses.classMap.values.forEach { classDef ->
             classDef.methods.filter { method ->
                 method.returnType == "V" &&
-                        method.accessFlags == AccessFlags.PUBLIC or AccessFlags.FINAL &&
-                        method.parameters == listOf("Landroid/view/View;", "Landroid/os/Bundle;") &&
-                        method.containsStringInstruction("r_pfvc") &&
-                        method.containsLiteralInstruction(bottomBarContainer)
+                method.accessFlags == (AccessFlags.PUBLIC.value or AccessFlags.FINAL.value) &&
+                method.parameters == listOf("Landroid/view/View;", "Landroid/os/Bundle;") &&
+                method.containsStringInstruction("r_pfvc") &&
+                method.containsLiteralInstruction(bottomBarContainer)
             }.forEach { method ->
-                proxy(classDef)
-                    .mutableClass
-                    .findMutableMethodOf(method).apply {
-                        val constIndex = indexOfFirstLiteralInstruction(bottomBarContainer)
-                        val targetIndex = indexOfFirstInstructionOrThrow(constIndex) {
-                            getReference<MethodReference>()?.name == "getHeight"
-                        } + 1
-                        val heightRegister =
-                            getInstruction<OneRegisterInstruction>(targetIndex).registerA
-                        addInstructions(
-                            targetIndex + 1, """
-                                invoke-static {v$heightRegister}, $SHORTS_CLASS_DESCRIPTOR->setNavigationBarHeight(I)I
-                                move-result v$heightRegister
-                                """
-                        )
-                        count++
-                    }
+                val mutableClass = mutableClassDefBy(classDef.type)
+                val mutableMethod = mutableClass.methods.first { MethodUtil.methodSignaturesMatch(it, method) }
+                mutableMethod.apply {
+                    val constIndex = indexOfFirstLiteralInstruction(bottomBarContainer)
+                    val targetIndex = indexOfFirstInstructionOrThrow(constIndex) {
+                        getReference<MethodReference>()?.name == "getHeight"
+                    } + 1
+                    val heightRegister = getInstruction<OneRegisterInstruction>(targetIndex).registerA
+                    addInstructions(
+                        targetIndex + 1, """
+                            invoke-static {v$heightRegister}, $SHORTS_CLASS_DESCRIPTOR->setNavigationBarHeight(I)I
+                            move-result v$heightRegister
+                            """
+                    )
+                    count++
+                }
             }
         }
 
@@ -500,14 +489,14 @@ private val shortsRepeatPatch = bytecodePatch(
                         } >= 0
             }
 
-            classes.forEach { classDef ->
+            // CORREGIDO: usar patchClasses en lugar de classes, y mutableClassDefBy en lugar de proxy
+            patchClasses.classMap.values.forEach { classDef ->
                 if (!insertMethodFound) {
                     classDef.methods.forEach { method ->
                         if (method.isInsertMethod()) {
                             insertMethodFound = true
-                            insertMethod = proxy(classDef)
-                                .mutableClass
-                                .findMutableMethodOf(method)
+                            val mutableClass = mutableClassDefBy(classDef.type)
+                            insertMethod = mutableClass.methods.first { MethodUtil.methodSignaturesMatch(it, method) }
                         }
                     }
                 }
@@ -517,24 +506,17 @@ private val shortsRepeatPatch = bytecodePatch(
         val enumMethod =
             reelEnumStaticFingerprint.mutableMethodOrThrow(reelEnumConstructorFingerprint)
 
-        // Reemplazar findmutableMethodOrThrow por búsqueda manual
-        run {
-            val method = findMethodOrThrow(EXTENSION_REPEAT_STATE_CLASS_DESCRIPTOR) {
-                name == "getShortsLoopBehaviorEnum"
-            }
-            val classDef = classes.find { it.type == EXTENSION_REPEAT_STATE_CLASS_DESCRIPTOR }
-                ?: throw PatchException("Class not found: $EXTENSION_REPEAT_STATE_CLASS_DESCRIPTOR")
-            val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                MethodUtil.methodSignaturesMatch(it, method)
-            }
-            mutableMethod.addInstructions(
-                0, """
-                    invoke-static/range { p0 .. p0 }, $enumMethod
-                    move-result-object p0
-                    return-object p0
-                    """
-            )
-        }
+        val getShortsLoopBehaviorMethod = mutableClassDefBy(EXTENSION_REPEAT_STATE_CLASS_DESCRIPTOR).methods.find { method ->
+            method.name == "getShortsLoopBehaviorEnum"
+        } ?: throw PatchException("getShortsLoopBehaviorEnum method not found in $EXTENSION_REPEAT_STATE_CLASS_DESCRIPTOR")
+
+        getShortsLoopBehaviorMethod.addInstructions(
+            0, """
+                invoke-static/range { p0 .. p0 }, $enumMethod
+                move-result-object p0
+                return-object p0
+                """
+        )
 
         insertMethod.apply {
             implementation!!.instructions
@@ -748,7 +730,7 @@ private const val RETURN_YOUTUBE_CHANNEL_NAME_FILTER_CLASS_DESCRIPTOR =
 @Suppress("unused")
 val shortsComponentPatch = bytecodePatch(
     name = SHORTS_COMPONENTS.key,
-    description = "${SHORTS_COMPONENTS.title}: ${SHORTS_COMPONENTS.summary}",  // Corregido: summaryummary -> summary
+    description = "${SHORTS_COMPONENTS.title}: ${SHORTS_COMPONENTS.summary}",
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 

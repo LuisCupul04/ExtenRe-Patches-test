@@ -143,7 +143,7 @@ val adsPatch = adsPatch(
         val premiumMatch = getPremiumTextViewFingerprint.matchOrThrow()
         val premiumMethod = premiumMatch.method
         val premiumClassDef = premiumMatch.classDef
-        val premiumMutableMethod = proxy(premiumClassDef).mutableClass.methods.first {
+        val premiumMutableMethod = mutableClassDefBy(premiumClassDef.type).methods.first {
             MethodUtil.methodSignaturesMatch(it, premiumMethod)
         }
         premiumMutableMethod.apply {

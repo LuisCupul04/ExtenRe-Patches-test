@@ -63,7 +63,6 @@ import com.extenre.util.adoptChild
 import com.extenre.util.cloneMutable
 import com.extenre.util.doRecursively
 import com.extenre.util.findInstructionIndicesReversed
-import com.extenre.util.findMethodOrThrow
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.injectLiteralInstructionViewCall
 import com.extenre.util.fingerprint.legacyFingerprint
@@ -97,6 +96,8 @@ import com.android.tools.smali.dexlib2.immutable.ImmutableMethodParameter
 import com.android.tools.smali.dexlib2.util.MethodUtil
 import org.w3c.dom.Element
 
+// ... (las constantes y funciones auxiliares se mantienen igual)
+
 private const val IMAGE_VIEW_TAG_NAME =
     "com.google.android.libraries.youtube.common.ui.TouchImageView"
 private const val NEXT_BUTTON_VIEW_ID =
@@ -113,7 +114,6 @@ private val playerComponentsResourcePatch = resourcePatch(
     execute {
         val publicFile = get("res/values/public.xml")
 
-        // Since YT Music v6.42.51,the resources for the next button have been removed, we need to add them manually.
         if (is_6_42_or_greater) {
             publicFile.writeText(
                 publicFile.readText()
@@ -300,15 +300,12 @@ val playerComponentsPatch = bytecodePatch(
             val onClickReference = getInstruction<ReferenceInstruction>(onClickIndex).reference
             val onClickReferenceDefiningClass = (onClickReference as MethodReference).definingClass
 
-            // Reemplazar findmutableMethodOrThrow por búsqueda manual
-            val method = findMethodOrThrow(onClickReferenceDefiningClass)
-            val classDef = classes.find { it.type == onClickReferenceDefiningClass }
-                ?: throw PatchException("Class not found: $onClickReferenceDefiningClass")
-            val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                MethodUtil.methodSignaturesMatch(it, method)
+            // CORREGIDO: obtener la clase mutable directamente
+            val onClickClass = mutableClassDefBy(onClickReferenceDefiningClass)
+            val onClickMethod = onClickClass.methods.first { method ->
+                MethodUtil.methodSignaturesMatch(method, onClickReference)
             }
-
-            mutableMethod.apply {
+            onClickMethod.apply {
                 addInstruction(
                     implementation!!.instructions.lastIndex,
                     "sput-object p0, $PLAYER_CLASS_DESCRIPTOR->$fieldName:$onClickReferenceDefiningClass"
@@ -381,7 +378,7 @@ val playerComponentsPatch = bytecodePatch(
             val nextButtonVisibilityMatch = nextButtonVisibilityFingerprint.matchOrThrow(miniPlayerParentFingerprint)
             val nextButtonVisibilityMethod = nextButtonVisibilityMatch.method
             val nextButtonVisibilityClassDef = nextButtonVisibilityMatch.classDef
-            val nextButtonVisibilityMutableMethod = proxy(nextButtonVisibilityClassDef).mutableClass.methods.first {
+            val nextButtonVisibilityMutableMethod = mutableClassDefBy(nextButtonVisibilityClassDef.type).methods.first {
                 MethodUtil.methodSignaturesMatch(it, nextButtonVisibilityMethod)
             }
             nextButtonVisibilityMutableMethod.apply {
@@ -630,7 +627,7 @@ val playerComponentsPatch = bytecodePatch(
         val minimizedPlayerMatch = minimizedPlayerFingerprint.matchOrThrow()
         val minimizedPlayerMethod = minimizedPlayerMatch.method
         val minimizedPlayerClassDef = minimizedPlayerMatch.classDef
-        val minimizedPlayerMutableMethod = proxy(minimizedPlayerClassDef).mutableClass.methods.first {
+        val minimizedPlayerMutableMethod = mutableClassDefBy(minimizedPlayerClassDef.type).methods.first {
             MethodUtil.methodSignaturesMatch(it, minimizedPlayerMethod)
         }
         minimizedPlayerMutableMethod.apply {
@@ -811,7 +808,7 @@ val playerComponentsPatch = bytecodePatch(
                 val miniPlayerDefaultTextMatch = miniPlayerDefaultTextFingerprint.matchOrThrow()
                 val miniPlayerDefaultTextMethod = miniPlayerDefaultTextMatch.method
                 val miniPlayerDefaultTextClassDef = miniPlayerDefaultTextMatch.classDef
-                val miniPlayerDefaultTextMutableMethod = proxy(miniPlayerDefaultTextClassDef).mutableClass.methods.first {
+                val miniPlayerDefaultTextMutableMethod = mutableClassDefBy(miniPlayerDefaultTextClassDef.type).methods.first {
                     MethodUtil.methodSignaturesMatch(it, miniPlayerDefaultTextMethod)
                 }
                 miniPlayerDefaultTextMutableMethod.apply {
@@ -994,7 +991,7 @@ val playerComponentsPatch = bytecodePatch(
         val remixGenericButtonMatch = remixGenericButtonFingerprint.matchOrThrow()
         val remixGenericButtonMethod = remixGenericButtonMatch.method
         val remixGenericButtonClassDef = remixGenericButtonMatch.classDef
-        val remixGenericButtonMutableMethod = proxy(remixGenericButtonClassDef).mutableClass.methods.first {
+        val remixGenericButtonMutableMethod = mutableClassDefBy(remixGenericButtonClassDef.type).methods.first {
             MethodUtil.methodSignaturesMatch(it, remixGenericButtonMethod)
         }
         remixGenericButtonMutableMethod.apply {
@@ -1120,10 +1117,7 @@ val playerComponentsPatch = bytecodePatch(
                 indexOfFirstInstructionReversedOrThrow(enumIndex, Opcode.CHECK_CAST)
             val shuffleClass =
                 getInstruction<ReferenceInstruction>(shuffleClassIndex).reference.toString()
-            val shuffleMutableClass = classBy { classDef ->
-                classDef.type == shuffleClass
-            }?.mutableClass
-                ?: throw PatchException("shuffle class not found")
+            val shuffleMutableClass = mutableClassDefBy(shuffleClass)
 
             val smaliInstructions =
                 """
@@ -1257,7 +1251,7 @@ val playerComponentsPatch = bytecodePatch(
             val engagementPanelHeightMatch = engagementPanelHeightFingerprint.matchOrThrow(engagementPanelHeightParentFingerprint)
             val engagementPanelHeightMethod = engagementPanelHeightMatch.method
             val engagementPanelHeightClassDef = engagementPanelHeightMatch.classDef
-            val engagementPanelHeightMutableMethod = proxy(engagementPanelHeightClassDef).mutableClass.methods.first {
+            val engagementPanelHeightMutableMethod = mutableClassDefBy(engagementPanelHeightClassDef.type).methods.first {
                 MethodUtil.methodSignaturesMatch(it, engagementPanelHeightMethod)
             }
             engagementPanelHeightMutableMethod.apply {

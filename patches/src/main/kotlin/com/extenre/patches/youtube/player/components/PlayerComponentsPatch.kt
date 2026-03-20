@@ -66,8 +66,6 @@ import com.extenre.patches.youtube.video.information.hookVideoInformation
 import com.extenre.patches.youtube.video.information.videoInformationPatch
 import com.extenre.util.REGISTER_TEMPLATE_REPLACEMENT
 import com.extenre.util.Utils.printWarn
-import com.extenre.util.findMethodOrThrow
-import com.extenre.util.findMutableMethodOf
 import com.extenre.util.fingerprint.injectLiteralInstructionBooleanCall
 import com.extenre.util.fingerprint.injectLiteralInstructionViewCall
 import com.extenre.util.fingerprint.matchOrThrow
@@ -187,16 +185,16 @@ private val speedOverlayPatch = bytecodePatch(
                         indexOfFirstInstruction(Opcode.CMPL_FLOAT) >= 0
             }
 
-            classes.forEach { classDef ->
+            // CORREGIDO: usar patchClasses.classMap.values en lugar de classes
+            patchClasses.classMap.values.forEach { classDef ->
                 classDef.methods.forEach { method ->
                     if (method.isSyntheticMethod()) {
-                        proxy(classDef)
-                            .mutableClass
-                            .findMutableMethodOf(method)
-                            .apply {
-                                val speedFieldIndex = indexOfFirstSpeedFieldInstruction(this)
-                                hookRelativeSpeedValue(speedFieldIndex)
-                            }
+                        val mutableClass = mutableClassDefBy(classDef.type)
+                        val mutableMethod = mutableClass.methods.first { MethodUtil.methodSignaturesMatch(it, method) }
+                        mutableMethod.apply {
+                            val speedFieldIndex = indexOfFirstSpeedFieldInstruction(this)
+                            hookRelativeSpeedValue(speedFieldIndex)
+                        }
                     }
                 }
             }
@@ -248,15 +246,9 @@ private val speedOverlayPatch = bytecodePatch(
                         val slideToSeekBooleanMethod =
                             getWalkerMethod(patternMatch.startIndex + 1)
 
-                        // Reemplazar findmutableMethodOrThrow por búsqueda manual
-                        val slideToSeekConstructorMethod = run {
-                            val method = findMethodOrThrow(slideToSeekBooleanMethod.definingClass)
-                            val classDef = classes.find { it.type == slideToSeekBooleanMethod.definingClass }
-                                ?: throw PatchException("Class not found: ${slideToSeekBooleanMethod.definingClass}")
-                            proxy(classDef).mutableClass.methods.first {
-                                MethodUtil.methodSignaturesMatch(it, method)
-                            }
-                        }
+                        val slideToSeekConstructorMethod = mutableClassDefBy(slideToSeekBooleanMethod.definingClass).methods.first { method ->
+                            MethodUtil.isConstructor(method) && method.parameterTypes.size == 3
+                        } // Adjust if needed
 
                         val slideToSeekSyntheticIndex = slideToSeekConstructorMethod
                             .indexOfFirstInstructionReversedOrThrow {
@@ -268,17 +260,9 @@ private val speedOverlayPatch = bytecodePatch(
                             .reference
                             .toString()
 
-                        // Reemplazar findmutableMethodOrThrow por búsqueda manual
-                        val slideToSeekSyntheticMethod = run {
-                            val method = findMethodOrThrow(slideToSeekSyntheticClass) {
-                                name == "run"
-                            }
-                            val classDef = classes.find { it.type == slideToSeekSyntheticClass }
-                                ?: throw PatchException("Class not found: $slideToSeekSyntheticClass")
-                            proxy(classDef).mutableClass.methods.first {
-                                MethodUtil.methodSignaturesMatch(it, method)
-                            }
-                        }
+                        val slideToSeekSyntheticMethod = mutableClassDefBy(slideToSeekSyntheticClass).methods.find { method ->
+                            method.name == "run"
+                        } ?: throw PatchException("run method not found in $slideToSeekSyntheticClass")
 
                         Pair(slideToSeekBooleanMethod, slideToSeekSyntheticMethod)
                     }
@@ -496,38 +480,22 @@ val playerComponentsPatch = bytecodePatch(
                         val syntheticReference =
                             getInstruction<ReferenceInstruction>(syntheticIndex).reference.toString()
 
-                        // Reemplazar findmutableMethodOrThrow por búsqueda manual
-                        run {
-                            val method = findMethodOrThrow(syntheticReference) {
-                                name == "onClick"
-                            }
-                            val classDef = classes.find { it.type == syntheticReference }
-                                ?: throw PatchException("Class not found: $syntheticReference")
-                            val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                                MethodUtil.methodSignaturesMatch(it, method)
-                            }
-                            mutableMethod.hookInitVideoPanel(0)
-                        }
+                        val onClickMethod = mutableClassDefBy(syntheticReference).methods.find { method ->
+                            method.name == "onClick"
+                        } ?: throw PatchException("onClick method not found in $syntheticReference")
+                        onClickMethod.hookInitVideoPanel(0)
                     } else {
                         printWarn("target Opcode not found in ${fingerprint.first}")
                     }
                 }
             }
 
-            // Reemplazar findmutableMethodOrThrow por búsqueda manual
-            run {
-                val method = findMethodOrThrow(
-                    engagementPanelPlaylistSyntheticFingerprint.mutableMethodOrThrow().definingClass
-                ) {
-                    name == "onClick"
-                }
-                val classDef = classes.find { it.type == engagementPanelPlaylistSyntheticFingerprint.mutableMethodOrThrow().definingClass }
-                    ?: throw PatchException("Class not found: ${engagementPanelPlaylistSyntheticFingerprint.mutableMethodOrThrow().definingClass}")
-                val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                    MethodUtil.methodSignaturesMatch(it, method)
-                }
-                mutableMethod.hookInitVideoPanel(0)
-            }
+            val engagementPanelPlaylistSyntheticClass =
+                engagementPanelPlaylistSyntheticFingerprint.mutableMethodOrThrow().definingClass
+            val onClickMethod = mutableClassDefBy(engagementPanelPlaylistSyntheticClass).methods.find { method ->
+                method.name == "onClick"
+            } ?: throw PatchException("onClick method not found in $engagementPanelPlaylistSyntheticClass")
+            onClickMethod.hookInitVideoPanel(0)
 
             startVideoInformerFingerprint.mutableMethodOrThrow().hookInitVideoPanel(1)
 
