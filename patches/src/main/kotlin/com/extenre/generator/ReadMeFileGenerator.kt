@@ -83,17 +83,16 @@ internal class ReadMeFileGenerator : PatchesFileGenerator {
 
                 patchesForPkg.sortedBy { it.name }.forEach { patch ->
                     // Obtener el conjunto de versiones para este paquete
-                    val versionSet = patch.compatiblePackages?.get(pkg)
-                    val supportedVersion = when {
-                        versionSet != null && versionSet.isNotEmpty() -> {
-                            // Convertir a lista para operaciones seguras
-                            val list = versionSet.toList()
-                            val min = list.minOrNull()!!
-                            val max = list.maxOrNull()!!
-                            if (min == max) min else "$min ~ $max"
-                        }
-                        exception.containsKey(pkg) -> exception[pkg] + "+"
-                        else -> "ALL"
+                    val versionSet: Set<String>? = patch.compatiblePackages?.get(pkg)
+                    val supportedVersion = if (!versionSet.isNullOrEmpty()) {
+                        val list = versionSet.toList()
+                        val min = list.minOrNull()!!
+                        val max = list.maxOrNull()!!
+                        if (min == max) min else "$min ~ $max"
+                    } else if (exception.containsKey(pkg)) {
+                        exception[pkg] + "+"
+                    } else {
+                        "ALL"
                     }
 
                     output.appendLine(
