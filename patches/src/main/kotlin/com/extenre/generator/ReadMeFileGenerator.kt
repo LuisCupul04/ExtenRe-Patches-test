@@ -13,6 +13,7 @@ import java.io.File
 import java.io.PrintWriter
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.util.*
 
 internal class ReadMeFileGenerator : PatchesFileGenerator {
     private val exception = mapOf(
@@ -78,12 +79,13 @@ internal class ReadMeFileGenerator : PatchesFileGenerator {
                 output.appendLine(tableHeader)
 
                 patchesForPkg.sortedBy { it.name }.forEach { patch ->
-                    // Acceder directamente al valor mediante la sintaxis de mapa
+                    // Usar Java Collections para evitar problemas de extensión de Kotlin
                     val versionSet = patch.compatiblePackages?.get(pkg)
-                    val supportedVersion = if (versionSet != null && versionSet.isNotEmpty()) {
-                        val sorted = versionSet.sorted()
-                        val min = sorted.first()
-                        val max = sorted.last()
+                    val supportedVersion = if (versionSet != null && !versionSet.isEmpty()) {
+                        val list = ArrayList(versionSet)
+                        Collections.sort(list)
+                        val min = list[0]
+                        val max = list[list.size - 1]
                         if (min == max) min else "$min ~ $max"
                     } else if (exception.containsKey(pkg)) {
                         exception[pkg] + "+"
