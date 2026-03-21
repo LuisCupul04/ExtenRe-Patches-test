@@ -79,8 +79,8 @@ internal class ReadMeFileGenerator : PatchesFileGenerator {
                 output.appendLine(tableHeader)
 
                 patchesForPkg.sortedBy { it.name }.forEach { patch ->
-                    // Usar Java Collections para evitar problemas de extensión de Kotlin
-                    val versionSet = patch.compatiblePackages?.get(pkg)
+                    // Obtener el conjunto de versiones para este paquete usando find para evitar problemas de inferencia
+                    val versionSet = patch.compatiblePackages?.entries?.find { it.key == pkg }?.value
                     val supportedVersion = if (versionSet != null && !versionSet.isEmpty()) {
                         val list = ArrayList(versionSet)
                         Collections.sort(list)
