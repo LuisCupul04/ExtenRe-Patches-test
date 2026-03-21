@@ -18,13 +18,15 @@ typealias VersionName = String
 internal class JsonPatchesFileGenerator : PatchesFileGenerator {
     override fun generate(patches: Set<Patch<*>>) {
         val patchesJson = File("../patches-exre.json")
-        patches.sortedBy { it.name }.map { patch ->
+        val jsonPatches = patches.sortedBy { it.name }.map { patch ->
             JsonPatch(
                 name = patch.name!!,
                 description = patch.description,
                 use = patch.use,
                 dependencies = patch.dependencies.map { it.name ?: it.toString() },
-                compatiblePackages = patch.compatiblePackages?.mapValues { (_, value) -> value },
+                compatiblePackages = patch.compatiblePackages?.associate { (packageName, versions) ->
+                    packageName to versions
+                },
                 options = patch.options.values.map { option ->
                     JsonPatch.Option(
                         key = option.key,
@@ -37,11 +39,10 @@ internal class JsonPatchesFileGenerator : PatchesFileGenerator {
                     )
                 },
             )
-        }.let { jsonPatches ->
-            patchesJson.writeText(
-                GsonBuilder().serializeNulls().setPrettyPrinting().create().toJson(jsonPatches)
-            )
         }
+        patchesJson.writeText(
+            GsonBuilder().serializeNulls().setPrettyPrinting().create().toJson(jsonPatches)
+        )
     }
 
     @Suppress("unused")

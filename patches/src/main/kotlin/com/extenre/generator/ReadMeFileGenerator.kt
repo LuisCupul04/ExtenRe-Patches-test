@@ -30,9 +30,7 @@ internal class ReadMeFileGenerator : PatchesFileGenerator {
         val readMeFile = File(readMeFilePath)
         val readMeTemplateFile = File("$rootPath/README-template.md")
 
-        val output = StringBuilder()
-
-        // Preparar el archivo README
+        // Preparar el archivo README (borrar contenido existente si lo hay)
         if (readMeFile.exists()) {
             PrintWriter(readMeFile).use { it.print("") }
         } else {
@@ -43,7 +41,7 @@ internal class ReadMeFileGenerator : PatchesFileGenerator {
         readMeFile.writeText(readMeTemplateFile.readText())
 
         // Reemplazar los marcadores de versiones compatibles
-        val markers: Map<Pair<String, Set<String>?>, String> = mapOf(
+        val markers = mapOf(
             com.extenre.patches.music.utils.compatibility.Constants.COMPATIBLE_PACKAGE to "\"COMPATIBLE_PACKAGE_MUSIC\"",
             com.extenre.patches.reddit.utils.compatibility.Constants.COMPATIBLE_PACKAGE to "\"COMPATIBLE_PACKAGE_REDDIT\"",
             com.extenre.patches.youtube.utils.compatibility.Constants.COMPATIBLE_PACKAGE to "\"COMPATIBLE_PACKAGE_YOUTUBE\""
@@ -74,6 +72,7 @@ internal class ReadMeFileGenerator : PatchesFileGenerator {
         }
 
         // Generar la tabla de parches
+        val output = StringBuilder()
         patchesByPackage.entries
             .sortedByDescending { it.value.size }
             .forEach { (pkg, patchesForPkg) ->
@@ -85,11 +84,9 @@ internal class ReadMeFileGenerator : PatchesFileGenerator {
                     val versions = patch.compatiblePackages?.get(pkg)
                     val supportedVersion = when {
                         versions != null && versions.isNotEmpty() -> {
-                            // Convertir Set a List para usar minOrNull y maxOrNull
-                            val list = versions.toList()
-                            val min = list.minOrNull()!!
-                            val max = list.maxOrNull()!!
-                            if (min == max) max else "$min ~ $max"
+                            val min = versions.minOrNull()!!
+                            val max = versions.maxOrNull()!!
+                            if (min == max) min else "$min ~ $max"
                         }
                         exception.containsKey(pkg) -> exception[pkg] + "+"
                         else -> "ALL"
