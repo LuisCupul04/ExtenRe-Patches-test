@@ -4,7 +4,6 @@ on:
   workflow_dispatch:
   push:
     branches:
-      # To use Github Actions, change the branch name from `revanced-extended` to `main`
       - master
       - dev
 
@@ -28,11 +27,10 @@ jobs:
       - name: Cache Gradle
         uses: burrunan/gradle-cache-action@v3
 
-      - name: Build
-        env:
-          GITHUB_TOKEN: ${{ secrets.EXTEN_TOKEN }}
-        # To update `README.md` and `patches.json`, the command `./gradlew generatePatchesFiles clean` should be used instead of the command `./gradlew build clean`
-        run: ./gradlew generatePatchesFiles clean
+      - name: Build and generate patches
+        run: |
+          ./gradlew generatePatchesFiles   # genera patches-exre.json y actualiza README
+          ./gradlew jar                     # genera el bundle .EXRE
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
