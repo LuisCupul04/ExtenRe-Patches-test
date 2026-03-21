@@ -20,10 +20,10 @@ import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.util.proxy.mutableTypes.MutableClass
 import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod
 import com.extenre.util.containsLiteralInstruction
-import com.extenre.util.findMutableMethodOf
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstLiteralInstruction
 import com.extenre.util.injectLiteralInstructionViewCall
+import com.extenre.util.mutableClassDefBy
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.ClassDef
 import com.android.tools.smali.dexlib2.iface.Method
@@ -42,8 +42,10 @@ internal fun Pair<String, Fingerprint>.definingClassOrThrow(): String =
     second.classDefOrNull?.type ?: throw first.exception
 
 context(BytecodePatchContext)
-internal fun Pair<String, Fingerprint>.matchOrThrow(): Match =
-    second.match
+internal fun Pair<String, Fingerprint>.matchOrThrow(): Match {
+    val classDef = second.classDefOrNull ?: throw first.exception
+    return second.match(classDef) ?: throw first.exception
+}
 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.matchOrThrow(parentFingerprint: Pair<String, Fingerprint>): Match {
@@ -68,7 +70,7 @@ internal fun Pair<String, Fingerprint>.methodOrNull(): Method? =
 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.methodOrThrow(): Method =
-    second.method
+    second.method ?: throw first.exception
 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.methodOrThrow(parentFingerprint: Pair<String, Fingerprint>): Method =
@@ -76,7 +78,7 @@ internal fun Pair<String, Fingerprint>.methodOrThrow(parentFingerprint: Pair<Str
 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.originalMethodOrThrow(): Method =
-    second.originalMethod
+    second.originalMethod ?: throw first.exception
 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.originalMethodOrThrow(parentFingerprint: Pair<String, Fingerprint>): Method =
@@ -85,17 +87,16 @@ internal fun Pair<String, Fingerprint>.originalMethodOrThrow(parentFingerprint: 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.mutableClassOrThrow(): MutableClass {
     val classDef = second.classDefOrNull ?: throw first.exception
-    return proxy(classDef).mutableClass
+    return mutableClassDefBy(classDef)
 }
 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.mutableMethodOrThrow(): MutableMethod {
-    val method = second.method
+    val method = second.method ?: throw first.exception
     val mutableClass = mutableClassOrThrow()
     return mutableClass.methods.first { MethodUtil.methodSignaturesMatch(it, method) }
 }
 
-/** Sobrecarga para cuando se usa un fingerprint padre */
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.mutableMethodOrThrow(parentFingerprint: Pair<String, Fingerprint>): MutableMethod {
     val method = methodOrThrow(parentFingerprint)
@@ -169,7 +170,7 @@ internal fun legacyFingerprint(
     customFingerprint: ((methodDef: Method, classDef: ClassDef) -> Boolean)? = null,
 ) = Pair(
     name,
-    fingerprint {
+    fingerprint(fuzzyPatternScanThreshold = fuzzyPatternScanThreshold) {
         if (accessFlags != null) {
             accessFlags(accessFlags)
         }
