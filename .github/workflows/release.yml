@@ -3,9 +3,8 @@ name: Release
 on:
   workflow_dispatch:
   push:
-    branches:
-      - master
-      - dev
+    tags:
+      - 'v*'
 
 jobs:
   release:
@@ -14,6 +13,8 @@ jobs:
       contents: write
       packages: write
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true   # opcional, para probar Node 24 ya
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -27,28 +28,44 @@ jobs:
       - name: Cache Gradle
         uses: burrunan/gradle-cache-action@v3
 
+      - name: Get the version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Update version in gradle.properties
+        run: |
+          sed -i "s/^version=.*/version=${{ steps.get_version.outputs.VERSION }}/" gradle.properties
+
       - name: Build and generate patches
         run: |
-          ./gradlew generatePatchesFiles   # genera patches-exre.json y actualiza README
-          ./gradlew jar                     # genera el bundle .EXRE
+          ./gradlew generatePatchesFiles
+          ./gradlew jar
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5   # actualizado a v5
         with:
           node-version: "lts/*"
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: Install dependencies (si las necesitas)
         run: npm install
 
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v6
-        with:
-          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.GPG_PASSPHRASE }}
-          fingerprint: ${{ vars.GPG_FINGERPRINT }}
 
-      - name: Release
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2   # asegúrate de usar v2 (última)
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          files: |
+            patches/build/libs/*.EXRE
+            patches-exre.json
         env:
           GITHUB_TOKEN: ${{ secrets.EXTEN_TOKEN }}
-        run: npm exec semantic-release
+
+      - name: Publish to GitHub Packages
+        run: ./gradlew :patches:publish
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.EXTEN_TOKEN }}
