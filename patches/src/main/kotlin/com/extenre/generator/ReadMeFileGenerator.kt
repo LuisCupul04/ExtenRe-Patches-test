@@ -82,8 +82,8 @@ internal class ReadMeFileGenerator : PatchesFileGenerator {
                 output.appendLine(tableHeader)
 
                 patchesForPkg.sortedBy { it.name }.forEach { patch ->
-                    // Obtener el conjunto de versiones para este paquete
-                    val versionSet: Set<String>? = patch.compatiblePackages?.get(pkg)
+                    // Obtener el conjunto de versiones para este paquete usando `let` para evitar ambigüedad
+                    val versionSet = patch.compatiblePackages?.let { it[pkg] }
                     val supportedVersion = if (!versionSet.isNullOrEmpty()) {
                         val list = versionSet.toList()
                         val min = list.minOrNull()!!
