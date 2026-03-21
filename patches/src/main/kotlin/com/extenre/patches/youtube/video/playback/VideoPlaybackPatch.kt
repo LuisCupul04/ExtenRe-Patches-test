@@ -258,7 +258,8 @@ val videoPlaybackPatch = bytecodePatch(
         // endregion
 
         // region patch for spoof device dimensions
-        val deviceDimensionsModelClass = deviceDimensionsModelToStringFingerprint.definingClassOrThrow()
+        val deviceDimensionsModelMatch = deviceDimensionsModelToStringFingerprint.matchOrThrow()
+        val deviceDimensionsModelClass = deviceDimensionsModelMatch.classDef.type
         val mutableClass = mutableClassDefBy(deviceDimensionsModelClass)
         val constructor = mutableClass.methods.find { MethodUtil.isConstructor(it) }
             ?: throw PatchException("Constructor not found in $deviceDimensionsModelClass")
