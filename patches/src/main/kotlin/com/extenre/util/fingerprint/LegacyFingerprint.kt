@@ -17,13 +17,13 @@ import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.fingerprint
 import com.extenre.patcher.patch.BytecodePatchContext
 import com.extenre.patcher.patch.PatchException
+import com.extenre.patcher.patch.mutableClassDefBy
 import com.extenre.patcher.util.proxy.mutableTypes.MutableClass
 import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod
 import com.extenre.util.containsLiteralInstruction
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstLiteralInstruction
 import com.extenre.util.injectLiteralInstructionViewCall
-import com.extenre.util.mutableClassDefBy
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.ClassDef
 import com.android.tools.smali.dexlib2.iface.Method
