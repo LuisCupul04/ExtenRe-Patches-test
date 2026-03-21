@@ -70,13 +70,17 @@ private val returnYouTubeDislikeRollingNumberPatch = bytecodePatch(
         }
 
         rollingNumberSetterFingerprint.matchOrThrow().let { match ->
-            match.mutableMethod.apply {
+            val method = match.method
+            val classDef = match.classDef
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
                 val rollingNumberClassIndex = match.patternMatch!!.startIndex
                 val rollingNumberClassReference =
                     getInstruction<ReferenceInstruction>(rollingNumberClassIndex).reference.toString()
-                // Obtener el constructor mutable de la clase
-                val rollingNumberConstructorMethod = mutableClassDefBy(rollingNumberClassReference).methods.first { method ->
-                    MethodUtil.isConstructor(method)
+                val rollingNumberConstructorMethod = mutableClassDefBy(rollingNumberClassReference).methods.first { m ->
+                    MethodUtil.isConstructor(m)
                 }
                 val charSequenceFieldReference = with(rollingNumberConstructorMethod) {
                     getInstruction<ReferenceInstruction>(
@@ -107,7 +111,12 @@ private val returnYouTubeDislikeRollingNumberPatch = bytecodePatch(
         }
 
         rollingNumberMeasureAnimatedTextFingerprint.matchOrThrow().let { match ->
-            match.mutableMethod.apply {
+            val method = match.method
+            val classDef = match.classDef
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
                 val endIndex = match.patternMatch!!.endIndex
                 val measuredTextWidthIndex = endIndex - 2
                 val measuredTextWidthRegister =
@@ -135,7 +144,12 @@ private val returnYouTubeDislikeRollingNumberPatch = bytecodePatch(
         rollingNumberMeasureStaticLabelFingerprint.matchOrThrow(
             rollingNumberMeasureTextParentFingerprint
         ).let { match ->
-            match.mutableMethod.apply {
+            val method = match.method
+            val classDef = match.classDef
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
                 val measureTextIndex = match.patternMatch!!.startIndex + 1
                 val freeRegister = getInstruction<TwoRegisterInstruction>(0).registerA
 
@@ -151,8 +165,8 @@ private val returnYouTubeDislikeRollingNumberPatch = bytecodePatch(
         arrayOf(
             rollingNumberTextViewFingerprint.mutableMethodOrThrow(),
             rollingNumberTextViewAnimationUpdateFingerprint.mutableMethodOrThrow(rollingNumberTextViewFingerprint)
-        ).forEach { method ->
-            method.apply {
+        ).forEach { mutableMethod ->
+            mutableMethod.apply {
                 val setTextIndex = indexOfFirstInstructionOrThrow {
                     getReference<MethodReference>()?.name == "setText"
                 }
@@ -178,7 +192,12 @@ private val returnYouTubeDislikeShortsPatch = bytecodePatch(
 
     execute {
         shortsTextViewFingerprint.matchOrThrow().let { match ->
-            match.mutableMethod.apply {
+            val method = match.method
+            val classDef = match.classDef
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
                 val startIndex = match.patternMatch!!.startIndex
 
                 val isDisLikesBooleanIndex = indexOfFirstInstructionReversedOrThrow(startIndex, Opcode.IGET_BOOLEAN)
