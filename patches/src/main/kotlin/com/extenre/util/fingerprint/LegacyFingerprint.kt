@@ -17,7 +17,6 @@ import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.fingerprint
 import com.extenre.patcher.patch.BytecodePatchContext
 import com.extenre.patcher.patch.PatchException
-import com.extenre.patcher.patch.mutableClassDefBy
 import com.extenre.patcher.util.proxy.mutableTypes.MutableClass
 import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod
 import com.extenre.util.containsLiteralInstruction
@@ -87,7 +86,8 @@ internal fun Pair<String, Fingerprint>.originalMethodOrThrow(parentFingerprint: 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.mutableClassOrThrow(): MutableClass {
     val classDef = second.classDefOrNull ?: throw first.exception
-    return mutableClassDefBy(classDef)
+    // Usar proxy en lugar de mutableClassDefBy para evitar problemas de importación
+    return proxy(classDef).mutableClass
 }
 
 context(BytecodePatchContext)
