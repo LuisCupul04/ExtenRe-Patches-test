@@ -1,4 +1,5 @@
 group = "com.extenre"
+version = rootProject.properties["version"] as? String ?: "0.0.0"
 
 patches {
     about {
@@ -9,25 +10,39 @@ patches {
 }
 
 dependencies {
-    // Used by JsonGenerator.
     implementation(libs.gson)
     implementation(libs.extenre.patcher)
 }
 
 tasks {
+    // Bundle de parches (extensión .EXRE)
     jar {
         archiveExtension.set("EXRE")
         exclude("com/extenre/generator")
     }
+
+    // JAR estándar para publicación como biblioteca (opcional)
+    register<Jar>("libraryJar") {
+        archiveClassifier.set("")
+        from(sourceSets.main.get().output)
+        exclude("com/extenre/generator")
+    }
+
+    // Genera patches-exre.json y actualiza README
     register<JavaExec>("generatePatchesFiles") {
         description = "Generate patches files"
-
         dependsOn(build)
-
         classpath = sourceSets["main"].runtimeClasspath
         mainClass.set("com.extenre.generator.MainKt")
     }
-    // Used by gradle-semantic-release-plugin.
+
+    // Fuentes para publicación
+    register<Jar>("sourcesJar") {
+        archiveClassifier.set("sources")
+        from(sourceSets.main.get().allSource)
+    }
+
+    // Tarea usada por gradle-semantic-release-plugin
     publish {
         dependsOn("generatePatchesFiles")
     }
@@ -47,6 +62,36 @@ publishing {
             credentials {
                 username = System.getenv("GITHUB_ACTOR")
                 password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+    publications {
+        create<MavenPublication>("patches") {
+            // Publica el JAR de biblioteca (no el .EXRE). Si prefieres publicar el .EXRE,
+            // cambia artifact(tasks["libraryJar"]) por artifact(tasks["jar"])
+            artifact(tasks["libraryJar"])
+            artifact(tasks["sourcesJar"])
+            pom {
+                name.set("ExtenRe Patches")
+                description.set("Patches for ExtenRe")
+                url.set("https://github.com/LuisCupul04/ExtenRe-Patches")
+                licenses {
+                    license {
+                        name.set("GNU General Public License v3.0")
+                        url.set("https://www.gnu.org/licenses/gpl-3.0.txt")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set("LuisCupul04")
+                        name.set("Luis Cupul")
+                    }
+                }
+                scm {
+                    connection.set("scm:git:git://github.com/LuisCupul04/ExtenRe-Patches.git")
+                    developerConnection.set("scm:git:git@github.com:LuisCupul04/ExtenRe-Patches.git")
+                    url.set("https://github.com/LuisCupul04/ExtenRe-Patches")
+                }
             }
         }
     }
