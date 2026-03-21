@@ -42,7 +42,7 @@ jobs:
           ./gradlew jar
 
       - name: Setup Node.js
-        uses: actions/setup-node@v5   # actualizado a v5
+        uses: actions/setup-node@v5
         with:
           node-version: "lts/*"
           cache: 'npm'
@@ -52,9 +52,16 @@ jobs:
 
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+          fingerprint: ${{ vars.GPG_FINGERPRINT }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+          git_tag_gpgsign: true
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2   # asegúrate de usar v2 (última)
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
