@@ -94,7 +94,6 @@ import com.extenre.util.fingerprint.methodCall
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.resolvable
 import com.extenre.util.getReference
-import com.extenre.util.getWalkerMethod
 import com.extenre.util.indexOfFirstInstruction
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
@@ -120,6 +119,7 @@ private const val EXTENSION_ANIMATION_FEEDBACK_CLASS_DESCRIPTOR =
     "$SHORTS_PATH/AnimationFeedbackPatch;"
 
 private val shortsAnimationPatch = bytecodePatch(
+    name = "shortsAnimationPatch",
     description = "shortsAnimationPatch"
 ) {
     dependsOn(
@@ -196,6 +196,7 @@ private const val EXTENSION_CUSTOM_ACTIONS_CLASS_DESCRIPTOR =
     "$SHORTS_PATH/CustomActionsPatch;"
 
 private val shortsCustomActionsPatch = bytecodePatch(
+    name = "shortsCustomActionsPatch",
     description = "shortsCustomActionsPatch"
 ) {
     dependsOn(
@@ -247,8 +248,13 @@ private val shortsCustomActionsPatch = bytecodePatch(
 
         // region hook flyout menu
 
-        bottomSheetMenuListBuilderFingerprint.matchOrThrow().let {
-            it.method.apply {
+        bottomSheetMenuListBuilderFingerprint.matchOrThrow().let { match ->
+            val method = match.method
+            val classDef = match.classDef
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
                 val addListIndex = indexOfFirstInstructionOrThrow {
                     opcode == Opcode.INVOKE_VIRTUAL &&
                             getReference<MethodReference>()?.name == "add"
@@ -273,7 +279,7 @@ private val shortsCustomActionsPatch = bytecodePatch(
                 val bottomSheetMenuObject =
                     (getInstruction<ReferenceInstruction>(bottomSheetMenuInitializeIndex).reference as MethodReference).parameterTypes[0]!!
 
-                val bottomSheetMenuListIndex = it.patternMatch!!.startIndex
+                val bottomSheetMenuListIndex = match.patternMatch!!.startIndex
                 val bottomSheetMenuListField =
                     (getInstruction<ReferenceInstruction>(bottomSheetMenuListIndex).reference as FieldReference)
 
@@ -328,7 +334,7 @@ private val shortsCustomActionsPatch = bytecodePatch(
                 val newParameter =
                     bottomSheetMenuItemBuilderMethod.parameters + listOf(customActionClass)
 
-                it.classDef.methods.add(
+                mutableClassDefBy(classDef.type).methods.add(
                     bottomSheetMenuItemBuilderMethod
                         .cloneMutable(
                             accessFlags = AccessFlags.PUBLIC or AccessFlags.FINAL,
@@ -406,6 +412,7 @@ private val shortsCustomActionsPatch = bytecodePatch(
 }
 
 private val shortsNavigationBarPatch = bytecodePatch(
+    name = "shortsNavigationBarPatch",
     description = "shortsNavigationBarPatch"
 ) {
     dependsOn(
@@ -415,7 +422,7 @@ private val shortsNavigationBarPatch = bytecodePatch(
 
     execute {
         var count = 0
-        patchClasses.classMap.values.forEach { classDef ->
+        classes.forEach { classDef ->
             classDef.methods.filter { method ->
                 method.returnType == "V" &&
                 method.accessFlags == (AccessFlags.PUBLIC.value or AccessFlags.FINAL.value) &&
@@ -452,6 +459,7 @@ private const val EXTENSION_REPEAT_STATE_CLASS_DESCRIPTOR =
     "$SHORTS_PATH/ShortsRepeatStatePatch;"
 
 private val shortsRepeatPatch = bytecodePatch(
+    name = "shortsRepeatPatch",
     description = "shortsRepeatPatch"
 ) {
     execute {
@@ -489,8 +497,7 @@ private val shortsRepeatPatch = bytecodePatch(
                         } >= 0
             }
 
-            // CORREGIDO: usar patchClasses en lugar de classes, y mutableClassDefBy en lugar de proxy
-            patchClasses.classMap.values.forEach { classDef ->
+            classes.forEach { classDef ->
                 if (!insertMethodFound) {
                     classDef.methods.forEach { method ->
                         if (method.isInsertMethod()) {
@@ -612,6 +619,7 @@ private val shortsRepeatPatch = bytecodePatch(
 }
 
 private val shortsTimeStampPatch = bytecodePatch(
+    name = "shortsTimeStampPatch",
     description = "shortsTimeStampPatch"
 ) {
     dependsOn(versionCheckPatch)
@@ -698,12 +706,18 @@ private val shortsTimeStampPatch = bytecodePatch(
 }
 
 private val shortsToolBarPatch = bytecodePatch(
+    name = "shortsToolBarPatch",
     description = "shortsToolBarPatch"
 ) {
     execute {
-        shortsToolBarFingerprint.matchOrThrow().let {
-            it.mutableMethod.apply {
-                val insertIndex = it.patternMatch!!.startIndex
+        shortsToolBarFingerprint.matchOrThrow().let { match ->
+            val method = match.method
+            val classDef = match.classDef
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
+                val insertIndex = match.patternMatch!!.startIndex
                 val insertRegister = getInstruction<TwoRegisterInstruction>(insertIndex).registerA
 
                 addInstructions(
@@ -953,9 +967,14 @@ val shortsComponentPatch = bytecodePatch(
 
         // region patch for hide paused header
 
-        shortsPausedHeaderFingerprint.matchOrThrow().let {
-            it.mutableMethod.apply {
-                val targetIndex = it.patternMatch!!.endIndex + 1
+        shortsPausedHeaderFingerprint.matchOrThrow().let { match ->
+            val method = match.method
+            val classDef = match.classDef
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
+                val targetIndex = match.patternMatch!!.endIndex + 1
                 val targetInstruction = getInstruction(targetIndex)
                 val targetReference =
                     (targetInstruction as? ReferenceInstruction)?.reference as? MethodReference
@@ -965,19 +984,23 @@ val shortsComponentPatch = bytecodePatch(
 
                 if (useMethodWalker) {
                     // YouTube 18.29.38 ~ YouTube 19.28.42
-                    getWalkerMethod(targetIndex).apply {
-                        addInstructionsWithLabels(
-                            0, """
-                                invoke-static {}, $SHORTS_CLASS_DESCRIPTOR->hideShortsPausedHeader()Z
-                                move-result v0
-                                if-eqz v0, :show
-                                return-void
-                                """, ExternalLabel("show", getInstruction(0))
-                        )
+                    // Obtener el método llamado en la instrucción
+                    val methodRef = targetReference
+                        ?: throw PatchException("No method reference at index $targetIndex")
+                    val targetMutableMethod = mutableClassDefBy(methodRef.definingClass).methods.first {
+                        it.name == methodRef.name && it.parameterTypes == methodRef.parameterTypes
                     }
+                    targetMutableMethod.addInstructionsWithLabels(
+                        0, """
+                            invoke-static {}, $SHORTS_CLASS_DESCRIPTOR->hideShortsPausedHeader()Z
+                            move-result v0
+                            if-eqz v0, :show
+                            return-void
+                            """, ExternalLabel("show", targetMutableMethod.getInstruction(0))
+                    )
                 } else {
                     // YouTube 19.29.42 ~
-                    val insertIndex = it.patternMatch!!.startIndex
+                    val insertIndex = match.patternMatch!!.startIndex
                     val insertRegister =
                         getInstruction<OneRegisterInstruction>(insertIndex).registerA
 
