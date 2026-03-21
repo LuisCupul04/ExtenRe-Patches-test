@@ -13,6 +13,7 @@ import java.io.File
 import java.io.PrintWriter
 import java.nio.file.Files
 import java.nio.file.Paths
+import kotlin.collections.*
 
 internal class ReadMeFileGenerator : PatchesFileGenerator {
     // Excepción para ciertos paquetes donde la versión soportada es fija
@@ -81,11 +82,14 @@ internal class ReadMeFileGenerator : PatchesFileGenerator {
                 output.appendLine(tableHeader)
 
                 patchesForPkg.sortedBy { it.name }.forEach { patch ->
-                    val versions = patch.compatiblePackages?.get(pkg)
+                    // Obtener el conjunto de versiones para este paquete
+                    val versionSet = patch.compatiblePackages?.get(pkg)
                     val supportedVersion = when {
-                        versions != null && versions.isNotEmpty() -> {
-                            val min = versions.minOrNull()!!
-                            val max = versions.maxOrNull()!!
+                        versionSet != null && versionSet.isNotEmpty() -> {
+                            // Convertir a lista para operaciones seguras
+                            val list = versionSet.toList()
+                            val min = list.minOrNull()!!
+                            val max = list.maxOrNull()!!
                             if (min == max) min else "$min ~ $max"
                         }
                         exception.containsKey(pkg) -> exception[pkg] + "+"
