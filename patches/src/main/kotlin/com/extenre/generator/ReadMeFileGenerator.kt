@@ -13,10 +13,8 @@ import java.io.File
 import java.io.PrintWriter
 import java.nio.file.Files
 import java.nio.file.Paths
-import kotlin.collections.*
 
 internal class ReadMeFileGenerator : PatchesFileGenerator {
-    // Excepción para ciertos paquetes donde la versión soportada es fija
     private val exception = mapOf(
         "com.google.android.apps.youtube.music" to "6.29.59"
     )
@@ -31,17 +29,15 @@ internal class ReadMeFileGenerator : PatchesFileGenerator {
         val readMeFile = File(readMeFilePath)
         val readMeTemplateFile = File("$rootPath/README-template.md")
 
-        // Preparar el archivo README (borrar contenido existente si lo hay)
         if (readMeFile.exists()) {
             PrintWriter(readMeFile).use { it.print("") }
         } else {
             Files.createFile(Paths.get(readMeFilePath))
         }
 
-        // Copiar el contenido de la plantilla
         readMeFile.writeText(readMeTemplateFile.readText())
 
-        // Reemplazar los marcadores de versiones compatibles
+        // Reemplazar marcadores de versiones compatibles
         val markers = mapOf(
             com.extenre.patches.music.utils.compatibility.Constants.COMPATIBLE_PACKAGE to "\"COMPATIBLE_PACKAGE_MUSIC\"",
             com.extenre.patches.reddit.utils.compatibility.Constants.COMPATIBLE_PACKAGE to "\"COMPATIBLE_PACKAGE_REDDIT\"",
@@ -72,7 +68,7 @@ internal class ReadMeFileGenerator : PatchesFileGenerator {
             }
         }
 
-        // Generar la tabla de parches
+        // Generar tabla de parches
         val output = StringBuilder()
         patchesByPackage.entries
             .sortedByDescending { it.value.size }
@@ -82,17 +78,15 @@ internal class ReadMeFileGenerator : PatchesFileGenerator {
                 output.appendLine(tableHeader)
 
                 patchesForPkg.sortedBy { it.name }.forEach { patch ->
-                    // Obtener el conjunto de versiones para este paquete usando `let` para evitar ambigüedad
-                    val versionSet = patch.compatiblePackages?.let { it[pkg] }
-                    val supportedVersion = if (!versionSet.isNullOrEmpty()) {
-                        val list = versionSet.toList()
-                        val min = list.minOrNull()!!
-                        val max = list.maxOrNull()!!
-                        if (min == max) min else "$min ~ $max"
-                    } else if (exception.containsKey(pkg)) {
-                        exception[pkg] + "+"
-                    } else {
-                        "ALL"
+                    val versionSet = patch.compatiblePackages?.get(pkg)
+                    val supportedVersion = when {
+                        versionSet != null && versionSet.isNotEmpty() -> {
+                            val min = versionSet.minOrNull()!!
+                            val max = versionSet.maxOrNull()!!
+                            if (min == max) min else "$min ~ $max"
+                        }
+                        exception.containsKey(pkg) -> exception[pkg] + "+"
+                        else -> "ALL"
                     }
 
                     output.appendLine(
@@ -104,7 +98,7 @@ internal class ReadMeFileGenerator : PatchesFileGenerator {
                 output.appendLine("</details>\n")
             }
 
-        // Reemplazar el marcador de tabla en el README
+        // Insertar tabla en el README
         val finalContent = readMeFile.readText().replace(Regex("\\{\\{\\s?table\\s?}}"), output.toString())
         readMeFile.writeText(finalContent)
     }
