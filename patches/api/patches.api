@@ -39,7 +39,7 @@ public abstract interface class com/extenre/patches/all/misc/transformation/IMet
 	public abstract fun getMethodName ()Ljava/lang/String;
 	public abstract fun getMethodParams ()[Ljava/lang/String;
 	public abstract fun getReturnType ()Ljava/lang/String;
-	public abstract fun replaceInvokeVirtualWithExtension (Ljava/lang/String;Lcom/extenre/patcher/util/proxy/mutableTypes/MutableMethod;Lcom/android/tools/smali/dexlib2/iface/instruction/formats/Instruction35c;I)V
+	public fun replaceInvokeVirtualWithExtension (Ljava/lang/String;Lcom/extenre/patcher/util/proxy/mutableTypes/MutableMethod;Lcom/android/tools/smali/dexlib2/iface/instruction/formats/Instruction35c;I)V
 }
 
 public final class com/extenre/patches/all/misc/transformation/IMethodCall$DefaultImpls {
@@ -280,6 +280,7 @@ public final class com/extenre/patches/music/utils/playservice/VersionCheckPatch
 	public static final fun is_8_29_or_greater ()Z
 	public static final fun is_8_30_or_greater ()Z
 	public static final fun is_8_33_or_greater ()Z
+	public static final fun is_9_05_or_greater ()Z
 }
 
 public final class com/extenre/patches/music/utils/resourceid/SharedResourceIdPatchKt {
@@ -1175,6 +1176,7 @@ public final class com/extenre/patches/youtube/utils/playservice/VersionCheckPat
 	public static final fun is_20_22_or_greater ()Z
 	public static final fun is_20_28_or_greater ()Z
 	public static final fun is_20_30_or_greater ()Z
+	public static final fun is_21_09_or_greater ()Z
 }
 
 public final class com/extenre/patches/youtube/utils/recyclerview/RecyclerViewTreeObserverPatchKt {
