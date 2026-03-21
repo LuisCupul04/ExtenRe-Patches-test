@@ -7,6 +7,7 @@ patches {
         author = "LuisCupul04"
         license = "GNU General Public License v3.0"
     }
+    publish = false   // ← desactiva la publicación automática del plugin
 }
 
 dependencies {
@@ -21,7 +22,7 @@ tasks {
         exclude("com/extenre/generator")
     }
 
-    // JAR estándar para publicación como biblioteca (opcional)
+    // JAR estándar para publicación como biblioteca
     register<Jar>("libraryJar") {
         archiveClassifier.set("")
         from(sourceSets.main.get().output)
@@ -36,12 +37,12 @@ tasks {
         mainClass.set("com.extenre.generator.MainKt")
     }
 
-    // Configurar la tarea sourcesJar existente (el plugin Java ya la crea)
+    // Configurar la tarea sourcesJar existente
     named<Jar>("sourcesJar") {
         from(sourceSets.main.get().allSource)
     }
 
-    // Tarea usada por gradle-semantic-release-plugin
+    // Tarea usada por gradle-semantic-release-plugin (si aún lo usas)
     publish {
         dependsOn("generatePatchesFiles")
     }
@@ -66,11 +67,8 @@ publishing {
     }
     publications {
         create<MavenPublication>("patches") {
-            // Publica el JAR de biblioteca (no el .EXRE). Si prefieres publicar el .EXRE,
-            // cambia artifact(tasks["libraryJar"]) por artifact(tasks["jar"])
             artifact(tasks["libraryJar"])
             artifact(tasks["sourcesJar"])
-            // Si también quieres publicar el Javadoc, puedes añadir artifact(tasks["javadocJar"])
             pom {
                 name.set("ExtenRe Patches")
                 description.set("Patches for ExtenRe")
