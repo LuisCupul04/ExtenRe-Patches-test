@@ -11,6 +11,7 @@ package com.extenre.patches.youtube.misc.backgroundplayback
 import com.extenre.patcher.extensions.InstructionExtensions.addInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.instructions
+import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
 import com.extenre.patches.youtube.utils.compatibility.Constants.COMPATIBLE_PACKAGE
 import com.extenre.patches.youtube.utils.extension.Constants.MISC_PATH
@@ -30,6 +31,7 @@ import com.extenre.util.getReference
 import com.extenre.util.returnEarly
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
+import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 import com.android.tools.smali.dexlib2.util.MethodUtil
 
@@ -82,8 +84,8 @@ val backgroundPlaybackPatch = bytecodePatch(
                 it.value.getReference<MethodReference>()?.returnType == "Z"
             }
             val settingsBooleanIndex = booleanCalls.elementAt(1).index
-            // Navigate to that instruction to get the method called
-            val invokeInstruction = mutableMethod.getInstruction<com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction>(settingsBooleanIndex)
+            // Obtener la instrucción en ese índice
+            val invokeInstruction = mutableMethod.getInstruction<ReferenceInstruction>(settingsBooleanIndex)
             val methodRef = invokeInstruction.reference as? MethodReference
                 ?: throw PatchException("No method reference at index $settingsBooleanIndex")
             val settingsBooleanMethod = mutableClassDefBy(methodRef.definingClass).methods.first {
