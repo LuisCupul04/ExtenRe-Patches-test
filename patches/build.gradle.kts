@@ -7,7 +7,6 @@ patches {
         author = "LuisCupul04"
         license = "GNU General Public License v3.0"
     }
-    publish = false   // ← desactiva la publicación automática del plugin
 }
 
 dependencies {
@@ -42,7 +41,7 @@ tasks {
         from(sourceSets.main.get().allSource)
     }
 
-    // Tarea usada por gradle-semantic-release-plugin (si aún lo usas)
+    // Tarea usada por gradle-semantic-release-plugin
     publish {
         dependsOn("generatePatchesFiles")
     }
@@ -67,6 +66,8 @@ publishing {
     }
     publications {
         create<MavenPublication>("patches") {
+            // Cambia el artifactId para evitar conflicto con la publicación automática del plugin
+            artifactId = "extenre-patches-library"
             artifact(tasks["libraryJar"])
             artifact(tasks["sourcesJar"])
             pom {
