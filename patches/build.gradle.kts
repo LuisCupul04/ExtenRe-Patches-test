@@ -36,9 +36,8 @@ tasks {
         mainClass.set("com.extenre.generator.MainKt")
     }
 
-    // Fuentes para publicación
-    register<Jar>("sourcesJar") {
-        archiveClassifier.set("sources")
+    // Configurar la tarea sourcesJar existente (el plugin Java ya la crea)
+    named<Jar>("sourcesJar") {
         from(sourceSets.main.get().allSource)
     }
 
@@ -71,6 +70,7 @@ publishing {
             // cambia artifact(tasks["libraryJar"]) por artifact(tasks["jar"])
             artifact(tasks["libraryJar"])
             artifact(tasks["sourcesJar"])
+            // Si también quieres publicar el Javadoc, puedes añadir artifact(tasks["javadocJar"])
             pom {
                 name.set("ExtenRe Patches")
                 description.set("Patches for ExtenRe")
