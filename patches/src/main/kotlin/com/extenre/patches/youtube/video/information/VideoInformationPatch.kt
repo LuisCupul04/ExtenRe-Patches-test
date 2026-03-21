@@ -52,7 +52,6 @@ import com.extenre.util.fingerprint.methodCall
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
 import com.extenre.util.getReference
-import com.extenre.util.getWalkerMethod
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
 import com.extenre.util.indexOfFirstLiteralInstructionOrThrow
@@ -241,8 +240,8 @@ val videoInformationPatch = bytecodePatch(
             }
         }
 
+        // videoEndFingerprint: obtener método mutable
         videoEndFingerprint.mutableMethodOrThrow().apply {
-            // Obtener la clase mutable directamente
             val mutableClass = mutableClassDefBy(definingClass)
             playerConstructorMethod = mutableClass.methods.first {
                 MethodUtil.methodSignaturesMatch(it, this)
@@ -251,12 +250,12 @@ val videoInformationPatch = bytecodePatch(
                 opcode == Opcode.INVOKE_DIRECT && getReference<MethodReference>()?.name == "<init>"
             } + 1
 
-            // hook the player controller for use through extension
             onCreateHook(EXTENSION_CLASS_DESCRIPTOR, "initialize")
 
             seekSourceEnumType = parameterTypes[1].toString()
             seekSourceMethodName = name
 
+            // seekRelativeFingerprint – obtener mutable
             seekRelativeFingerprint.mutableMethodOrThrow(videoEndFingerprint).also { method ->
                 seekRelativeSourceMethodName = method.name
                 cloneSeekRelativeSourceMethod = method.returnType == "V"
@@ -264,7 +263,6 @@ val videoInformationPatch = bytecodePatch(
 
             cloneSeekRelativeSourceMethod(videoEndFingerprint.mutableClassOrThrow())
 
-            // Create extension interface methods.
             addSeekInterfaceMethods(
                 videoEndFingerprint.mutableClassOrThrow(),
                 this,
@@ -290,12 +288,16 @@ val videoInformationPatch = bytecodePatch(
                         reference.parameterTypes.isEmpty() &&
                         reference.returnType == "V"
             }
-
-            videoEndMethod = getWalkerMethod(walkerIndex)
+            // Obtener el método llamado en esa instrucción
+            val invokeInstruction = getInstruction<ReferenceInstruction>(walkerIndex)
+            val methodRef = invokeInstruction.reference as? MethodReference
+                ?: throw PatchException("No method reference at index $walkerIndex")
+            videoEndMethod = mutableClassDefBy(methodRef.definingClass).methods.first {
+                it.name == methodRef.name && it.parameterTypes == methodRef.parameterTypes
+            }
         }
 
         mdxPlayerDirectorSetVideoStageFingerprint.mutableMethodOrThrow().apply {
-            // Obtener la clase mutable directamente
             val mutableClass = mutableClassDefBy(definingClass)
             mdxConstructorMethod = mutableClass.methods.first {
                 MethodUtil.methodSignaturesMatch(it, this)
@@ -304,12 +306,10 @@ val videoInformationPatch = bytecodePatch(
                 opcode == Opcode.INVOKE_DIRECT && getReference<MethodReference>()?.name == "<init>"
             } + 1
 
-            // hook the MDX director for use through extension
             onCreateHookMdx(EXTENSION_CLASS_DESCRIPTOR, "initializeMdx")
 
             cloneSeekRelativeSourceMethod(mdxPlayerDirectorSetVideoStageFingerprint.mutableClassOrThrow())
 
-            // Create extension interface methods.
             addSeekInterfaceMethods(
                 mdxPlayerDirectorSetVideoStageFingerprint.mutableClassOrThrow(),
                 this,
@@ -341,8 +341,13 @@ val videoInformationPatch = bytecodePatch(
         videoLengthMethodCall = videoLengthFingerprint.getPlayerResponseInstruction("J")
         videoIsLiveMethodCall = channelIdFingerprint.getPlayerResponseInstruction("Z")
 
-        playbackInitializationFingerprint.matchOrThrow().let {
-            it.mutableMethod.apply {
+        playbackInitializationFingerprint.matchOrThrow().let { match ->
+            val method = match.method
+            val classDef = match.classDef
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
                 val targetIndex = indexOfPlayerResponseModelDirectInstruction(this) + 1
                 val targetRegister = getInstruction<OneRegisterInstruction>(targetIndex).registerA
 
@@ -352,14 +357,19 @@ val videoInformationPatch = bytecodePatch(
                 )
 
                 videoInformationMethod = getVideoInformationMethod()
-                it.classDef.methods.add(videoInformationMethod)
+                mutableClassDefBy(classDef.type).methods.add(videoInformationMethod)
 
                 hookVideoInformation("$EXTENSION_CLASS_DESCRIPTOR->setVideoInformation(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JZ)V")
             }
         }
 
-        videoIdFingerprintBackgroundPlay.matchOrThrow().let {
-            it.mutableMethod.apply {
+        videoIdFingerprintBackgroundPlay.matchOrThrow().let { match ->
+            val method = match.method
+            val classDef = match.classDef
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
                 val targetIndex = indexOfPlayerResponseModelInterfaceInstruction(this)
                 val targetRegister = getInstruction<FiveRegisterInstruction>(targetIndex).registerC
 
@@ -369,12 +379,17 @@ val videoInformationPatch = bytecodePatch(
                 )
 
                 backgroundVideoInformationMethod = getVideoInformationMethod()
-                it.classDef.methods.add(backgroundVideoInformationMethod)
+                mutableClassDefBy(classDef.type).methods.add(backgroundVideoInformationMethod)
             }
         }
 
-        videoIdFingerprintShorts.matchOrThrow().let {
-            it.mutableMethod.apply {
+        videoIdFingerprintShorts.matchOrThrow().let { match ->
+            val method = match.method
+            val classDef = match.classDef
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
                 val targetIndex = indexOfPlayerResponseModelInterfaceInstruction(this)
                 val targetRegister = getInstruction<FiveRegisterInstruction>(targetIndex).registerC
 
@@ -384,16 +399,26 @@ val videoInformationPatch = bytecodePatch(
                 )
 
                 shortsVideoInformationMethod = getVideoInformationMethod()
-                it.classDef.methods.add(shortsVideoInformationMethod)
+                mutableClassDefBy(classDef.type).methods.add(shortsVideoInformationMethod)
             }
         }
 
         /**
          * Set current video time method
          */
-        playerControllerSetTimeReferenceFingerprint.matchOrThrow().let {
-            videoTimeConstructorMethod =
-                it.getWalkerMethod(it.patternMatch!!.startIndex)
+        playerControllerSetTimeReferenceFingerprint.matchOrThrow().let { match ->
+            val method = match.method
+            val classDef = match.classDef
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            val startIndex = match.patternMatch!!.startIndex
+            val invokeInstruction = mutableMethod.getInstruction<ReferenceInstruction>(startIndex)
+            val methodRef = invokeInstruction.reference as? MethodReference
+                ?: throw PatchException("No method reference at index $startIndex")
+            videoTimeConstructorMethod = mutableClassDefBy(methodRef.definingClass).methods.first {
+                it.name == methodRef.name && it.parameterTypes == methodRef.parameterTypes
+            }
         }
 
         /**
@@ -419,8 +444,13 @@ val videoInformationPatch = bytecodePatch(
         /**
          * Hook current playback speed
          */
-        onPlaybackSpeedItemClickFingerprint.matchOrThrow().let {
-            it.mutableMethod.apply {
+        onPlaybackSpeedItemClickFingerprint.matchOrThrow().let { match ->
+            val method = match.method
+            val classDef = match.classDef
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
                 speedSelectionInsertMethod = this
                 val speedSelectionValueInstructionIndex =
                     indexOfFirstInstructionOrThrow(Opcode.IGET)
@@ -440,7 +470,7 @@ val videoInformationPatch = bytecodePatch(
                     getInstruction<ReferenceInstruction>(speedSelectionValueInstructionIndex + 2).reference as MethodReference
 
                 // add override playback speed method
-                it.classDef.methods.add(
+                mutableClassDefBy(classDef.type).methods.add(
                     ImmutableMethod(
                         definingClass,
                         "overridePlaybackSpeed",
@@ -475,20 +505,31 @@ val videoInformationPatch = bytecodePatch(
                     ).toMutable()
                 )
 
-                // set current playback speed
-                val walkerMethod = getWalkerMethod(speedSelectionValueInstructionIndex + 2)
-                walkerMethod.apply {
+                // set current playback speed: obtener el método llamado en la instrucción
+                val targetInstructionIndex = speedSelectionValueInstructionIndex + 2
+                val invokeInstruction = getInstruction<ReferenceInstruction>(targetInstructionIndex)
+                val methodRef = invokeInstruction.reference as? MethodReference
+                    ?: throw PatchException("No method reference at index $targetInstructionIndex")
+                val targetMethod = mutableClassDefBy(methodRef.definingClass).methods.first {
+                    it.name == methodRef.name && it.parameterTypes == methodRef.parameterTypes
+                }
+                targetMethod.apply {
                     addInstruction(
-                        this.implementation!!.instructions.size - 1,
+                        implementation!!.instructions.size - 1,
                         "invoke-static { p1 }, $EXTENSION_CLASS_DESCRIPTOR->setPlaybackSpeed(F)V"
                     )
                 }
             }
         }
 
-        videoIdFingerprintShorts.matchOrThrow().let {
-            it.mutableMethod.apply {
-                val shortsPlaybackSpeedClassField = it.classDef.fields.find { field ->
+        videoIdFingerprintShorts.matchOrThrow().let { match ->
+            val method = match.method
+            val classDef = match.classDef
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
+                val shortsPlaybackSpeedClassField = mutableClassDefBy(classDef.type).fields.find { field ->
                     field.type == setPlaybackSpeedMethodReference.definingClass
                 } ?: throw PatchException("Failed to find hook field")
 
@@ -509,7 +550,7 @@ val videoInformationPatch = bytecodePatch(
                 )
 
                 // add override playback speed method
-                it.classDef.methods.add(
+                mutableClassDefBy(classDef.type).methods.add(
                     ImmutableMethod(
                         definingClass,
                         "overridePlaybackSpeed",
@@ -590,9 +631,14 @@ val videoInformationPatch = bytecodePatch(
          */
         onCreateHook(EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR, "newVideoStarted")
 
-        videoQualityFingerprint.matchOrThrow().let {
+        videoQualityFingerprint.matchOrThrow().let { match ->
+            val method = match.method
+            val classDef = match.classDef
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
             // Fix bad data used by YouTube.
-            val (qualityNameField, resolutionField) = with(it.method) {
+            val (qualityNameField, resolutionField) = with(mutableMethod) {
                 val qualityNameIndex = indexOfVideoQualityNameFieldInstruction(this)
                 val resolutionIndex = indexOfVideoQualityResolutionFieldInstruction(this)
                 val qualityNameReference =
@@ -618,54 +664,53 @@ val videoInformationPatch = bytecodePatch(
             }
 
             // Add methods to access obfuscated quality fields.
-            it.classDef.apply {
-                methods.add(
-                    ImmutableMethod(
-                        type,
-                        "patch_getQualityName",
-                        listOf(),
-                        "Ljava/lang/String;",
-                        AccessFlags.PUBLIC.value or AccessFlags.FINAL.value,
-                        null,
-                        null,
-                        MutableMethodImplementation(2),
-                    ).toMutable().apply {
-                        addInstructions(
-                            0, """
-                                iget-object v0, p0, $qualityNameField
-                                return-object v0
-                                """
-                        )
-                    }
-                )
+            val mutableClass = mutableClassDefBy(classDef.type)
+            mutableClass.methods.add(
+                ImmutableMethod(
+                    mutableClass.type,
+                    "patch_getQualityName",
+                    listOf(),
+                    "Ljava/lang/String;",
+                    AccessFlags.PUBLIC.value or AccessFlags.FINAL.value,
+                    null,
+                    null,
+                    MutableMethodImplementation(2),
+                ).toMutable().apply {
+                    addInstructions(
+                        0, """
+                            iget-object v0, p0, $qualityNameField
+                            return-object v0
+                            """
+                    )
+                }
+            )
 
-                methods.add(
-                    ImmutableMethod(
-                        type,
-                        "patch_getResolution",
-                        listOf(),
-                        "I",
-                        AccessFlags.PUBLIC.value or AccessFlags.FINAL.value,
-                        null,
-                        null,
-                        MutableMethodImplementation(2),
-                    ).toMutable().apply {
-                        addInstructions(
-                            0, """
-                                iget v0, p0, $resolutionField
-                                return v0
-                                """
-                        )
-                    }
-                )
-            }
+            mutableClass.methods.add(
+                ImmutableMethod(
+                    mutableClass.type,
+                    "patch_getResolution",
+                    listOf(),
+                    "I",
+                    AccessFlags.PUBLIC.value or AccessFlags.FINAL.value,
+                    null,
+                    null,
+                    MutableMethodImplementation(2),
+                ).toMutable().apply {
+                    addInstructions(
+                        0, """
+                            iget v0, p0, $resolutionField
+                            return v0
+                            """
+                    )
+                }
+            )
         }
 
         val formatStreamFpsReference = formatStreamingModelQualityLabelBuilderFingerprint
             .matchOrThrow()
-            .let {
-                with(it.method) {
-                    val stringIndex = it.stringMatches!!.first().index
+            .let { match ->
+                with(match.method) {
+                    val stringIndex = match.stringMatches!!.first().index
                     val formatStreamIndex = indexOfFirstInstructionReversedOrThrow(stringIndex) {
                         val reference = getReference<MethodReference>()
                         opcode == Opcode.INVOKE_VIRTUAL &&
@@ -681,26 +726,25 @@ val videoInformationPatch = bytecodePatch(
             .mutableMethodOrThrow()
             .methodCall()
 
-        val formatStreamITagReference = run {
-            val method = formatStreamModelToStringFingerprint.methodOrThrow()
-            val classDef = formatStreamModelToStringFingerprint.classDefOrThrow()
-            val mutableMethod = mutableClassDefBy(classDef).methods.first {
-                MethodUtil.methodSignaturesMatch(it, method)
-            }
-            mutableMethod.findMethodFromToString("FormatStream(itag=")
-                .methodCall()
-        }
+        val formatStreamITagReference = formatStreamModelToStringFingerprint
+            .matchOrThrow()
+            .method
+            .findMethodFromToString("FormatStream(itag=")
+            .methodCall()
 
         val formatStreamResolutionReference =
             availableVideoFormatsFingerprint.matchOrThrow(
                 formatStreamModelBuilderFingerprint
-            ).let {
-                with(it.method) {
-                    val formatStreamIndex = it.patternMatch!!.startIndex + 1
+            ).let { match ->
+                with(match.method) {
+                    val mutableMethod = mutableClassDefBy(match.classDef.type).methods.first {
+                        MethodUtil.methodSignaturesMatch(it, this)
+                    }
+                    val formatStreamIndex = match.patternMatch!!.startIndex + 1
                     val formatStreamResolutionReference =
                         getInstruction<ReferenceInstruction>(formatStreamIndex).reference as MethodReference
 
-                    addInstructions(
+                    mutableMethod.addInstructions(
                         0,
                         "invoke-static { p0 }, $EXTENSION_VIDEO_QUALITY_CLASS_DESCRIPTOR->setVideoFormat(Ljava/util/List;)V"
                     )
@@ -729,25 +773,24 @@ val videoInformationPatch = bytecodePatch(
                     move-result-object v0
                     return-object v0
                 """
-            // Obtener la clase mutable directamente
-            val mutableClass = mutableClassDefBy(YOUTUBE_FORMAT_STREAM_MODEL_CLASS_TYPE)
-            mutableClass.methods.add(
-                ImmutableMethod(
-                    YOUTUBE_FORMAT_STREAM_MODEL_CLASS_TYPE,
-                    methodName,
-                    listOf(),
-                    returnType,
-                    AccessFlags.PUBLIC.value or AccessFlags.FINAL.value,
-                    null,
-                    null,
-                    MutableMethodImplementation(2),
-                ).toMutable().apply {
-                    addInstructions(
-                        0,
-                        smaliInstructions
-                    )
-                }
-            )
+            mutableClassDefBy(YOUTUBE_FORMAT_STREAM_MODEL_CLASS_TYPE)
+                .methods.add(
+                    ImmutableMethod(
+                        YOUTUBE_FORMAT_STREAM_MODEL_CLASS_TYPE,
+                        methodName,
+                        listOf(),
+                        returnType,
+                        AccessFlags.PUBLIC.value or AccessFlags.FINAL.value,
+                        null,
+                        null,
+                        MutableMethodImplementation(2),
+                    ).toMutable().apply {
+                        addInstructions(
+                            0,
+                            smaliInstructions
+                        )
+                    }
+                )
         }
 
         initFormatStreamFingerprint.mutableMethodOrThrow(initFormatStreamParentFingerprint)
@@ -773,9 +816,10 @@ val videoInformationPatch = bytecodePatch(
             }
 
         val initialResolutionField = run {
-            val method = playbackStartParametersToStringFingerprint.methodOrThrow()
-            val classDef = playbackStartParametersToStringFingerprint.classDefOrThrow()
-            val mutableMethod = mutableClassDefBy(classDef).methods.first {
+            val match = playbackStartParametersToStringFingerprint.matchOrThrow()
+            val method = match.method
+            val classDef = match.classDef
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.findFieldFromToString(FIXED_RESOLUTION_STRING)
@@ -798,9 +842,14 @@ val videoInformationPatch = bytecodePatch(
                 )
             }
 
-        videoQualityArrayFingerprint.matchOrThrow(formatStreamModelBuilderFingerprint).let {
-            it.mutableMethod.apply {
-                val index = it.patternMatch!!.startIndex
+        videoQualityArrayFingerprint.matchOrThrow(formatStreamModelBuilderFingerprint).let { match ->
+            val method = match.method
+            val classDef = match.classDef
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
+                val index = match.patternMatch!!.startIndex
                 val register = getInstruction<OneRegisterInstruction>(index).registerA
 
                 addInstructionsAtControlFlowLabel(
@@ -812,12 +861,16 @@ val videoInformationPatch = bytecodePatch(
             }
         }
 
-        videoQualityListFingerprint.matchOrThrow().let {
-            val classDef = it.classDef
-            it.mutableMethod.apply {
-                classDef.interfaces.add(EXTENSION_VIDEO_QUALITY_MENU_INTERFACE)
+        videoQualityListFingerprint.matchOrThrow().let { match ->
+            val classDef = match.classDef
+            val mutableClass = mutableClassDefBy(classDef.type)
+            val mutableMethod = mutableClass.methods.first {
+                MethodUtil.methodSignaturesMatch(it, match.method)
+            }
+            mutableMethod.apply {
+                mutableClass.interfaces.add(EXTENSION_VIDEO_QUALITY_MENU_INTERFACE)
 
-                classDef.methods.add(
+                mutableClass.methods.add(
                     ImmutableMethod(
                         definingClass,
                         "patch_setQuality",
@@ -834,7 +887,7 @@ val videoInformationPatch = bytecodePatch(
                         null,
                         MutableMethodImplementation(2),
                     ).toMutable().apply {
-                        val setQualityMenuIndexMethod = classDef.methods.single { method ->
+                        val setQualityMenuIndexMethod = mutableClass.methods.single { method ->
                             method.parameterTypes.firstOrNull() == YOUTUBE_VIDEO_QUALITY_CLASS_TYPE
                         }
 
@@ -847,7 +900,7 @@ val videoInformationPatch = bytecodePatch(
                         )
                     }
                 )
-                val interfaceIndex = it.patternMatch!!.startIndex
+                val interfaceIndex = match.patternMatch!!.startIndex
                 val listRegister =
                     getInstruction<FiveRegisterInstruction>(interfaceIndex).registerD
                 val indexRegister =
@@ -862,9 +915,14 @@ val videoInformationPatch = bytecodePatch(
             }
         }
 
-        videoQualitySetterFingerprint.matchOrThrow().let {
-            it.mutableMethod.apply {
-                val textIndex = it.patternMatch!!.endIndex
+        videoQualitySetterFingerprint.matchOrThrow().let { match ->
+            val method = match.method
+            val classDef = match.classDef
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
+                val textIndex = match.patternMatch!!.endIndex
                 val textRegister = getInstruction<TwoRegisterInstruction>(textIndex).registerA
 
                 addInstruction(

@@ -15,6 +15,7 @@ import com.extenre.patcher.extensions.InstructionExtensions.getInstruction
 import com.extenre.patcher.extensions.InstructionExtensions.removeInstruction
 import com.extenre.patcher.patch.PatchException
 import com.extenre.patcher.patch.bytecodePatch
+import com.extenre.patcher.util.MethodNavigator
 import com.extenre.patcher.util.proxy.mutableTypes.MutableMethod
 import com.extenre.patcher.util.smali.ExternalLabel
 import com.extenre.patches.shared.litho.addLithoFilter
@@ -72,7 +73,6 @@ import com.extenre.util.fingerprint.matchOrThrow
 import com.extenre.util.fingerprint.mutableMethodOrThrow
 import com.extenre.util.fingerprint.mutableClassOrThrow
 import com.extenre.util.getReference
-import com.extenre.util.getWalkerMethod
 import com.extenre.util.indexOfFirstInstruction
 import com.extenre.util.indexOfFirstInstructionOrThrow
 import com.extenre.util.indexOfFirstInstructionReversedOrThrow
@@ -94,6 +94,7 @@ import com.android.tools.smali.dexlib2.iface.reference.TypeReference
 import com.android.tools.smali.dexlib2.util.MethodUtil
 
 private val speedOverlayPatch = bytecodePatch(
+    name = "speedOverlayPatch",
     description = "speedOverlayPatch"
 ) {
     dependsOn(
@@ -185,12 +186,14 @@ private val speedOverlayPatch = bytecodePatch(
                         indexOfFirstInstruction(Opcode.CMPL_FLOAT) >= 0
             }
 
-            // CORREGIDO: usar patchClasses.classMap.values en lugar de classes
-            patchClasses.classMap.values.forEach { classDef ->
+            // Adaptación: iterar sobre `classes` (ProxyClassList) y obtener mutableClass por tipo
+            classes.forEach { classDef ->
+                val mutableClass = mutableClassDefBy(classDef.type)
                 classDef.methods.forEach { method ->
                     if (method.isSyntheticMethod()) {
-                        val mutableClass = mutableClassDefBy(classDef.type)
-                        val mutableMethod = mutableClass.methods.first { MethodUtil.methodSignaturesMatch(it, method) }
+                        val mutableMethod = mutableClass.methods.first { target ->
+                            MethodUtil.methodSignaturesMatch(target, method)
+                        }
                         mutableMethod.apply {
                             val speedFieldIndex = indexOfFirstSpeedFieldInstruction(this)
                             hookRelativeSpeedValue(speedFieldIndex)
@@ -233,9 +236,9 @@ private val speedOverlayPatch = bytecodePatch(
             val (slideToSeekBooleanMethod, slideToSeekSyntheticMethod) =
                 slideToSeekMotionEventFingerprint.matchOrThrow(
                     horizontalTouchOffsetConstructorFingerprint
-                ).let {
-                    with(it.method) {
-                        val patternMatch = it.patternMatch!!
+                ).let { match ->
+                    with(match.method) {
+                        val patternMatch = match.patternMatch!!
                         val jumpIndex = patternMatch.endIndex + 1
                         val insertIndex = patternMatch.endIndex - 1
                         val insertRegister =
@@ -243,28 +246,37 @@ private val speedOverlayPatch = bytecodePatch(
 
                         hookSpeedOverlay(insertIndex, insertRegister, jumpIndex)
 
-                        val slideToSeekBooleanMethod =
-                            getWalkerMethod(patternMatch.startIndex + 1)
+                        // Obtener el método booleano mutable usando la clase del fingerprint
+                        val slideToSeekBooleanMatch = slideToSeekMotionEventFingerprint.matchOrThrow()
+                        val booleanMethod = slideToSeekBooleanMatch.method
+                        val booleanClassDef = slideToSeekBooleanMatch.classDef
+                        val slideToSeekBooleanMutable = mutableClassDefBy(booleanClassDef.type).methods.first {
+                            MethodUtil.methodSignaturesMatch(it, booleanMethod)
+                        }
 
-                        val slideToSeekConstructorMethod = mutableClassDefBy(slideToSeekBooleanMethod.definingClass).methods.first { method ->
-                            MethodUtil.isConstructor(method) && method.parameterTypes.size == 3
-                        } // Adjust if needed
+                        // Obtener el método sintético mutable
+                        val slideToSeekConstructorMatch = horizontalTouchOffsetConstructorFingerprint.matchOrThrow()
+                        val constructorMethod = slideToSeekConstructorMatch.method
+                        val constructorClassDef = slideToSeekConstructorMatch.classDef
+                        val slideToSeekConstructorMutable = mutableClassDefBy(constructorClassDef.type).methods.first {
+                            MethodUtil.methodSignaturesMatch(it, constructorMethod)
+                        }
 
-                        val slideToSeekSyntheticIndex = slideToSeekConstructorMethod
+                        val slideToSeekSyntheticIndex = slideToSeekConstructorMutable
                             .indexOfFirstInstructionReversedOrThrow {
                                 opcode == Opcode.NEW_INSTANCE
                             }
 
-                        val slideToSeekSyntheticClass = slideToSeekConstructorMethod
+                        val slideToSeekSyntheticClass = slideToSeekConstructorMutable
                             .getInstruction<ReferenceInstruction>(slideToSeekSyntheticIndex)
                             .reference
                             .toString()
 
-                        val slideToSeekSyntheticMethod = mutableClassDefBy(slideToSeekSyntheticClass).methods.find { method ->
+                        val slideToSeekSyntheticMutable = mutableClassDefBy(slideToSeekSyntheticClass).methods.find { method ->
                             method.name == "run"
                         } ?: throw PatchException("run method not found in $slideToSeekSyntheticClass")
 
-                        Pair(slideToSeekBooleanMethod, slideToSeekSyntheticMethod)
+                        Pair(slideToSeekBooleanMutable, slideToSeekSyntheticMutable)
                     }
                 }
 
@@ -541,9 +553,14 @@ val playerComponentsPatch = bytecodePatch(
 
         // region patch for hide channel watermark
 
-        watermarkFingerprint.matchOrThrow(watermarkParentFingerprint).let {
-            it.mutableMethod.apply {
-                val insertIndex = it.patternMatch!!.endIndex
+        watermarkFingerprint.matchOrThrow(watermarkParentFingerprint).let { match ->
+            val method = match.method
+            val classDef = match.classDef
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
+                val insertIndex = match.patternMatch!!.endIndex
                 val register = getInstruction<TwoRegisterInstruction>(insertIndex).registerA
 
                 addInstructions(
@@ -559,9 +576,14 @@ val playerComponentsPatch = bytecodePatch(
 
         // region patch for hide crowdfunding box
 
-        crowdfundingBoxFingerprint.matchOrThrow().let {
-            it.mutableMethod.apply {
-                val insertIndex = it.patternMatch!!.endIndex
+        crowdfundingBoxFingerprint.matchOrThrow().let { match ->
+            val method = match.method
+            val classDef = match.classDef
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
+                val insertIndex = match.patternMatch!!.endIndex
                 val register = getInstruction<TwoRegisterInstruction>(insertIndex).registerA
 
                 addInstruction(
@@ -598,9 +620,14 @@ val playerComponentsPatch = bytecodePatch(
             endScreenElementLayoutIconFingerprint,
             endScreenElementLayoutVideoFingerprint
         ).forEach { fingerprint ->
-            fingerprint.matchOrThrow().let {
-                it.mutableMethod.apply {
-                    val insertIndex = it.patternMatch!!.endIndex
+            fingerprint.matchOrThrow().let { match ->
+                val method = match.method
+                val classDef = match.classDef
+                val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                    MethodUtil.methodSignaturesMatch(it, method)
+                }
+                mutableMethod.apply {
+                    val insertIndex = match.patternMatch!!.endIndex
                     val viewRegister = getInstruction<OneRegisterInstruction>(insertIndex).registerA
 
                     addInstruction(
@@ -667,9 +694,14 @@ val playerComponentsPatch = bytecodePatch(
         if (is_20_12_or_greater) {
             filmStripOverlayMotionEventPrimaryFingerprint.matchOrThrow(
                 filmStripOverlayStartParentFingerprint
-            ).let {
-                it.mutableMethod.apply {
-                    val index = it.patternMatch!!.startIndex
+            ).let { match ->
+                val method = match.method
+                val classDef = match.classDef
+                val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                    MethodUtil.methodSignaturesMatch(it, method)
+                }
+                mutableMethod.apply {
+                    val index = match.patternMatch!!.startIndex
                     val register = getInstruction<TwoRegisterInstruction>(index).registerA
 
                     hookFilmstripOverlay(index, register)
@@ -678,9 +710,14 @@ val playerComponentsPatch = bytecodePatch(
 
             filmStripOverlayMotionEventSecondaryFingerprint.matchOrThrow(
                 filmStripOverlayStartParentFingerprint
-            ).let {
-                it.mutableMethod.apply {
-                    val index = it.patternMatch!!.startIndex + 2
+            ).let { match ->
+                val method = match.method
+                val classDef = match.classDef
+                val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                    MethodUtil.methodSignaturesMatch(it, method)
+                }
+                mutableMethod.apply {
+                    val index = match.patternMatch!!.startIndex + 2
                     val register = getInstruction<OneRegisterInstruction>(index).registerA
 
                     addInstructions(
@@ -741,9 +778,14 @@ val playerComponentsPatch = bytecodePatch(
 
         // region patch for hide info cards
 
-        infoCardsIncognitoFingerprint.matchOrThrow().let {
-            it.mutableMethod.apply {
-                val targetIndex = it.patternMatch!!.startIndex
+        infoCardsIncognitoFingerprint.matchOrThrow().let { match ->
+            val method = match.method
+            val classDef = match.classDef
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
+                val targetIndex = match.patternMatch!!.startIndex
                 val targetRegister =
                     getInstruction<TwoRegisterInstruction>(targetIndex).registerA
 
@@ -760,10 +802,22 @@ val playerComponentsPatch = bytecodePatch(
 
         // region patch for hide relative video
 
-        linearLayoutManagerItemCountsFingerprint.matchOrThrow().let {
-            val methodWalker =
-                it.getWalkerMethod(it.patternMatch!!.endIndex)
-            methodWalker.apply {
+        linearLayoutManagerItemCountsFingerprint.matchOrThrow().let { match ->
+            val method = match.method
+            val classDef = match.classDef
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            // Obtener el método mutable de la clase destino usando la referencia de la instrucción
+            val endIndex = match.patternMatch!!.endIndex
+            val referenceInstruction = mutableMethod.getInstruction<ReferenceInstruction>(endIndex)
+            val methodRef = referenceInstruction.reference as? MethodReference
+                ?: throw PatchException("No method reference at index $endIndex")
+            val targetClass = methodRef.definingClass
+            val targetMethod = mutableClassDefBy(targetClass).methods.first {
+                it.name == methodRef.name && it.parameterTypes == methodRef.parameterTypes
+            }
+            targetMethod.apply {
                 val index = indexOfFirstInstructionOrThrow(Opcode.MOVE_RESULT)
                 val register = getInstruction<OneRegisterInstruction>(index).registerA
 
@@ -856,9 +910,14 @@ val playerComponentsPatch = bytecodePatch(
 
         // region patch for hide suggested actions
 
-        suggestedActionsFingerprint.matchOrThrow().let {
-            it.mutableMethod.apply {
-                val targetIndex = it.patternMatch!!.endIndex
+        suggestedActionsFingerprint.matchOrThrow().let { match ->
+            val method = match.method
+            val classDef = match.classDef
+            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
+                val targetIndex = match.patternMatch!!.endIndex
                 val targetRegister = getInstruction<OneRegisterInstruction>(targetIndex).registerA
 
                 addInstruction(
