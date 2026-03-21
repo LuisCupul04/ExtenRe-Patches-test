@@ -82,8 +82,6 @@ private const val CLONE_PACKAGE_NAME_YOUTUBE_MUSIC = "app.extenre.android.apps.y
 private const val DEFAULT_PACKAGE_NAME_YOUTUBE_MUSIC = "com.extenre.android.apps.youtube.music"
 internal const val ORIGINAL_PACKAGE_NAME_YOUTUBE_MUSIC = "com.google.android.apps.youtube.music"
 
-private const val GET_GMS_CORE_VENDOR_GROUP_ID_METHOD_NAME = "getGmsCoreVendorGroupId"
-
 /**
  * A patch that allows patched Google apps to run without root and under a different package name
  * by using GmsCore instead of Google Play Services.
