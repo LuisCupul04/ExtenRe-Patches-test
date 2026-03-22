@@ -13,9 +13,7 @@ plugins {
     alias(libs.plugins.protobuf)
 }
 
-extension {
-    name = "extensions/shared.re"
-}
+val extensionName = "extensions/shared.re"
 
 android {
     namespace = "com.extenre.extension"
@@ -55,15 +53,12 @@ kotlin {
 dependencies {
     compileOnly(libs.annotation)
     compileOnly(libs.preference)
-
     implementation(libs.collections4)
     implementation(libs.gson)
     implementation(libs.lang3)
     implementation(libs.okhttp3)
     implementation(libs.protobuf.javalite)
-
     implementation("com.github.ynab:J2V8:6.2.1-16kb.2@aar")
-
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     compileOnly(project(":extensions:shared:stub"))
 }
@@ -83,8 +78,6 @@ protobuf {
     }
 }
 
-// ================== Tarea manual para generar el DEX ==================
-val extensionName = extension.name.get()
 val parentPath = extensionName.substringBeforeLast('/')
 val fileName = extensionName.substringAfterLast('/')
 
@@ -116,13 +109,6 @@ tasks.register<Sync>("syncExtension") {
         }
     }
 
-    from(dexOutputDir) {
-        include(fileName)
-    }
+    from(dexOutputDir) { include(fileName) }
     into(dexOutputDir.parentFile)
-}
-
-// Deshabilitar la tarea generada automáticamente por el plugin (conflicto)
-tasks.named("generateExtensionDex") {
-    enabled = false
 }
