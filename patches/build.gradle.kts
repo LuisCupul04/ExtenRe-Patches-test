@@ -3,7 +3,7 @@ import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.testing.Test
 import org.gradle.kotlin.dsl.*
 
-group = "com.extenre"
+group = "com.extenre.test"
 version = rootProject.properties["version"] as? String ?: "0.0.0"
 
 // El plugin com.extenre.patches ya está aplicado en settings.gradle.kts,
