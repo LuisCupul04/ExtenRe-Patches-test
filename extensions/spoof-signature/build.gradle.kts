@@ -2,9 +2,7 @@ plugins {
     id("com.android.application")
 }
 
-extension {
-    name = "extensions/all/misc/signature/spoof-signature.re"
-}
+val extensionName = "extensions/all/misc/signature/spoof-signature.re"
 
 android {
     namespace = "com.extenre.extension"
@@ -33,8 +31,6 @@ dependencies {
     implementation(libs.hiddenapi)
 }
 
-// ================== Tarea manual para generar el DEX ==================
-val extensionName = extension.name.get()
 val parentPath = extensionName.substringBeforeLast('/')
 val fileName = extensionName.substringAfterLast('/')
 
@@ -66,13 +62,6 @@ tasks.register<Sync>("syncExtension") {
         }
     }
 
-    from(dexOutputDir) {
-        include(fileName)
-    }
+    from(dexOutputDir) { include(fileName) }
     into(dexOutputDir.parentFile)
-}
-
-// Deshabilitar la tarea generada automáticamente por el plugin (conflicto)
-tasks.named("generateExtensionDex") {
-    enabled = false
 }
