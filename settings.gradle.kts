@@ -38,4 +38,4 @@ plugins {
 
 rootProject.name = "extenre-patches"
 
-// include(":patches", ":extensions:shared:stub", ":extensions:shared", ":extensions:spoof-signature", ":extensions:spoof-wifi")
+include(":patches", ":extensions:shared:stub", ":extensions:shared", ":extensions:spoof-signature", ":extensions:spoof-wifi")
