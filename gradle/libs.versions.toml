@@ -33,5 +33,5 @@ protobuf-protoc = { module = "com.google.protobuf:protoc", version.ref = "protoc
 
 [plugins]
 kotlin-android = { id = "org.jetbrains.kotlin.android" }
-android-application = { id = "com.android.application", version.ref = "agp" }   #// ← sin version.ref
+android-application = { id = "com.android.application" }  #// ← sin version.ref
 protobuf = { id = "com.google.protobuf", version.ref = "protobuf" }
