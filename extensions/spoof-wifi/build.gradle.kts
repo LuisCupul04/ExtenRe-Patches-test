@@ -66,3 +66,8 @@ tasks.register<Sync>("syncExtension") {
     from(dexOutputDir) { include(fileName) }
     into(dexOutputDir.parentFile)
 }
+
+afterEvaluate {
+    tasks.findByName("generateExtensionDex")?.enabled = false
+}
+
