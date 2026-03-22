@@ -23,17 +23,12 @@ extension {
 android {
     namespace = "com.extenre.extension"
     compileSdk = 35
-
-    defaultConfig {
-        minSdk = 21
-    }
-
+    defaultConfig { minSdk = 21 }
     buildTypes {
         release {
             isMinifyEnabled = true
         }
     }
-
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -45,30 +40,38 @@ dependencies {
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 }
 
-// ================== Tarea manual para generar el DEX ==================
+// ================== Tarea para generar el DEX ==================
 val extensionName = extension.name.get()
 val parentPath = extensionName.substringBeforeLast('/')
 val fileName = extensionName.substringAfterLast('/')
 
 afterEvaluate {
-    tasks.register<Sync>("syncExtension") {
-        dependsOn("bundleReleaseAar")
+    val bundleTask = tasks.named("bundleReleaseAar")
 
-        val aarFile = layout.buildDirectory.file("outputs/aar/${project.name}-release.aar").get().asFile
+    tasks.register<Sync>("syncExtension") {
+        dependsOn(bundleTask)
+
+        val aarFileProvider = bundleTask.flatMap { it.outputs.files.single() }
         val extractDir = layout.buildDirectory.dir("tmp/extractAar").get().asFile
         val dexOutputDir = layout.buildDirectory.dir("extenre/$parentPath").get().asFile
 
+        inputs.file(aarFileProvider)
+        outputs.dir(dexOutputDir)
+
         doFirst {
+            val aar = aarFileProvider.get().asFile
+            logger.lifecycle("Processing AAR: ${aar.absolutePath}")
+
             extractDir.deleteRecursively()
             extractDir.mkdirs()
             copy {
-                from(zipTree(aarFile))
+                from(zipTree(aar))
                 into(extractDir)
             }
 
             val classesJar = extractDir.resolve("classes.jar")
             if (!classesJar.exists()) {
-                throw GradleException("classes.jar not found in AAR: $aarFile")
+                throw GradleException("classes.jar not found in AAR: $aar")
             }
 
             dexOutputDir.mkdirs()
@@ -77,6 +80,8 @@ afterEvaluate {
                 .setOutput(dexOutputDir.toPath(), OutputMode.DexIndexed)
                 .build()
                 .let(D8::run)
+
+            logger.lifecycle("DEX generated: ${dexOutputDir.listFiles()?.joinToString()}")
         }
 
         from(dexOutputDir) {
