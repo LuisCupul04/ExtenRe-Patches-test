@@ -7,7 +7,7 @@ group = "com.extenre"
 version = rootProject.properties["version"] as? String ?: "0.0.0"
 
 // Plugin de parches (para la configuración de metadatos)
-apply(plugin = "com.extenre.patches.test")
+apply(plugin = "com.extenre.patches")
 
 // Configuración de metadatos del parche (generado por el plugin)
 patches {
