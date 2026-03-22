@@ -1,21 +1,14 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import com.android.tools.r8.D8
-import com.android.tools.r8.D8Command
-import com.android.tools.r8.OutputMode
-import com.android.build.gradle.tasks.BundleAar
 
 buildscript {
     repositories {
         google()
         mavenCentral()
     }
-    dependencies {
-        classpath("com.android.tools:r8:8.3.36")
-    }
 }
 
 plugins {
-    alias(libs.plugins.android.library)
+    alias(libs.plugins.android.application)   // ← CAMBIADO DE LIBRARY A APPLICATION
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.protobuf)
 }
@@ -29,7 +22,10 @@ android {
     compileSdk = 35
 
     defaultConfig {
+        applicationId = "com.extenre.extension.shared"   // Necesario para aplicación
         minSdk = 24
+        versionCode = 1
+        versionName = "1.0"
     }
 
     buildTypes {
@@ -59,12 +55,15 @@ kotlin {
 dependencies {
     compileOnly(libs.annotation)
     compileOnly(libs.preference)
+
     implementation(libs.collections4)
     implementation(libs.gson)
     implementation(libs.lang3)
     implementation(libs.okhttp3)
     implementation(libs.protobuf.javalite)
+
     implementation("com.github.ynab:J2V8:6.2.1-16kb.2@aar")
+
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     compileOnly(project(":extensions:shared:stub"))
 }
@@ -84,56 +83,41 @@ protobuf {
     }
 }
 
-// ================== Tarea para generar el DEX ==================
+// ================== Tarea manual para generar el DEX ==================
 val extensionName = extension.name.get()
 val parentPath = extensionName.substringBeforeLast('/')
 val fileName = extensionName.substringAfterLast('/')
 
-val syncExtension = tasks.register<Sync>("syncExtension") {
-    // Depende de la tarea que genera el AAR (bundleReleaseAar)
-    dependsOn("bundleReleaseAar")
+tasks.register<Sync>("syncExtension") {
+    dependsOn("assembleRelease")
 
-    // Obtenemos la referencia al AAR generado, pero la evaluamos en tiempo de ejecución
-    val aarFile = provider {
-        val bundleTask = tasks.named<BundleAar>("bundleReleaseAar").get()
-        bundleTask.outputs.files.single()
-    }
-
-    val extractDir = layout.buildDirectory.dir("tmp/extractAar").get().asFile
+    val apkFile = layout.buildDirectory.file("outputs/apk/release/${project.name}-release.apk").get().asFile
+    val extractDir = layout.buildDirectory.dir("tmp/extractApk").get().asFile
     val dexOutputDir = layout.buildDirectory.dir("extenre/$parentPath").get().asFile
 
-    inputs.file(aarFile)
-    outputs.dir(dexOutputDir)
-
     doFirst {
-        val aar = aarFile.get()
-        logger.lifecycle("Processing AAR: ${aar.absolutePath}")
-
         extractDir.deleteRecursively()
         extractDir.mkdirs()
         copy {
-            from(zipTree(aar))
+            from(zipTree(apkFile))
             into(extractDir)
         }
 
-        val classesJar = extractDir.resolve("classes.jar")
-        if (!classesJar.exists()) {
-            throw GradleException("classes.jar not found in AAR: $aar")
+        val classesDex = extractDir.resolve("classes.dex")
+        if (!classesDex.exists()) {
+            throw GradleException("classes.dex not found in APK: $apkFile")
         }
 
         dexOutputDir.mkdirs()
-        D8Command.builder()
-            .addProgramFiles(classesJar.toPath())
-            .setOutput(dexOutputDir.toPath(), OutputMode.DexIndexed)
-            .build()
-            .let(D8::run)
-
-        logger.lifecycle("DEX generated: ${dexOutputDir.listFiles()?.joinToString()}")
+        copy {
+            from(classesDex)
+            into(dexOutputDir)
+            rename { fileName }
+        }
     }
 
     from(dexOutputDir) {
-        include("*.dex")
+        include(fileName)
     }
     into(dexOutputDir.parentFile)
-    rename { fileName }
 }
