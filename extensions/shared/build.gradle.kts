@@ -8,7 +8,7 @@ buildscript {
 }
 
 plugins {
-    alias(libs.plugins.android.application)   // ← CAMBIADO DE LIBRARY A APPLICATION
+    id("com.android.application")
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.protobuf)
 }
@@ -22,7 +22,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.extenre.extension.shared"   // Necesario para aplicación
+        applicationId = "com.extenre.extension.shared"
         minSdk = 24
         versionCode = 1
         versionName = "1.0"
@@ -120,4 +120,9 @@ tasks.register<Sync>("syncExtension") {
         include(fileName)
     }
     into(dexOutputDir.parentFile)
+}
+
+// Deshabilitar la tarea generada automáticamente por el plugin (conflicto)
+tasks.named("generateExtensionDex") {
+    enabled = false
 }
