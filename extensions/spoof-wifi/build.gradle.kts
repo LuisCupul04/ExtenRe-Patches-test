@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.android.application)   // ← CAMBIADO DE LIBRARY A APPLICATION
+    id("com.android.application")
 }
 
 extension {
@@ -11,7 +11,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.extenre.extension.spoofwifi"   // Necesario para aplicación
+        applicationId = "com.extenre.extension.spoofwifi"
         minSdk = 21
         versionCode = 1
         versionName = "1.0"
@@ -71,4 +71,9 @@ tasks.register<Sync>("syncExtension") {
         include(fileName)
     }
     into(dexOutputDir.parentFile)
+}
+
+// Deshabilitar la tarea generada automáticamente por el plugin (conflicto)
+tasks.named("generateExtensionDex") {
+    enabled = false
 }
