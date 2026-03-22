@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.protobuf)
+    id("com.extenre.patches.extension")
 }
 
 extension {
