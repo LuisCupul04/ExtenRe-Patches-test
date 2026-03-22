@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.library)   // ← Agregado
+    id("com.extenre.patches.extension")
 }
 
 extension {
