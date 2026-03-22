@@ -34,7 +34,6 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
-
             ndk {
                 abiFilters.add("armeabi-v7a")
                 abiFilters.add("arm64-v8a")
@@ -59,15 +58,12 @@ kotlin {
 dependencies {
     compileOnly(libs.annotation)
     compileOnly(libs.preference)
-
     implementation(libs.collections4)
     implementation(libs.gson)
     implementation(libs.lang3)
     implementation(libs.okhttp3)
     implementation(libs.protobuf.javalite)
-
     implementation("com.github.ynab:J2V8:6.2.1-16kb.2@aar")
-
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     compileOnly(project(":extensions:shared:stub"))
 }
@@ -87,30 +83,38 @@ protobuf {
     }
 }
 
-// ================== Tarea manual para generar el DEX ==================
+// ================== Tarea para generar el DEX ==================
 val extensionName = extension.name.get()
 val parentPath = extensionName.substringBeforeLast('/')
 val fileName = extensionName.substringAfterLast('/')
 
 afterEvaluate {
-    tasks.register<Sync>("syncExtension") {
-        dependsOn("bundleReleaseAar")   // ← Usar la tarea que genera el AAR
+    val bundleTask = tasks.named("bundleReleaseAar")
 
-        val aarFile = layout.buildDirectory.file("outputs/aar/${project.name}-release.aar").get().asFile
+    tasks.register<Sync>("syncExtension") {
+        dependsOn(bundleTask)
+
+        val aarFileProvider = bundleTask.flatMap { it.outputs.files.single() }
         val extractDir = layout.buildDirectory.dir("tmp/extractAar").get().asFile
         val dexOutputDir = layout.buildDirectory.dir("extenre/$parentPath").get().asFile
 
+        inputs.file(aarFileProvider)
+        outputs.dir(dexOutputDir)
+
         doFirst {
+            val aar = aarFileProvider.get().asFile
+            logger.lifecycle("Processing AAR: ${aar.absolutePath}")
+
             extractDir.deleteRecursively()
             extractDir.mkdirs()
             copy {
-                from(zipTree(aarFile))
+                from(zipTree(aar))
                 into(extractDir)
             }
 
             val classesJar = extractDir.resolve("classes.jar")
             if (!classesJar.exists()) {
-                throw GradleException("classes.jar not found in AAR: $aarFile")
+                throw GradleException("classes.jar not found in AAR: $aar")
             }
 
             dexOutputDir.mkdirs()
@@ -119,6 +123,8 @@ afterEvaluate {
                 .setOutput(dexOutputDir.toPath(), OutputMode.DexIndexed)
                 .build()
                 .let(D8::run)
+
+            logger.lifecycle("DEX generated: ${dexOutputDir.listFiles()?.joinToString()}")
         }
 
         from(dexOutputDir) {
