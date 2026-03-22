@@ -1,6 +1,7 @@
 import com.android.tools.r8.D8
 import com.android.tools.r8.D8Command
 import com.android.tools.r8.OutputMode
+import com.android.build.gradle.tasks.BundleAar
 
 buildscript {
     repositories {
@@ -45,49 +46,49 @@ val extensionName = extension.name.get()
 val parentPath = extensionName.substringBeforeLast('/')
 val fileName = extensionName.substringAfterLast('/')
 
-afterEvaluate {
-    val bundleTask = tasks.named("bundleReleaseAar")
+val syncExtension = tasks.register<Sync>("syncExtension") {
+    dependsOn("bundleReleaseAar")
 
-    tasks.register<Sync>("syncExtension") {
-        dependsOn(bundleTask)
-
-        val aarFileProvider = bundleTask.flatMap { it.outputs.files.single() }
-        val extractDir = layout.buildDirectory.dir("tmp/extractAar").get().asFile
-        val dexOutputDir = layout.buildDirectory.dir("extenre/$parentPath").get().asFile
-
-        inputs.file(aarFileProvider)
-        outputs.dir(dexOutputDir)
-
-        doFirst {
-            val aar = aarFileProvider.get().asFile
-            logger.lifecycle("Processing AAR: ${aar.absolutePath}")
-
-            extractDir.deleteRecursively()
-            extractDir.mkdirs()
-            copy {
-                from(zipTree(aar))
-                into(extractDir)
-            }
-
-            val classesJar = extractDir.resolve("classes.jar")
-            if (!classesJar.exists()) {
-                throw GradleException("classes.jar not found in AAR: $aar")
-            }
-
-            dexOutputDir.mkdirs()
-            D8Command.builder()
-                .addProgramFiles(classesJar.toPath())
-                .setOutput(dexOutputDir.toPath(), OutputMode.DexIndexed)
-                .build()
-                .let(D8::run)
-
-            logger.lifecycle("DEX generated: ${dexOutputDir.listFiles()?.joinToString()}")
-        }
-
-        from(dexOutputDir) {
-            include("*.dex")
-        }
-        into(dexOutputDir.parentFile)
-        rename { fileName }
+    val aarFile = provider {
+        val bundleTask = tasks.named<BundleAar>("bundleReleaseAar").get()
+        bundleTask.outputs.files.single()
     }
+
+    val extractDir = layout.buildDirectory.dir("tmp/extractAar").get().asFile
+    val dexOutputDir = layout.buildDirectory.dir("extenre/$parentPath").get().asFile
+
+    inputs.file(aarFile)
+    outputs.dir(dexOutputDir)
+
+    doFirst {
+        val aar = aarFile.get()
+        logger.lifecycle("Processing AAR: ${aar.absolutePath}")
+
+        extractDir.deleteRecursively()
+        extractDir.mkdirs()
+        copy {
+            from(zipTree(aar))
+            into(extractDir)
+        }
+
+        val classesJar = extractDir.resolve("classes.jar")
+        if (!classesJar.exists()) {
+            throw GradleException("classes.jar not found in AAR: $aar")
+        }
+
+        dexOutputDir.mkdirs()
+        D8Command.builder()
+            .addProgramFiles(classesJar.toPath())
+            .setOutput(dexOutputDir.toPath(), OutputMode.DexIndexed)
+            .build()
+            .let(D8::run)
+
+        logger.lifecycle("DEX generated: ${dexOutputDir.listFiles()?.joinToString()}")
+    }
+
+    from(dexOutputDir) {
+        include("*.dex")
+    }
+    into(dexOutputDir.parentFile)
+    rename { fileName }
 }
