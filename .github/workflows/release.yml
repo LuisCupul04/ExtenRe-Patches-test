@@ -15,9 +15,12 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true   # opcional, para probar Node 24 ya
+
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0   # necesario para obtener todos los tags
 
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -38,10 +41,16 @@ jobs:
 
       - name: Build and generate patches
         run: |
+          # Generar los DEX de las extensiones
+          ./gradlew :extensions:shared:syncExtension \
+                    :extensions:spoof-signature:syncExtension \
+                    :extensions:spoof-wifi:syncExtension
+          # Generar el bundle .EXRE
+          ./gradlew :patches:jar
+          # Generar los archivos JSON (si es necesario)
           ./gradlew generatePatchesFiles
-          ./gradlew jar
 
-      - name: Setup Node.js
+      - name: Setup Node.js (opcional, para herramientas que lo requieran)
         uses: actions/setup-node@v5
         with:
           node-version: "lts/*"
@@ -50,7 +59,7 @@ jobs:
       - name: Install dependencies (si las necesitas)
         run: npm install
 
-      - name: Import GPG key
+      - name: Import GPG key (opcional, para firmar commits/tags)
         uses: crazy-max/ghaction-import-gpg@v6
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
