@@ -1,4 +1,3 @@
-// build.gradle.kts (módulo :patches)
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.testing.Test
 import org.gradle.kotlin.dsl.*
@@ -6,8 +5,6 @@ import org.gradle.kotlin.dsl.*
 group = "com.extenre.test"
 version = rootProject.properties["version"] as? String ?: "0.0.0"
 
-// El plugin com.extenre.patches ya está aplicado en settings.gradle.kts,
-// por lo que el bloque "patches" ya está disponible.
 patches {
     about {
         name = "ExtenRe Patches"
@@ -16,44 +13,31 @@ patches {
     }
 }
 
-// Dependencias del módulo de parches
 dependencies {
     implementation(libs.gson)
-    implementation(libs.extenre.patcher)   // Patcher de ExtenRe
-    // Otras dependencias necesarias...
+    implementation(libs.extenre.patcher)
 }
 
-// Lista de submódulos de extensión
 val extensionProjects = subprojects.filter { it.path.startsWith(":extensions:") }
 
-// Tarea que genera el bundle .EXRE
 tasks.jar {
-    // Asegurar que los DEX de las extensiones estén generados
-    dependsOn(extensionProjects.map { it.tasks.named("syncExtension") })
-
-    // Cambiar extensión a .EXRE
     archiveExtension.set("EXRE")
-
-    // Excluir clases del generador de JSON (no necesarias en el bundle)
     exclude("com/extenre/generator")
 
-    // Incluir el contenido de build/extenre/ de cada extensión
+    dependsOn(extensionProjects.map { it.tasks.named("syncExtension") })
     from(extensionProjects.map { project ->
-        project.layout.buildDirectory.dir("extenre")
+        project.tasks.named("syncExtension").flatMap { it.outputs.files }
     }) {
-        // Mantener la estructura de directorios (ej. extensions/all/...)
         into("")
     }
 }
 
-// Tarea adicional para generar un JAR estándar (biblioteca) sin las extensiones
 tasks.register<Jar>("libraryJar") {
     archiveClassifier.set("")
     from(sourceSets.main.get().output)
     exclude("com/extenre/generator")
 }
 
-// Tarea que genera el archivo patches-RE.json y actualiza el README
 tasks.register<JavaExec>("generatePatchesFiles") {
     description = "Generate patches files (JSON and README)"
     dependsOn(tasks.build)
@@ -61,24 +45,20 @@ tasks.register<JavaExec>("generatePatchesFiles") {
     mainClass.set("com.extenre.generator.MainKt")
 }
 
-// Configurar la tarea sourcesJar existente (si se usa)
 tasks.named<Jar>("sourcesJar") {
     from(sourceSets.main.get().allSource)
 }
 
-// Hacer que la tarea 'publish' (usada por semantic-release) dependa de la generación de archivos
 tasks.named("publish") {
     dependsOn("generatePatchesFiles")
 }
 
-// Configuración de Kotlin (si se usa Kotlin en el módulo)
 kotlin {
     compilerOptions {
         freeCompilerArgs = listOf("-Xcontext-receivers")
     }
 }
 
-// Publicación a Maven (GitHub Packages)
 publishing {
     repositories {
         maven {
@@ -92,12 +72,9 @@ publishing {
     }
     publications {
         create<MavenPublication>("patches") {
-            // Cambia el artifactId para evitar conflicto con el plugin
             artifactId = "ExtenRe-patches-test-library"
             artifact(tasks["libraryJar"])
             artifact(tasks["sourcesJar"])
-            // Si deseas publicar también el bundle .EXRE como artefacto adicional:
-            // artifact(tasks.jar) { classifier = "bundle" }
             pom {
                 name.set("ExtenRe Patches")
                 description.set("Patches for ExtenRe")
