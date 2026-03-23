@@ -1,5 +1,5 @@
 plugins {
-    id("com.android.application")
+    alias(libs.plugins.android.library)   // ← Agregado
 }
 
 extension {
@@ -11,15 +11,12 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.extenre.extension.spoofsignature"
         minSdk = 21
-        versionCode = 1
-        versionName = "1.0"
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = true
+            isMinifyEnabled = true   // ← Cambiado de TRUE a true
         }
     }
 
