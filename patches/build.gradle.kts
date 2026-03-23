@@ -1,5 +1,13 @@
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.kotlin.dsl.*
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmOptions
+
+plugins {
+    java
+    application
+    kotlin("jvm") version "2.0.21"   // o la versión que uses en libs.versions.toml
+    `maven-publish`
+}
 
 group = "com.extenre.test"
 version = rootProject.properties["version"] as? String ?: "0.0.0"
