@@ -1,11 +1,9 @@
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.kotlin.dsl.*
-import org.jetbrains.kotlin.gradle.dsl.KotlinJvmOptions
 
 plugins {
     java
-    application
-    kotlin("jvm") version "2.0.21"   // o la versión que uses en libs.versions.toml
+    kotlin("jvm") version "2.0.21"
     `maven-publish`
 }
 
@@ -23,9 +21,7 @@ tasks.jar {
     archiveExtension.set("EXRE")
     exclude("com/extenre/generator")
     dependsOn(extensionProjects.map { it.tasks.named("syncExtension") })
-    from(extensionProjects.map { project ->
-        project.layout.buildDirectory.dir("extenre")
-    })
+    from(extensionProjects.map { it.layout.buildDirectory.dir("extenre") })
 }
 
 tasks.register<Jar>("libraryJar") {
@@ -41,7 +37,8 @@ tasks.register<JavaExec>("generatePatchesFiles") {
     mainClass.set("com.extenre.generator.MainKt")
 }
 
-tasks.named<Jar>("sourcesJar") {
+tasks.register<Jar>("sourcesJar") {
+    archiveClassifier.set("sources")
     from(sourceSets.main.get().allSource)
 }
 
