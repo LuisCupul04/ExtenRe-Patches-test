@@ -1,8 +1,9 @@
 pluginManagement {
     resolutionStrategy {
         eachPlugin {
-            if (requested.id.id == "com.android.library") {
-                useVersion("8.14.0")
+            when (requested.id.id) {
+                "com.android.library" -> useVersion("8.14.0")
+                "com.android.application" -> useVersion("8.14.0")
             }
         }
     }
@@ -10,9 +11,20 @@ pluginManagement {
         google()
         mavenCentral()
         gradlePluginPortal()
-        mavenLocal() // ¡Importante!
+        mavenLocal()
         maven { setUrl("https://jitpack.io") }
-        // tus repositorios con credenciales
+
+        // Repositorio del plugin de parches (recién publicado)
+        maven {
+            name = "ExtenRePatchesGradlePlugin"
+            url = uri("https://maven.pkg.github.com/LuisCupul04/ExtenRe-patches-gradle-plugin")
+            credentials {
+                username = providers.gradleProperty("gpr.user").getOrElse(System.getenv("GITHUB_ACTOR"))
+                password = providers.gradleProperty("gpr.key").getOrElse(System.getenv("GITHUB_TOKEN"))
+            }
+        }
+
+        // Otros repositorios
         maven {
             name = "GitHubPackages"
             url = uri("https://maven.pkg.github.com/LuisCupul04/ExtenRe-patcher")
@@ -33,7 +45,7 @@ pluginManagement {
 }
 
 plugins {
-    id("com.extenre.patches") version "1.0.7.dev-RE"
+    id("com.extenre.patches") version "1.0.7.dev-RE"   // Ajusta a la versión real que publicaste
 }
 
 rootProject.name = "extenre-patches"
