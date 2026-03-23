@@ -3,7 +3,7 @@ pluginManagement {
         eachPlugin {
             when (requested.id.id) {
                 "com.android.library" -> useVersion("8.14.0")
-                "com.android.application" -> useVersion("8.14.0")
+               // "com.android.application" -> useVersion("8.14.0")
             }
         }
     }
