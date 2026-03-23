@@ -3,7 +3,7 @@ pluginManagement {
         eachPlugin {
             when (requested.id.id) {
                 "com.android.library" -> useVersion("8.14.0")
-               // "com.android.application" -> useVersion("8.14.0")
+                "com.android.application" -> useVersion("8.14.0")
             }
         }
     }
@@ -45,7 +45,7 @@ pluginManagement {
 }
 
 plugins {
-    id("com.extenre.patches") version "1.0.8.dev-RE"   // Ajusta a la versión real que publicaste
+    id("com.extenre.patches") version "1.0.7.17-dev-RE"   // Ajusta a la versión real que publicaste
 }
 
 rootProject.name = "extenre-patches"
