@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.android.library)   // ← Agregado
+    alias(libs.plugins.android.library)  // ← esto genera un AAR
 }
 
 extension {
