@@ -1,28 +1,50 @@
-import org.gradle.kotlin.dsl.*
-
-plugins {
-    java
-    kotlin("jvm") version "2.0.21"
-    `maven-publish`
-}
-
-group = "com.extenre.test"   // o tu grupo real
+group = "com.extenre"
 version = rootProject.properties["version"] as? String ?: "0.0.0"
+
+patches {
+    about {
+        name = "ExtenRe Patches"
+        author = "LuisCupul04"
+        license = "GNU General Public License v3.0"
+    }
+}
 
 dependencies {
     implementation(libs.gson)
     implementation(libs.extenre.patcher)
 }
 
-tasks.register<JavaExec>("generatePatchesFiles") {
-    description = "Generate patches files (JSON and README)"
-    dependsOn(tasks.build)
-    classpath = sourceSets.main.get().runtimeClasspath
-    mainClass.set("com.extenre.generator.MainKt")
-}
+tasks {
+    // Bundle de parches (extensión .EXRE)
+    jar {
+        archiveExtension.set("EXRE")
+        exclude("com/extenre/generator")
+    }
 
-tasks.named("publish") {
-    dependsOn("generatePatchesFiles")
+    // JAR estándar para publicación como biblioteca
+    register<Jar>("libraryJar") {
+        archiveClassifier.set("")
+        from(sourceSets.main.get().output)
+        exclude("com/extenre/generator")
+    }
+
+    // Genera patches-exre.json y actualiza README
+    register<JavaExec>("generatePatchesFiles") {
+        description = "Generate patches files"
+        dependsOn(build)
+        classpath = sourceSets["main"].runtimeClasspath
+        mainClass.set("com.extenre.generator.MainKt")
+    }
+
+    // Configurar la tarea sourcesJar existente
+    named<Jar>("sourcesJar") {
+        from(sourceSets.main.get().allSource)
+    }
+
+    // Tarea usada por gradle-semantic-release-plugin
+    publish {
+        dependsOn("generatePatchesFiles")
+    }
 }
 
 kotlin {
@@ -35,7 +57,7 @@ publishing {
     repositories {
         maven {
             name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/LuisCupul04/ExtenRe-patches-test")
+            url = uri("https://maven.pkg.github.com/LuisCupul04/ExtenRe-patches")
             credentials {
                 username = System.getenv("GITHUB_ACTOR")
                 password = System.getenv("GITHUB_TOKEN")
@@ -44,13 +66,14 @@ publishing {
     }
     publications {
         create<MavenPublication>("patches") {
+            // Cambia el artifactId para evitar conflicto con la publicación automática del plugin
             artifactId = "extenre-patches-library"
-            artifact(tasks.jar)
-            artifact(tasks["sourcesJar"])   // Si defines sourcesJar
+            artifact(tasks["libraryJar"])
+            artifact(tasks["sourcesJar"])
             pom {
                 name.set("ExtenRe Patches")
                 description.set("Patches for ExtenRe")
-                url.set("https://github.com/LuisCupul04/ExtenRe-patches-test")
+                url.set("https://github.com/LuisCupul04/ExtenRe-Patches")
                 licenses {
                     license {
                         name.set("GNU General Public License v3.0")
@@ -64,9 +87,9 @@ publishing {
                     }
                 }
                 scm {
-                    connection.set("scm:git:git://github.com/LuisCupul04/ExtenRe-patches-test.git")
-                    developerConnection.set("scm:git:git@github.com:LuisCupul04/ExtenRe-patches-test.git")
-                    url.set("https://github.com/LuisCupul04/ExtenRe-patches-test")
+                    connection.set("scm:git:git://github.com/LuisCupul04/ExtenRe-Patches.git")
+                    developerConnection.set("scm:git:git@github.com:LuisCupul04/ExtenRe-Patches.git")
+                    url.set("https://github.com/LuisCupul04/ExtenRe-Patches")
                 }
             }
         }
