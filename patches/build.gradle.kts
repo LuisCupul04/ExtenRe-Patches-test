@@ -4,14 +4,6 @@ import org.gradle.kotlin.dsl.*
 group = "com.extenre.test"
 version = rootProject.properties["version"] as? String ?: "0.0.0"
 
-patches {
-    about {
-        name = "ExtenRe Patches"
-        author = "LuisCupul04"
-        license = "GNU General Public License v3.0"
-    }
-}
-
 dependencies {
     implementation(libs.gson)
     implementation(libs.extenre.patcher)
