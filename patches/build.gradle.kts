@@ -1,4 +1,3 @@
-import org.gradle.api.tasks.bundling.Jar
 import org.gradle.kotlin.dsl.*
 
 plugins {
@@ -7,7 +6,7 @@ plugins {
     `maven-publish`
 }
 
-group = "com.extenre.test"
+group = "com.extenre.test"   // o tu grupo real
 version = rootProject.properties["version"] as? String ?: "0.0.0"
 
 dependencies {
@@ -15,31 +14,11 @@ dependencies {
     implementation(libs.extenre.patcher)
 }
 
-val extensionProjects = subprojects.filter { it.path.startsWith(":extensions:") }
-
-tasks.jar {
-    archiveExtension.set("EXRE")
-    exclude("com/extenre/generator")
-    dependsOn(extensionProjects.map { it.tasks.named("syncExtension") })
-    from(extensionProjects.map { it.layout.buildDirectory.dir("extenre") })
-}
-
-tasks.register<Jar>("libraryJar") {
-    archiveClassifier.set("")
-    from(sourceSets.main.get().output)
-    exclude("com/extenre/generator")
-}
-
 tasks.register<JavaExec>("generatePatchesFiles") {
     description = "Generate patches files (JSON and README)"
     dependsOn(tasks.build)
     classpath = sourceSets.main.get().runtimeClasspath
     mainClass.set("com.extenre.generator.MainKt")
-}
-
-tasks.register<Jar>("sourcesJar") {
-    archiveClassifier.set("sources")
-    from(sourceSets.main.get().allSource)
 }
 
 tasks.named("publish") {
@@ -65,9 +44,9 @@ publishing {
     }
     publications {
         create<MavenPublication>("patches") {
-            artifactId = "ExtenRe-patches-test-library"
-            artifact(tasks["libraryJar"])
-            artifact(tasks["sourcesJar"])
+            artifactId = "extenre-patches-library"
+            artifact(tasks.jar)
+            artifact(tasks["sourcesJar"])   // Si defines sourcesJar
             pom {
                 name.set("ExtenRe Patches")
                 description.set("Patches for ExtenRe")
