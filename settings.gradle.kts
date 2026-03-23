@@ -45,7 +45,7 @@ pluginManagement {
 }
 
 plugins {
-    id("com.extenre.patches") version "1.0.7.dev-RE"   // Ajusta a la versión real que publicaste
+    id("com.extenre.patches") version "1.0.8.dev-RE"   // Ajusta a la versión real que publicaste
 }
 
 rootProject.name = "extenre-patches"
