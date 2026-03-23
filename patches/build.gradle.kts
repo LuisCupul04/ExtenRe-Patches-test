@@ -11,6 +11,7 @@ patches {
 
 dependencies {
     implementation(libs.gson)
+    implementation(libs.smali.re)
     implementation(libs.extenre.patcher)
 }
 
