@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    alias(libs.plugins.android.library)
+    alias(libs.plugins.android.library)  // ← esto genera un AAR
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.protobuf)
 }
