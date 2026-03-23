@@ -13,14 +13,19 @@ jobs:
       contents: write
       packages: write
     runs-on: ubuntu-latest
+    # 🔑 Variables de entorno a nivel de job para que estén disponibles en todos los pasos
     env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true   # opcional, para probar Node 24 ya
+      GITHUB_ACTOR: ${{ github.actor }}
+      GITHUB_TOKEN: ${{ secrets.EXTEN_TOKEN }}
+      # Si tu proyecto necesita GPG para firmar commits/tags
+      GPG_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+      GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
-          fetch-depth: 0   # necesario para obtener todos los tags
+          fetch-depth: 0
 
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -41,16 +46,14 @@ jobs:
 
       - name: Build and generate patches
         run: |
-          # Generar los DEX de las extensiones
+          # Gradle ahora tiene acceso a GITHUB_ACTOR y GITHUB_TOKEN
           ./gradlew :extensions:shared:syncExtension \
                     :extensions:spoof-signature:syncExtension \
-                    :extensions:spoof-wifi:syncExtension
-          # Generar el bundle .EXRE
-          ./gradlew :patches:jar
-          # Generar los archivos JSON (si es necesario)
-          ./gradlew generatePatchesFiles
+                    :extensions:spoof-wifi:syncExtension \
+                    :patches:jar \
+                    generatePatchesFiles
 
-      - name: Setup Node.js (opcional, para herramientas que lo requieran)
+      - name: Setup Node.js (opcional)
         uses: actions/setup-node@v5
         with:
           node-version: "lts/*"
@@ -59,7 +62,7 @@ jobs:
       - name: Install dependencies (si las necesitas)
         run: npm install
 
-      - name: Import GPG key (opcional, para firmar commits/tags)
+      - name: Import GPG key (opcional, para firmar)
         uses: crazy-max/ghaction-import-gpg@v6
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
@@ -80,7 +83,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.EXTEN_TOKEN }}
 
-      - name: Publish to GitHub Packages
+      - name: Publish to GitHub Packages (si es necesario)
         run: ./gradlew :patches:publish
         env:
           GITHUB_ACTOR: ${{ github.actor }}
