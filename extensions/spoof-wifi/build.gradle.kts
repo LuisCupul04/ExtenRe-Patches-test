@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.android.library)  // ← esto genera un AAR
+    id("com.android.application")
 }
 
 extension {
