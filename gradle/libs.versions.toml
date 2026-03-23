@@ -2,7 +2,7 @@
 extenre-patcher = "20.0.2.dev-RE"
 # Tracking https://github.com/google/smali/issues/64.
 #noinspection GradleDependency
-smali = "3.0.9.RE"
+smali-re = "3.0.9.RE"
 gson = "2.13.2"
 agp = "8.14.0"
 annotation = "1.9.1"
