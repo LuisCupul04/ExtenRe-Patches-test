@@ -1,9 +1,8 @@
 pluginManagement {
     resolutionStrategy {
         eachPlugin {
-            when (requested.id.id) {
-                "com.android.library" -> useVersion("8.14.0")
-                "com.android.application" -> useVersion("8.14.0")
+            if (requested.id.id == "com.android.library") {
+                useVersion("8.14.0")
             }
         }
     }
@@ -11,20 +10,9 @@ pluginManagement {
         google()
         mavenCentral()
         gradlePluginPortal()
-        mavenLocal()
+        mavenLocal() // ¡Importante!
         maven { setUrl("https://jitpack.io") }
-
-        // Repositorio del plugin de parches (recién publicado)
-        maven {
-            name = "ExtenRePatchesGradlePlugin"
-            url = uri("https://maven.pkg.github.com/LuisCupul04/ExtenRe-patches-gradle-plugin")
-            credentials {
-                username = providers.gradleProperty("gpr.user").getOrElse(System.getenv("GITHUB_ACTOR"))
-                password = providers.gradleProperty("gpr.key").getOrElse(System.getenv("GITHUB_TOKEN"))
-            }
-        }
-
-        // Otros repositorios
+        // tus repositorios con credenciales
         maven {
             name = "GitHubPackages"
             url = uri("https://maven.pkg.github.com/LuisCupul04/ExtenRe-patcher")
@@ -40,12 +28,20 @@ pluginManagement {
                 username = providers.gradleProperty("gpr.user").getOrElse(System.getenv("GITHUB_ACTOR"))
                 password = providers.gradleProperty("gpr.key").getOrElse(System.getenv("GITHUB_TOKEN"))
             }
-        }
+        }        
+        maven {
+            name = "GitHubPackages3"
+            url = uri("https://maven.pkg.github.com/LuisCupul04/ExtenRe-patches-gradle-plugin")
+            credentials {
+                username = providers.gradleProperty("gpr.user").getOrElse(System.getenv("GITHUB_ACTOR"))
+                password = providers.gradleProperty("gpr.key").getOrElse(System.getenv("GITHUB_TOKEN"))
+            }
+        } 
     }
 }
 
 plugins {
-    id("com.extenre.patches") version "1.0.7.17-dev-RE"   // Ajusta a la versión real que publicaste
+    id("com.extenre.patches") version "1.0.5.dev-RE"
 }
 
 rootProject.name = "extenre-patches"
