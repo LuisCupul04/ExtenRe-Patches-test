@@ -8,11 +8,27 @@ on:
 jobs:
   update:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write      # Para crear el PR
+      packages: read       # Para leer los paquetes de GitHub Packages
+    env:
+      GITHUB_ACTOR: ${{ github.actor }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # O usa EXTEN_TOKEN si tiene read:packages
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+
+      # 🔑 Configurar las propiedades de Gradle antes de ejecutar la acción
+      - name: Setup Gradle properties for GitHub Packages
+        run: |
+          mkdir -p ~/.gradle
+          cat << EOF >> ~/.gradle/gradle.properties
+          gpr.user=$GITHUB_ACTOR
+          gpr.key=$GITHUB_TOKEN
+          EOF
 
       - name: Update Gradle Wrapper
         uses: gradle-update/update-gradle-wrapper-action@v2
         with:
           target-branch: dev
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
